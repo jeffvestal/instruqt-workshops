@@ -1,0 +1,25 @@
+slug: johnnyrazorstotallynormalcandystore
+id: hqcegji4bh0y
+title: Johnny Razors Totally Normal Candy Store
+description: ""
+icon: ""
+tags: []
+owner: elastic
+developers:
+- jeff.vestal@elastic.co
+show_timer: true
+idle_timeout: 86400
+timelimit: 86400
+sandbox_preset: managed-vm-elastic-9-2-0-snapshot
+lab_config:
+  extend_ttl: 10800
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  theme:
+    name: modern-dark
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "5179619359849346182"
+enhanced_loading: false
