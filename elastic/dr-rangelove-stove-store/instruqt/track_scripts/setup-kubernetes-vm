@@ -1,0 +1,97 @@
+#!/bin/bash
+
+####################################################################### WAIT
+
+echo "Wait for the Instruqt host bootstrap to finish"
+# Wait for the Instruqt host bootstrap to finish
+while [ ! -f /opt/instruqt/bootstrap/host-bootstrap-completed ]
+do
+    echo "Waiting for Instruqt to finish booting the virtual machine"
+    sleep 1
+done
+
+# explicitly source env vars
+source /etc/profile.d/instruqt-env.sh
+
+####################################################################### ENV CHECK
+
+export _SANDBOX_ID=$_SANDBOX_ID
+
+export INSTRUQT=$INSTRUQT
+export LLM_KEY_DURATION=$LLM_KEY_DURATION
+export LLM_KEY_MAX_BUDGET=$LLM_KEY_MAX_BUDGET
+export LLM_MODELS=$LLM_MODELS
+export LLM_PROXY_URL=$LLM_PROXY_URL
+
+export SA_LLM_PROXY_BEARER_TOKEN=$SA_LLM_PROXY_BEARER_TOKEN
+export GCSKEY_ELASTIC_SA=$GCSKEY_ELASTIC_SA
+export GCSKEY_EDEN_WORKSHOP=$GCSKEY_EDEN_WORKSHOP
+export GCS_KEY_EDUCATION=$GCS_KEY_EDUCATION
+export GCSKEY=$GCSKEY
+
+if [[ -z "$_SANDBOX_ID" ]]; then
+    echo "_SANDBOX_ID is null"
+    exit 1
+else
+    echo "_SANDBOX_ID=$_SANDBOX_ID"
+fi
+
+if [[ -z "$INSTRUQT" ]]; then
+    echo "INSTRUQT is null"
+    exit 1
+else
+    echo "INSTRUQT=$INSTRUQT"
+fi
+
+if [[ -z "$LLM_KEY_DURATION" ]]; then
+    echo "LLM_KEY_DURATION is null"
+    exit 1
+else
+    echo "LLM_KEY_DURATION=$LLM_KEY_DURATION"
+fi
+
+if [[ -z "$LLM_KEY_MAX_BUDGET" ]]; then
+    echo "LLM_KEY_MAX_BUDGET is null"
+    exit 1
+else
+    echo "LLM_KEY_MAX_BUDGET=$LLM_KEY_MAX_BUDGET"
+fi
+
+if [[ -z "$LLM_MODELS" ]]; then
+    echo "LLM_MODELS is null"
+    exit 1
+else
+    echo "LLM_MODELS=$LLM_MODELS"
+fi
+
+if [[ -z "$LLM_PROXY_URL" ]]; then
+    echo "LLM_PROXY_URL is null"
+    exit 1
+else
+    echo "LLM_PROXY_URL=$LLM_PROXY_URL"
+fi
+
+if [[ -z "$SA_LLM_PROXY_BEARER_TOKEN" ]]; then
+    echo "SA_LLM_PROXY_BEARER_TOKEN is null"
+    exit 1
+fi
+if [[ -z "$GCSKEY_ELASTIC_SA" ]]; then
+    echo "GCSKEY_ELASTIC_SA is null"
+    exit 1
+fi
+if [[ -z "$GCSKEY_EDEN_WORKSHOP" ]]; then
+    echo "GCSKEY_EDEN_WORKSHOP is null"
+    exit 1
+fi
+if [[ -z "$GCSKEY" ]]; then
+    echo "GCSKEY is null"
+    exit 1
+fi
+
+####################################################################### STARTUP
+
+# finish elastic install
+source /opt/workshops/elastic-start.sh
+
+# setup openai
+source /opt/workshops/llm-key.sh

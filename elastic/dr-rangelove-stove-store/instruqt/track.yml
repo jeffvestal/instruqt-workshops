@@ -1,0 +1,30 @@
+slug: dr-rangelove-stove-store
+id: bmusmpbufrmz
+title: 'From Insights to Outcomes: Automating with Elastic Workflows & AI'
+description: Learn to build, test, and orchestrate automated workflows and AI agents
+  in Elastic. Build a self-healing system from scratch.
+icon: ""
+tags:
+- ai
+- aiops
+- workflows
+- agents
+- automation
+owner: elastic
+developers:
+- jeff.vestal@elastic.co
+show_timer: true
+idle_timeout: 14400
+timelimit: 14400
+lab_config:
+  extend_ttl: 10800
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  theme:
+    name: modern-dark
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "10834382753673251000"
+enhanced_loading: false

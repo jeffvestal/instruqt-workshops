@@ -1,0 +1,36 @@
+# Test output files
+test_results_*.txt
+
+# Remote/pulled files from Instruqt
+*.remote
+
+# Data generator output files
+backfill_data.jsonl
+backfill_progress.json
+backfill_ingest_progress.json
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Log files
+*.log
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak

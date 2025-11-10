@@ -1,0 +1,45 @@
+[
+  {
+    "name": "Market Data Latency Spike",
+    "description": "L2 cache exhaustion causing significant latency increase",
+    "service.name": "market-data-feed",
+    "http.status_code": 200,
+    "latency_ms": 3500,
+    "log.message": "WARN: P99 latency > 3000ms - L2 cache hit rate degraded to 45%",
+    "duration_seconds": 15,
+    "probability": 0.4
+  },
+  {
+    "name": "Payment Gateway Timeout",
+    "description": "External payment gateway experiencing high latency",
+    "service.name": "payment-service",
+    "http.status_code": 503,
+    "latency_ms": 5000,
+    "log.message": "ERROR: Upstream gateway connection timeout after 5000ms",
+    "duration_seconds": 15,
+    "probability": 0.3
+  },
+  {
+    "name": "Trade Service Database Connection Pool Exhaustion",
+    "description": "Database connection pool saturated causing service degradation",
+    "service.name": "trade-service",
+    "http.status_code": 500,
+    "latency_ms": 2800,
+    "log.message": "ERROR: Cannot acquire database connection from pool - all 50 connections in use",
+    "duration_seconds": 15,
+    "probability": 0.2
+  },
+  {
+    "name": "Order Processor Memory Pressure",
+    "description": "High memory usage causing garbage collection pauses",
+    "service.name": "order-processor",
+    "http.status_code": 200,
+    "latency_ms": 1200,
+    "log.message": "WARN: GC pause time 850ms - heap usage at 92%",
+    "duration_seconds": 15,
+    "probability": 0.1
+  }
+]
+
+
+

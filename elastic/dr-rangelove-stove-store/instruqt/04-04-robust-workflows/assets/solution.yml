@@ -1,0 +1,39 @@
+version: "1"
+name: ip_geolocator
+description: "Geolocate an IP address with error handling and conditional logic"
+enabled: true
+
+consts:
+  ip_api_base_url: http://ip-api.com/json
+
+inputs:
+  - name: ip_address
+    type: string
+    required: true
+    description: "The IP to geolocate (e.g., 8.8.8.8)"
+
+triggers:
+  - type: manual
+    enabled: true
+
+steps:
+  - name: get_geolocation
+    type: http
+    with:
+      url: "{{ consts.ip_api_base_url }}/{{ inputs.ip_address }}"
+      method: GET
+    on-failure:
+      retry:
+        max-attempts: 2
+        delay: 1s
+
+  - name: print_location
+    type: console
+    with:
+      message: |
+        {% if steps.get_geolocation.response.countryCode == "US" %}
+        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.city }}.
+        {% else %}
+        🌍 This is an international IP from {{ steps.get_geolocation.response.country }}.
+        {% endif %}
+

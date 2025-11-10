@@ -1,0 +1,67 @@
+version: "1"
+name: self_healing_aiops
+description: "Self-healing workflow triggered by alerts"
+enabled: true
+
+inputs: [] # No inputs needed, the alert is the input
+
+triggers:
+  - type: alert
+    enabled: true
+    params:
+      alert_ids: ["latency-threshold-alert-critical"] # Threshold alert (or ml-anomaly-alert-critical for ML)
+
+steps:
+  # Step 1: Extract the service name from the alert payload
+  - name: get_service_name
+    type: console
+    with:
+      # For threshold alerts, service name is in the matched documents
+      message: "Alert detected for service: {{ trigger.data.context.hits[0]._source.service.name }}"
+
+  # Step 2: Call an AI agent to decide what to do
+  - name: ai_analysis
+    type: kibana.post_agent_builder_converse
+    with:
+      agent_id: agent_content_creator
+      input: |
+        A critical latency anomaly was detected for service: {{ trigger.data.context.hits[0]._source.service.name }}
+        Respond ONLY with the following JSON:
+        {"remediation": "restart_service"}
+
+  # Step 3: Use an "if" condition to check the AI's response
+  - name: check_remediation
+    type: if
+    with:
+      condition: "{{ steps.ai_analysis.output.response.message.remediation == 'restart_service' }}"
+      then:
+        - name: call_remediation_api
+          type: http
+          with:
+            url: "http://host-1:3000/remediate_service"
+            method: POST
+            headers:
+              Content-Type: application/json
+            body:
+              service_name: "{{ trigger.data.context.hits[0]._source.service.name }}"
+          on-failure:
+            retry:
+              max-attempts: 2
+        
+        - name: log_action
+          type: console
+          with:
+            message: "✅ Successfully triggered remediation for {{ trigger.data.context.hits[0]._source.service.name }}"
+
+  # Step 4: Index the results back into Elastic for auditing
+  - name: log_to_elasticsearch
+    type: elasticsearch.index
+    with:
+      index: "workflow_actions-{{ now() | date('YYYY-MM-DD') }}"
+      document:
+        timestamp: "{{ now() }}"
+        workflow_name: "self_healing_aiops"
+        service: "{{ trigger.data.context.hits[0]._source.service.name }}"
+        alert_id: "{{ trigger.data.alert.id }}"
+        action_taken: "{{ steps.call_remediation_api.response.status }}"
+

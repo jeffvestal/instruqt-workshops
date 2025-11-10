@@ -1,0 +1,58 @@
+version: "1"
+name: triage_service_incident
+description: "Triage a service by querying observability data"
+enabled: true
+
+inputs:
+  - name: service_name
+    type: string
+    required: true
+    description: "The name of the service to triage"
+
+triggers:
+  - type: manual
+    enabled: true
+
+steps:
+  # Get 5 most recent 5xx error messages
+  - name: get_error_logs
+    type: elasticsearch.search
+    with:
+      index: "o11y-heartbeat"
+      query:
+        bool:
+          must:
+            - term:
+                service.name: "{{ inputs.service_name }}"
+            - range:
+                http.status_code:
+                  gte: 500
+      size: 5
+      sort:
+        - "@timestamp": "desc"
+
+  # Get the P95 latency
+  - name: get_latency
+    type: elasticsearch.search
+    with:
+      index: "o11y-heartbeat"
+      query:
+        term:
+          service.name: "{{ inputs.service_name }}"
+      aggs:
+        p95_latency:
+          percentiles:
+            field: "latency_ms"
+            percents: [95]
+      size: 0
+
+  # Format a report for the AI
+  - name: format_triage_report
+    type: console
+    with:
+      message: |
+        Triage Report for {{ inputs.service_name }}:
+        - P95 Latency is {{ steps.get_latency.response.aggregations.p95_latency.values["95.0"] }} ms.
+        - Found {{ steps.get_error_logs.response.hits.total.value }} error logs.
+        - Sample Error: {{ steps.get_error_logs.response.hits.hits[0]._source.log.message }}
+

@@ -1,0 +1,21 @@
+version: "1"
+name: hello_world
+description: "A simple hello world workflow that greets a user by name"
+enabled: true
+
+inputs:
+  - name: username
+    type: string
+    required: true
+    description: "The name of the user to greet"
+
+triggers:
+  - type: manual
+    enabled: true
+
+steps:
+  - name: print_greeting
+    type: console
+    with:
+      message: "Hello, {{ inputs.username }}!"
+

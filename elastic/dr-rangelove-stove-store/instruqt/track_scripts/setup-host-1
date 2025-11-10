@@ -1,0 +1,27 @@
+#!/bin/bash
+
+####################################################################### WAIT
+
+echo "Wait for the Instruqt host bootstrap to finish"
+# Wait for the Instruqt host bootstrap to finish
+while [ ! -f /opt/instruqt/bootstrap/host-bootstrap-completed ]
+do
+    echo "Waiting for Instruqt to finish booting the virtual machine"
+    sleep 1
+done
+
+# explicitly source env vars
+source /etc/profile.d/instruqt-env.sh
+
+####################################################################### ENV CHECK
+
+export GCSKEY_CE_INFRA_CONTAINERS=$GCSKEY_CE_INFRA_CONTAINERS
+
+if [[ -z "$GCSKEY_CE_INFRA_CONTAINERS" ]]; then
+    echo "GCSKEY_CE_INFRA_CONTAINERS is null"
+    exit 1
+fi
+
+####################################################################### STARTUP
+
+source /opt/workshops/worker-start.sh

@@ -1,0 +1,670 @@
+#!/usr/bin/env python3
+"""
+Data Sprayer - Synthetic Observability Data Generator for Louise's EARS
+
+Generates synthetic observability data and streams it to Elasticsearch.
+Supports two modes:
+- --backfill: Generate 3 months of historical data for ML training
+- --live: Continuous generation with periodic anomaly injection
+"""
+
+import argparse
+import asyncio
+import json
+import os
+import random
+import sys
+import multiprocessing as mp
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Any
+
+from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_bulk
+
+
+# Configuration - support both naming conventions
+ES_CLOUD_ID = os.environ.get("ELASTIC_CLOUD_ID") or os.environ.get("ELASTICSEARCH_URL")
+ES_API_KEY = os.environ.get("ELASTIC_API_KEY") or os.environ.get("ELASTICSEARCH_APIKEY")
+INDEX_NAME = "o11y-heartbeat"
+
+# Service definitions
+SERVICES = [
+    "market-data-feed",
+    "trade-service",
+    "payment-service",
+    "order-processor"
+]
+
+# Healthy baseline latencies (ms) per service
+HEALTHY_LATENCIES = {
+    "market-data-feed": (45, 85),    # P50: ~65ms, P99: ~85ms
+    "trade-service": (80, 150),       # P50: ~115ms, P99: ~150ms
+    "payment-service": (120, 300),    # P50: ~210ms, P99: ~300ms
+    "order-processor": (30, 70)       # P50: ~50ms, P99: ~70ms
+}
+
+HEALTHY_MESSAGES = [
+    "Request processed successfully",
+    "Trade executed successfully",
+    "Order validated and accepted",
+    "Payment processed",
+    "Market data quote updated",
+    "Connection established",
+    "Cache hit - serving from memory",
+    "Response sent to client"
+]
+
+
+class DataSprayer:
+    def __init__(self, es_client: AsyncElasticsearch):
+        self.es_client = es_client
+        self.scenarios = self._load_scenarios()
+        self.injecting_anomaly = False
+        self.current_scenario = None
+        
+    def _load_scenarios(self) -> List[Dict[str, Any]]:
+        """Load anomaly scenarios from scenarios.json"""
+        try:
+            with open("scenarios.json", "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print("Warning: scenarios.json not found. Using default scenarios.")
+            return [
+                {
+                    "name": "Market Data Latency Spike",
+                    "service.name": "market-data-feed",
+                    "http.status_code": 200,
+                    "latency_ms": 3500,
+                    "log.message": "WARN: P99 latency > 3000ms",
+                    "duration_seconds": 15
+                }
+            ]
+    
+    def _generate_healthy_doc(self, timestamp: datetime, service: str) -> Dict[str, Any]:
+        """Generate a healthy observability document"""
+        min_latency, max_latency = HEALTHY_LATENCIES[service]
+        
+        # Normal distribution around healthy range
+        latency = random.gauss((min_latency + max_latency) / 2, (max_latency - min_latency) / 4)
+        latency = max(min_latency * 0.8, min(max_latency * 1.1, latency))  # Clamp with slight variance
+        
+        return {
+            "@timestamp": timestamp.isoformat(),
+            "service.name": service,
+            "http.status_code": random.choices([200, 201, 204], weights=[85, 10, 5])[0],
+            "latency_ms": round(latency, 2),
+            "log.message": random.choice(HEALTHY_MESSAGES),
+            "trace.id": f"trace-{random.randint(100000, 999999)}",
+            "span.id": f"span-{random.randint(100000, 999999)}"
+        }
+    
+    def _generate_anomaly_doc(self, timestamp: datetime, scenario: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate an anomalous observability document"""
+        # Add some variance to the anomaly values
+        latency_variance = scenario["latency_ms"] * 0.1
+        latency = scenario["latency_ms"] + random.gauss(0, latency_variance)
+        
+        return {
+            "@timestamp": timestamp.isoformat(),
+            "service.name": scenario["service.name"],
+            "http.status_code": scenario["http.status_code"],
+            "latency_ms": round(latency, 2),
+            "log.message": scenario["log.message"],
+            "trace.id": f"trace-{random.randint(100000, 999999)}",
+            "span.id": f"span-{random.randint(100000, 999999)}",
+            "anomaly": True  # Tag for debugging
+        }
+    
+    def _generate_known_anomaly(self, timestamp: datetime) -> Dict[str, Any]:
+        """Generate known anomaly pattern for backfill (ML training)"""
+        scenario = random.choice(self.scenarios)
+        return self._generate_anomaly_doc(timestamp, scenario)
+    
+    async def _bulk_index(self, docs: List[Dict[str, Any]]):
+        """Bulk index documents to Elasticsearch"""
+        actions = [
+            {
+                "_index": INDEX_NAME,
+                "_source": doc
+            }
+            for doc in docs
+        ]
+        
+        success, failed = await async_bulk(self.es_client, actions, raise_on_error=False)
+        if failed:
+            print(f"Warning: {len(failed)} documents failed to index")
+        return success
+    
+    def _load_progress(self, progress_file: str) -> Dict[str, Any]:
+        """Load progress from JSON file"""
+        if os.path.exists(progress_file):
+            try:
+                with open(progress_file, "r") as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+    
+    def _save_progress(self, progress_file: str, progress: Dict[str, Any]):
+        """Save progress to JSON file"""
+        with open(progress_file, "w") as f:
+            json.dump(progress, f, indent=2)
+    
+    @staticmethod
+    def _generate_chunk_worker(chunk_id: int, start_second: int, end_second: int, start_time_iso: str, output_file: str, scenarios: List[Dict[str, Any]]):
+        """
+        Worker function for multiprocessing - generates a chunk of time-series data.
+        This runs in a separate process.
+        """
+        start_time = datetime.fromisoformat(start_time_iso)
+        chunk_output = f"{output_file}.chunk_{chunk_id}"
+        
+        with open(chunk_output, 'w') as f:
+            for i in range(start_second, end_second):
+                timestamp = start_time + timedelta(seconds=i)
+                
+                # Generate documents for all services
+                for service in SERVICES:
+                    # 98% healthy, 2% anomaly
+                    if random.random() < 0.98:
+                        # Generate healthy doc (inline to avoid pickling issues)
+                        min_latency, max_latency = HEALTHY_LATENCIES[service]
+                        latency = random.gauss((min_latency + max_latency) / 2, (max_latency - min_latency) / 4)
+                        latency = max(min_latency * 0.8, min(max_latency * 1.1, latency))
+                        
+                        doc = {
+                            "@timestamp": timestamp.isoformat(),
+                            "service.name": service,
+                            "http.status_code": random.choices([200, 201, 204], weights=[85, 10, 5])[0],
+                            "latency_ms": round(latency, 2),
+                            "log.message": random.choice(HEALTHY_MESSAGES),
+                            "trace.id": f"trace-{random.randint(100000, 999999)}",
+                            "span.id": f"span-{random.randint(100000, 999999)}"
+                        }
+                    else:
+                        # Generate anomaly doc
+                        scenario = random.choice(scenarios) if scenarios else {
+                            "name": "Market Data Latency Spike",
+                            "service.name": "market-data-feed",
+                            "http.status_code": 200,
+                            "latency_ms": 3500,
+                            "log.message": "WARN: P99 latency > 3000ms",
+                            "duration_seconds": 15
+                        }
+                        doc = {
+                            "@timestamp": timestamp.isoformat(),
+                            "service.name": scenario["service.name"],
+                            "http.status_code": scenario["http.status_code"],
+                            "latency_ms": scenario["latency_ms"],
+                            "log.message": scenario["log.message"],
+                            "trace.id": f"trace-{random.randint(100000, 999999)}",
+                            "span.id": f"span-{random.randint(100000, 999999)}"
+                        }
+                    
+                    f.write(json.dumps(doc) + "\n")
+        
+        return chunk_output, end_second - start_second
+    
+    async def _generate_to_file_parallel(self, output_file: str, progress_file: str, days: int = 90):
+        """
+        Phase 1: Generate all documents to local JSONL file using multiprocessing.
+        This version splits the work across CPU cores for 3-5x speedup.
+        """
+        print("=" * 70)
+        print("PHASE 1: Generating documents to local file (PARALLEL)")
+        print("=" * 70)
+        
+        # Calculate time range
+        end_time = datetime.now(timezone.utc)
+        start_time = end_time - timedelta(days=days)
+        total_seconds = int((end_time - start_time).total_seconds())
+        docs_per_second = len(SERVICES)
+        total_docs = total_seconds * docs_per_second
+        
+        # Determine number of processes (use all cores, but cap at reasonable number)
+        num_processes = min(mp.cpu_count(), 16)
+        
+        print(f"Generating {total_docs:,} documents to {output_file}")
+        print(f"Time range: {start_time.isoformat()} to {end_time.isoformat()}")
+        print(f"({total_seconds:,} seconds × {docs_per_second} services)")
+        print(f"Using {num_processes} parallel processes")
+        
+        # Calculate chunk boundaries
+        chunk_size = total_seconds // num_processes
+        chunks = []
+        for i in range(num_processes):
+            start_second = i * chunk_size
+            if i == num_processes - 1:
+                # Last chunk gets any remainder
+                end_second = total_seconds
+            else:
+                end_second = (i + 1) * chunk_size
+            chunks.append((i, start_second, end_second))
+        
+        # Start timing
+        import time
+        start_gen_time = time.time()
+        
+        # Launch parallel processes
+        print(f"\n⚡ Launching {num_processes} worker processes...")
+        with mp.Pool(processes=num_processes) as pool:
+            results = pool.starmap(
+                DataSprayer._generate_chunk_worker,
+                [(chunk_id, start_sec, end_sec, start_time.isoformat(), output_file, self.scenarios)
+                 for chunk_id, start_sec, end_sec in chunks]
+            )
+        
+        gen_time = time.time() - start_gen_time
+        
+        # Concatenate chunk files into final output
+        print(f"\n📦 Merging {num_processes} chunk files...")
+        merge_start = time.time()
+        
+        with open(output_file, 'wb') as outfile:
+            for chunk_file, _ in results:
+                with open(chunk_file, 'rb') as infile:
+                    outfile.write(infile.read())
+                os.remove(chunk_file)  # Clean up chunk file
+        
+        merge_time = time.time() - merge_start
+        total_time = gen_time + merge_time
+        
+        docs_per_sec = total_docs / total_time if total_time > 0 else 0
+        
+        print(f"\n✅ Generation complete!")
+        print(f"   Total documents: {total_docs:,}")
+        print(f"   Generation time: {gen_time:.1f}s")
+        print(f"   Merge time: {merge_time:.1f}s")
+        print(f"   Total time: {total_time:.1f}s")
+        print(f"   Rate: {docs_per_sec:,.0f} docs/sec")
+        
+        # Save completion status
+        progress = {
+            "current_second": total_seconds,
+            "total_seconds": total_seconds,
+            "output_file": output_file,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "completed": True
+        }
+        self._save_progress(progress_file, progress)
+    
+    async def _generate_to_file_custom(self, output_file: str, progress_file: str, days: int = 90):
+        """Phase 1: Generate all documents to local JSONL file (with custom days)"""
+        print("=" * 70)
+        print("PHASE 1: Generating documents to local file")
+        print("=" * 70)
+        
+        # Calculate time range
+        end_time = datetime.now(timezone.utc)
+        start_time = end_time - timedelta(days=days)
+        total_seconds = int((end_time - start_time).total_seconds())
+        docs_per_second = len(SERVICES)
+        total_docs = total_seconds * docs_per_second
+        
+        # Load existing progress
+        progress = self._load_progress(progress_file)
+        start_second = progress.get("current_second", 0)
+        file_mode = "a" if start_second > 0 else "w"
+        
+        if start_second > 0:
+            print(f"Resuming generation from second {start_second:,} of {total_seconds:,}")
+            print(f"Progress: {start_second / total_seconds * 100:.2f}%")
+        else:
+            print(f"Generating {total_docs:,} documents to {output_file}")
+            print(f"Time range: {start_time.isoformat()} to {end_time.isoformat()}")
+            print(f"({total_seconds:,} seconds × {docs_per_second} services)")
+        
+        last_update = datetime.now()
+        last_count = start_second
+        
+        with open(output_file, file_mode) as f:
+            for i in range(start_second, total_seconds):
+                timestamp = start_time + timedelta(seconds=i)
+                
+                # Generate documents for all services
+                for service in SERVICES:
+                    # 98% healthy, 2% anomaly
+                    if random.random() < 0.98:
+                        doc = self._generate_healthy_doc(timestamp, service)
+                    else:
+                        doc = self._generate_known_anomaly(timestamp)
+                    
+                    # Write as JSON line
+                    f.write(json.dumps(doc) + "\n")
+                
+                # Update progress every 1000 seconds (or every 5 seconds for faster feedback)
+                if i % 1000 == 0 or (datetime.now() - last_update).total_seconds() >= 5:
+                    progress_pct = ((i + 1) / total_seconds) * 100
+                    # Calculate seconds processed in THIS interval only
+                    seconds_in_interval = (i + 1) - last_count
+                    elapsed = (datetime.now() - last_update).total_seconds()
+                    
+                    if elapsed > 0 and seconds_in_interval > 0:
+                        # Rate based on this interval only, not total since resume
+                        rate = seconds_in_interval / elapsed  # seconds per second (should be ~1.0 if working well)
+                        remaining_seconds = total_seconds - (i + 1)
+                        eta_seconds = remaining_seconds / rate if rate > 0 else 0
+                        eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+                        docs_rate = seconds_in_interval * docs_per_second / elapsed
+                    else:
+                        eta_str = "calculating..."
+                        rate = 0
+                        docs_rate = 0
+                    
+                    print(f"\rGeneration: {progress_pct:.2f}% | "
+                          f"{i+1:,}/{total_seconds:,} seconds | "
+                          f"Rate: {docs_rate:.0f} docs/sec | "
+                          f"ETA: {eta_str}",
+                          end="", flush=True)
+                    
+                    # Save progress
+                    progress = {
+                        "current_second": i + 1,
+                        "total_seconds": total_seconds,
+                        "output_file": output_file,
+                        "last_updated": datetime.now(timezone.utc).isoformat()
+                    }
+                    self._save_progress(progress_file, progress)
+                    f.flush()  # Ensure data is written to disk
+                    last_update = datetime.now()
+                    last_count = i + 1  # Update to current position for next interval calculation
+        
+        print(f"\n✅ Generation complete! {total_docs:,} documents written to {output_file}")
+    
+    async def _generate_to_file(self, output_file: str, progress_file: str):
+        """Phase 1: Generate all documents to local JSONL file"""
+        # Call the parallel method with default 90 days for faster generation
+        await self._generate_to_file_parallel(output_file, progress_file, days=90)
+    
+    async def _ingest_from_file(self, input_file: str, progress_file: str):
+        """Phase 2: Bulk ingest documents from local file to Elasticsearch"""
+        print("\n" + "=" * 70)
+        print("PHASE 2: Bulk ingesting documents to Elasticsearch")
+        print("=" * 70)
+        
+        if not os.path.exists(input_file):
+            print(f"❌ Error: Input file {input_file} not found")
+            return
+        
+        # Get file size
+        file_size = os.path.getsize(input_file)
+        file_size_mb = file_size / (1024 * 1024)
+        print(f"File size: {file_size_mb:.2f} MB")
+        
+        # Load ingestion progress
+        ingest_progress_file = progress_file.replace("_progress", "_ingest_progress")
+        ingest_progress = self._load_progress(ingest_progress_file)
+        start_line = ingest_progress.get("last_line", 0)
+        
+        if start_line > 0:
+            print(f"Resuming ingestion from line {start_line:,}")
+        
+        # Count total lines (for progress calculation)
+        print("Counting total lines...")
+        total_lines = 0
+        with open(input_file, "r") as f:
+            for _ in f:
+                total_lines += 1
+        
+        print(f"Total documents: {total_lines:,}")
+        
+        # Bulk ingest settings
+        batch_size = 50000  # Large batches for better throughput
+        batch = []
+        batch_line = 0
+        indexed_total = 0
+        start_time = datetime.now()
+        last_update = datetime.now()
+        
+        print(f"Ingesting with batch size: {batch_size:,}")
+        print()
+        
+        with open(input_file, "r") as f:
+            # Skip already processed lines
+            for _ in range(start_line):
+                next(f, None)
+                batch_line += 1
+            
+            for line_num, line in enumerate(f, start=start_line):
+                try:
+                    doc = json.loads(line.strip())
+                    batch.append({
+                        "_index": INDEX_NAME,
+                        "_source": doc
+                    })
+                    batch_line += 1
+                    
+                    # Bulk index when batch is full
+                    if len(batch) >= batch_size:
+                        success, failed = await async_bulk(
+                            self.es_client, 
+                            batch, 
+                            raise_on_error=False,
+                            chunk_size=batch_size
+                        )
+                        
+                        indexed_total += success
+                        if failed:
+                            print(f"\n⚠️  Warning: {len(failed)} documents failed to index")
+                        
+                        # Update progress
+                        ingest_progress = {
+                            "last_line": batch_line,
+                            "total_lines": total_lines,
+                            "indexed_total": indexed_total,
+                            "last_updated": datetime.now(timezone.utc).isoformat()
+                        }
+                        self._save_progress(ingest_progress_file, ingest_progress)
+                        
+                        # Progress reporting
+                        progress_pct = (batch_line / total_lines) * 100
+                        elapsed = (datetime.now() - start_time).total_seconds()
+                        rate = indexed_total / elapsed if elapsed > 0 else 0
+                        remaining = total_lines - indexed_total
+                        eta_seconds = remaining / rate if rate > 0 else 0
+                        eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+                        
+                        print(f"\rIngestion: {progress_pct:.2f}% | "
+                              f"{indexed_total:,}/{total_lines:,} docs | "
+                              f"Rate: {rate:.0f} docs/sec | "
+                              f"ETA: {eta_str}",
+                              end="", flush=True)
+                        
+                        batch = []
+                        last_update = datetime.now()
+                        
+                except json.JSONDecodeError as e:
+                    print(f"\n⚠️  Warning: Failed to parse line {line_num}: {e}")
+                    continue
+        
+        # Index remaining documents
+        if batch:
+            success, failed = await async_bulk(
+                self.es_client,
+                batch,
+                raise_on_error=False
+            )
+            indexed_total += success
+            if failed:
+                print(f"\n⚠️  Warning: {len(failed)} documents failed to index")
+        
+        elapsed_total = (datetime.now() - start_time).total_seconds()
+        avg_rate = indexed_total / elapsed_total if elapsed_total > 0 else 0
+        
+        print(f"\n✅ Ingestion complete! {indexed_total:,} documents indexed")
+        print(f"   Average rate: {avg_rate:.0f} docs/sec")
+        print(f"   Total time: {int(elapsed_total // 60)}m {int(elapsed_total % 60)}s")
+    
+    async def backfill(self):
+        """Generate 3 months of historical data for ML training (local-first with resume)"""
+        output_file = "backfill_data.jsonl"
+        progress_file = "backfill_progress.json"
+        
+        print("\n" + "=" * 70)
+        print("BACKFILL MODE: 3 Months Historical Data Generation")
+        print("=" * 70)
+        print()
+        print("This process has two phases:")
+        print("  1. Generate all documents to local file (fast, can be paused/resumed)")
+        print("  2. Bulk ingest to Elasticsearch (can be paused/resumed)")
+        print()
+        
+        # Phase 1: Generate to file
+        if not os.path.exists(output_file) or os.path.getsize(output_file) == 0:
+            await self._generate_to_file(output_file, progress_file)
+        else:
+            progress = self._load_progress(progress_file)
+            total_seconds = progress.get("total_seconds", 0)
+            current_second = progress.get("current_second", 0)
+            
+            if current_second < total_seconds:
+                print(f"⚠️  Found incomplete generation file. Resuming...")
+                await self._generate_to_file(output_file, progress_file)
+            else:
+                print(f"✅ Generation file already complete ({total_seconds:,} seconds)")
+        
+        # Phase 2: Ingest from file
+        await self._ingest_from_file(output_file, progress_file)
+        
+        print("\n" + "=" * 70)
+        print("✅ BACKFILL COMPLETE!")
+        print("=" * 70)
+        print("ML job can now be trained on this historical data")
+        print(f"Data file: {output_file} ({os.path.getsize(output_file) / (1024**3):.2f} GB)")
+    
+    async def live(self):
+        """Run in live mode with continuous generation and anomaly injection"""
+        print("Starting live mode - generating real-time data with periodic anomalies...")
+        print(f"Services: {', '.join(SERVICES)}")
+        print(f"Anomaly injection: Every 60-90 seconds for 15 seconds\n")
+        
+        last_anomaly_time = datetime.now(timezone.utc) - timedelta(seconds=60)
+        anomaly_end_time = None
+        
+        while True:
+            current_time = datetime.now(timezone.utc)
+            
+            # Check if it's time to inject an anomaly
+            if not self.injecting_anomaly:
+                time_since_last = (current_time - last_anomaly_time).total_seconds()
+                if time_since_last >= random.randint(60, 90):
+                    # Start anomaly injection
+                    self.injecting_anomaly = True
+                    self.current_scenario = random.choice(self.scenarios)
+                    anomaly_end_time = current_time + timedelta(seconds=15)
+                    print(f"\n🔥 INJECTING ANOMALY: {self.current_scenario['name']}")
+                    print(f"   Service: {self.current_scenario['service.name']}")
+                    print(f"   Duration: 15 seconds\n")
+            
+            # Check if anomaly should end
+            if self.injecting_anomaly and current_time >= anomaly_end_time:
+                self.injecting_anomaly = False
+                last_anomaly_time = current_time
+                print(f"\n✅ Anomaly ended. System returning to normal.\n")
+            
+            # Generate documents for all services
+            batch = []
+            for service in SERVICES:
+                if self.injecting_anomaly and service == self.current_scenario["service.name"]:
+                    doc = self._generate_anomaly_doc(current_time, self.current_scenario)
+                else:
+                    doc = self._generate_healthy_doc(current_time, service)
+                batch.append(doc)
+            
+            # Index batch
+            await self._bulk_index(batch)
+            
+            # Status update
+            status = "🔥 ANOMALY" if self.injecting_anomaly else "✅ HEALTHY"
+            print(f"[{current_time.strftime('%H:%M:%S')}] {status} - Indexed {len(batch)} documents", end='\r')
+            
+            # Wait 1 second
+            await asyncio.sleep(1)
+
+
+async def main():
+    parser = argparse.ArgumentParser(description="Louise's EARS Data Sprayer - Synthetic Observability Data Generator")
+    parser.add_argument("--backfill", action="store_true", help="Generate 3 months of historical data")
+    parser.add_argument("--live", action="store_true", help="Run in live mode with anomaly injection (default)")
+    parser.add_argument("--generate-only", action="store_true", help="Generate to local file only (no ES connection required)")
+    parser.add_argument("--days", type=int, default=90, help="Number of days to generate (default: 90)")
+    args = parser.parse_args()
+    
+    # Generate-only mode doesn't need ES credentials
+    if args.generate_only:
+        output_file = "backfill_data.jsonl"
+        progress_file = "backfill_progress.json"
+        
+        print("\n" + "=" * 70)
+        print(f"GENERATE-ONLY MODE: {args.days} Days Historical Data Generation")
+        print("=" * 70)
+        print("Generating to local file only - no Elasticsearch connection required")
+        print()
+        
+        # Create a minimal sprayer for file generation
+        sprayer = DataSprayer(None)  # No ES client needed
+        
+        # Generate to file using parallel method for speed
+        await sprayer._generate_to_file_parallel(output_file, progress_file, args.days)
+        
+        print("\n" + "=" * 70)
+        print("✅ GENERATION COMPLETE!")
+        print("=" * 70)
+        print(f"Data file: {output_file}")
+        print("To ingest to Elasticsearch, run with --backfill mode")
+        return
+    
+    # Validate environment variables for backfill/live modes
+    if not ES_CLOUD_ID or not ES_API_KEY:
+        print("Error: ELASTIC_CLOUD_ID/ELASTICSEARCH_URL and ELASTIC_API_KEY/ELASTICSEARCH_APIKEY environment variables must be set")
+        sys.exit(1)
+    
+    # Connect to Elasticsearch
+    print("Connecting to Elasticsearch...")
+    # Support both Cloud ID (traditional) and URL (serverless)
+    if ES_CLOUD_ID and ES_CLOUD_ID.startswith("https://"):
+        # Serverless/URL-based connection
+        es_client = AsyncElasticsearch(
+            hosts=[ES_CLOUD_ID],
+            api_key=ES_API_KEY,
+            request_timeout=60
+        )
+    else:
+        # Traditional Cloud ID connection
+        es_client = AsyncElasticsearch(
+            cloud_id=ES_CLOUD_ID,
+            api_key=ES_API_KEY,
+            request_timeout=60
+        )
+    
+    try:
+        # Verify connection
+        info = await es_client.info()
+        print(f"Connected to Elasticsearch {info['version']['number']}")
+        
+        # Initialize data sprayer
+        sprayer = DataSprayer(es_client)
+        
+        # Run appropriate mode
+        if args.backfill:
+            await sprayer.backfill()
+        else:
+            # Default to live mode
+            await sprayer.live()
+    
+    except KeyboardInterrupt:
+        print("\n\nShutting down gracefully...")
+    except Exception as e:
+        print(f"\nError: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        await es_client.close()
+        print("Connection closed")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+
