@@ -15,7 +15,7 @@ tabs:
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
-  path: /app/ai_agent_builder
+  path: /app/agent_builder
   port: 30001
 - id: boqsyf6qjdpr
   title: Terminal
@@ -30,7 +30,7 @@ enhanced_loading: null
 
 So far, our workflows have called AI. Now, let's make an **AI call our workflow**.
 
-This "full circle" integration is the most powerful concept. We will give an AI Agent a "Workflow Tool" to run automation on its behalf.
+This "full circle" integration is the key concept. We will give an AI Agent a "Workflow Tool" to run automation on its behalf.
 
 **Goal:** We will build an "SRE Triage Bot." When we ask it to "triage a service," it will run a workflow to pull logs and metrics from our `o11y-heartbeat` index, then give us a summary.
 
@@ -55,7 +55,6 @@ inputs:
 
 triggers:
   - type: manual
-    enabled: true
 
 steps:
   # Get 5 most recent 5xx error messages

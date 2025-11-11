@@ -11,7 +11,6 @@ inputs:
 
 triggers:
   - type: manual
-    enabled: true
 
 steps:
   # Get 5 most recent 5xx error messages

@@ -22,7 +22,7 @@ enhanced_loading: null
 
 # 📖 Challenge 3: Chaining Steps - From Input to Output
 
-Workflows are powerful because they are a *chain*. The output of one step becomes the input for the next.
+Workflows are versatile because they are a *chain*. The output of one step becomes the input for the next.
 
 Let's build a workflow that takes an IP address, enriches it with a free geolocation API, and then prints the location.
 
@@ -54,7 +54,6 @@ inputs:
 
 triggers:
   - type: manual
-    enabled: true
 ```
 
 ## 3. Add the `http` Step
@@ -87,12 +86,12 @@ Add this *below* your `get_geolocation` step (inside the `steps` array):
   - name: print_location
     type: console
     with:
-      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.response.city }}, {{ steps.get_geolocation.response.country }}."
+      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.response.data.city }}, {{ steps.get_geolocation.response.data.country }}."
 ```
 
 **This is the most important concept:**
 
-* `steps.get_geolocation.response.city`: We are accessing the `response` of the step named `get_geolocation` and digging into its JSON structure.
+* `steps.get_geolocation.response.data.city`: We are accessing the `response` of the step named `get_geolocation` and digging into its JSON structure (the actual data is nested under `response.data`).
 
 ## 5. Run and Verify
 
@@ -104,4 +103,4 @@ Add this *below* your `get_geolocation` step (inside the `steps` array):
 
 You just chained two steps!
 
-**Click "Next" to make this workflow smarter.**
+**Click "Next" to make this workflow more sophisticated.**

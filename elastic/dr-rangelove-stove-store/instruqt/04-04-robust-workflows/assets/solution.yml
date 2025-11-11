@@ -14,7 +14,6 @@ inputs:
 
 triggers:
   - type: manual
-    enabled: true
 
 steps:
   - name: get_geolocation
@@ -31,9 +30,9 @@ steps:
     type: console
     with:
       message: |
-        {% if steps.get_geolocation.response.countryCode == "US" %}
-        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.city }}.
+        {% if steps.get_geolocation.response.data.countryCode == "US" %}
+        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.data.city }}.
         {% else %}
-        🌍 This is an international IP from {{ steps.get_geolocation.response.country }}.
+        🌍 This is an international IP from {{ steps.get_geolocation.response.data.country }}.
         {% endif %}
 

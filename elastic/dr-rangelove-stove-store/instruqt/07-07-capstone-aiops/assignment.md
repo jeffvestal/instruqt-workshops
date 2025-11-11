@@ -55,7 +55,6 @@ inputs: [] # <-- No inputs needed, the alert *is* the input
 
 triggers:
   - type: alert
-    enabled: true
     params:
       alert_ids: ["latency-threshold-alert-critical"] # <-- Our threshold alert
 ```

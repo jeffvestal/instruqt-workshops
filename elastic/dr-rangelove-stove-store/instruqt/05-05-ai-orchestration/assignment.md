@@ -15,7 +15,7 @@ tabs:
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
-  path: /app/ai_agent_builder
+  path: /app/agent_builder
   port: 30001
 - id: aax4rydycg19
   title: Terminal
@@ -57,7 +57,6 @@ inputs:
 
 triggers:
   - type: manual
-    enabled: true
 
 steps:
   # Steps will go here

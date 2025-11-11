@@ -6,10 +6,10 @@ title: Building Your First Workflow
 teaser: Create a simple workflow with inputs and console output
 tabs:
 - id: yjatgx2waodm
-  title: Kibana
+  title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
-  path: /app/management/kibana/workflows
+  path: /app/workflows
   port: 30001
 - id: wjmvynnsyzla
   title: Terminal
@@ -29,8 +29,8 @@ Let's start with the "Hello, World!" of automation. We will build a simple workf
 In the **Kibana** tab:
 
 1. Go to the main menu (the "hamburger" icon).
-2. Navigate to **Management > Dev Tools**.
-3. Find and click on **Workflows** (this is a new Tech Preview UI).
+2. Navigate to **Management > Workflows**.
+3. This opens the Workflows UI (a new Tech Preview feature).
 
 ## 2. Create a New Workflow
 
@@ -62,7 +62,6 @@ Paste this *below* your `inputs` block:
 ```yaml
 triggers:
   - type: manual
-    enabled: true
 
 steps:
   - name: print_greeting
@@ -73,7 +72,7 @@ steps:
 
 **Look closely at the `message`:**
 
-* We use `{{ ... }}` (Jinja templating) to access data.
+* We use `{{ ... }}` (Liquid templating) to access data.
 * `inputs.username` directly references the input we defined!
 
 ## 5. Save and Run the Workflow
@@ -81,7 +80,7 @@ steps:
 1. Click **"Save"** in the bottom right.
 2. Now, click the **"Run"** button (top right).
 3. A panel will appear asking for the `username`.
-4. In the `username` field, type your name (e.g., "Alex") and click **"Run"**.
+4. In the `username` field, replace the placeholder text "Enter a string" with your actual name (e.g., "Alex") and click **"Run"**.
 
 ## 6. Check the Output
 

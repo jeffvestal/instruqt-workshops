@@ -14,7 +14,6 @@ inputs:
 
 triggers:
   - type: manual
-    enabled: true
 
 steps:
   - name: get_geolocation
@@ -26,5 +25,5 @@ steps:
   - name: print_location
     type: console
     with:
-      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.response.city }}, {{ steps.get_geolocation.response.country }}."
+      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.response.data.city }}, {{ steps.get_geolocation.response.data.country }}."
 

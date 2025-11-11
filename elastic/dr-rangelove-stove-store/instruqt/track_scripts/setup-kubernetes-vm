@@ -297,6 +297,172 @@ else
   echo "[Workshop] ⚠️  Warning: Could not verify data load (curl failed)"
 fi
 
+####################################################################### CREATE LLM CONNECTOR
+
+echo "[Workshop] Creating LLM connector..."
+
+# Check for required LLM environment variables
+if [[ -z "$LLM_PROXY_URL" ]]; then
+  echo "[Workshop] ERROR: LLM_PROXY_URL is not set"
+  echo "[Workshop] Environment variables:"
+  env | sort
+  exit 1
+fi
+
+if [[ -z "$LLM_APIKEY" ]]; then
+  echo "[Workshop] ERROR: LLM_APIKEY is not set"
+  echo "[Workshop] Environment variables:"
+  env | sort
+  exit 1
+fi
+
+# Helper function for Kibana API calls
+kibana_post() {
+  local endpoint="$1"
+  local body="$2"
+  curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}${endpoint}" \
+    -H "Content-Type: application/json" \
+    -H "kbn-xsrf: true" \
+    -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+    -d "$body"
+}
+
+kibana_post_internal() {
+  local endpoint="$1"
+  local body="$2"
+  curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}${endpoint}" \
+    -H "Content-Type: application/json" \
+    -H "kbn-xsrf: true" \
+    -H "x-elastic-internal-origin: featureflag" \
+    -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+    -d "$body"
+}
+
+# Create connector with retry logic
+CONNECTOR_ID=""
+MAX_RETRIES=5
+RETRY_COUNT=0
+LAST_BODY_FILE="/tmp/llm_connector_response.json"
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  echo "[Workshop] Attempting to create LLM connector (attempt ${RETRY_COUNT}/${MAX_RETRIES})..."
+  
+  RESPONSE=$(kibana_post "/api/actions/connector" '{
+    "name": "Elastic Proxy LLM",
+    "config": {
+      "apiProvider": "OpenAI",
+      "apiUrl": "https://'"${LLM_PROXY_URL}"'/v1/chat/completions",
+      "defaultModel": "gpt-4.1"
+    },
+    "secrets": {
+      "apiKey": "'"${LLM_APIKEY}"'"
+    },
+    "connector_type_id": ".gen-ai"
+  }')
+  
+  HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+  BODY=$(echo "$RESPONSE" | sed '$d')
+  echo "$BODY" > "$LAST_BODY_FILE"
+  
+  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+    # Success - extract connector ID
+    CONNECTOR_ID=$(cat "$LAST_BODY_FILE" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+    if [ -n "$CONNECTOR_ID" ]; then
+      echo "[Workshop] ✓ LLM connector created successfully (ID: ${CONNECTOR_ID})"
+      break
+    else
+      echo "[Workshop] ⚠️  Warning: Created connector but could not extract ID from response"
+      echo "[Workshop] Response body:"
+      cat "$LAST_BODY_FILE"
+    fi
+  elif [ "$HTTP_CODE" = "409" ]; then
+    # Connector already exists - try to discover it
+    echo "[Workshop] Connector already exists (409), attempting to discover existing connector..."
+    # List connectors to find the one we need
+    LIST_RESPONSE=$(curl -s -X GET "${KIBANA_URL_UI}/api/actions/connectors" \
+      -H "kbn-xsrf: true" \
+      -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}")
+    
+    CONNECTOR_ID=$(echo "$LIST_RESPONSE" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for conn in data.get('data', []):
+        if conn.get('name') == 'Elastic Proxy LLM':
+            print(conn.get('id', ''))
+            break
+except:
+    pass
+" 2>/dev/null)
+    
+    if [ -n "$CONNECTOR_ID" ]; then
+      echo "[Workshop] ✓ Found existing LLM connector (ID: ${CONNECTOR_ID})"
+      break
+    else
+      echo "[Workshop] ⚠️  Warning: Could not discover existing connector ID"
+    fi
+  else
+    echo "[Workshop] ⚠️  Warning: Failed to create connector (HTTP ${HTTP_CODE})"
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+      echo "[Workshop] Retrying in 2 seconds..."
+      sleep 2
+    else
+      echo "[Workshop] ERROR: Failed to create LLM connector after ${MAX_RETRIES} attempts"
+      echo "[Workshop] Last response (HTTP ${HTTP_CODE}):"
+      cat "$LAST_BODY_FILE"
+      echo ""
+      echo "[Workshop] Environment variables:"
+      env | sort
+      exit 1
+    fi
+  fi
+done
+
+# Set connector as default GenAI connector
+if [ -n "$CONNECTOR_ID" ]; then
+  echo "[Workshop] Setting LLM connector as default GenAI connector..."
+  
+  # Try internal endpoint first
+  SETTING_RESPONSE=$(kibana_post_internal "/internal/kibana/settings" '{
+    "changes": {
+      "genAiSettings:defaultAIConnector": "'"${CONNECTOR_ID}"'"
+    }
+  }')
+  
+  SETTING_HTTP_CODE=$(echo "$SETTING_RESPONSE" | tail -n1)
+  
+  if [ "$SETTING_HTTP_CODE" != "200" ] && [ "$SETTING_HTTP_CODE" != "204" ]; then
+    # Fallback to public API endpoint
+    echo "[Workshop] Internal endpoint failed (HTTP ${SETTING_HTTP_CODE}), trying public API..."
+    SETTING_RESPONSE=$(kibana_post "/api/kibana/settings" '{
+      "changes": {
+        "genAiSettings:defaultAIConnector": "'"${CONNECTOR_ID}"'"
+      }
+    }')
+    SETTING_HTTP_CODE=$(echo "$SETTING_RESPONSE" | tail -n1)
+  fi
+  
+  if [ "$SETTING_HTTP_CODE" = "200" ] || [ "$SETTING_HTTP_CODE" = "204" ]; then
+    echo "[Workshop] ✓ LLM connector set as default GenAI connector"
+  else
+    echo "[Workshop] ERROR: Failed to set connector as default (HTTP ${SETTING_HTTP_CODE})"
+    echo "[Workshop] Response:"
+    echo "$SETTING_RESPONSE"
+    echo "[Workshop] Environment variables:"
+    env | sort
+    exit 1
+  fi
+else
+  echo "[Workshop] ERROR: No connector ID available to set as default"
+  echo "[Workshop] Environment variables:"
+  env | sort
+  exit 1
+fi
+
+# Clean up temp file
+rm -f "$LAST_BODY_FILE"
+
 # 4. Start live data sprayer in background
 echo "[Workshop] Starting live data sprayer..."
 nohup PYTHONUNBUFFERED=1 python3 -u data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &

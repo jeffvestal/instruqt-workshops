@@ -2,14 +2,14 @@
 slug: 01-intro
 id: dr4d5kdosqjd
 type: challenge
-title: 'The ''Why'': From Insights to Outcomes'
+title: 'The ''Why'': From Findings to Outcomes'
 teaser: Understand the 'Two-Vendor Problem' and how Workflows solve it
 notes:
 - type: text
   contents: |
     # Welcome to the Elastic Workflow & AI Agent Workshop!
 
-    In this hands-on workshop, you'll learn to build powerful automation that bridges the gap between insights and outcomes.
+    In this hands-on workshop, you'll learn to build robust automation that bridges the gap between findings and outcomes.
 
     We'll start with simple workflows and progress to building a complete self-healing AIOps system.
 tabs:
@@ -28,18 +28,18 @@ timelimit: 300
 enhanced_loading: null
 ---
 
-# 📖 Challenge 1: The "Why" - From Insights to Outcomes
+# 📖 Challenge 1: The "Why" - From Findings to Outcomes
 
 Welcome to the workshop!
 
 ## The Problem: The "Two-Vendor" Gap
 
-For years, Elastic has been a world-class "insights" engine. It's fantastic at telling you *what's wrong*:
+For years, Elastic has been a world-class "findings" engine. It's fantastic at telling you *what's wrong*:
 
 * **Security:** "We found a malicious IP in your logs!"
 * **Observability:** "The ML just found a critical anomaly for your `payment-service`!"
 
-But then what? You have to take that insight, pivot to *another tool* (a separate SOAR, a script, a PagerDuty console), and manually take *action*. This is the "Two-Vendor Problem."
+But then what? You have to take that finding, pivot to *another tool* (a separate SOAR, a script, a PagerDuty console), and manually take *action*. This is the "Two-Vendor Problem."
 
 ## The Solution: Elastic Workflow
 
@@ -53,13 +53,13 @@ In this workshop, we will build:
 
 By the end, you will build a "self-healing" workflow that triggers from a **real alert**, uses AI to decide on a fix, and calls an API to "remediate" the faulty service—all without human intervention.
 
-## From Insights to Outcomes
+## From Findings to Outcomes
 
-This is the core philosophy of the workshop. Elastic gives you **insights** (alerts, anomalies, detections). Workflows turn those insights into **outcomes** (automated responses, remediation, orchestration).
+This is the core philosophy of the workshop. Elastic gives you **findings** (alerts, anomalies, detections). Workflows turn those findings into **outcomes** (automated responses, remediation, orchestration).
 
 Think of it this way:
 
-* **Insights**: "What's wrong?" (Elasticsearch, ML, Security)
+* **Findings**: "What's wrong?" (Elasticsearch, ML, Security)
 * **Outcomes**: "What do we do about it?" (Workflows, Agents, Actions)
 
 ## What You'll Learn
@@ -72,3 +72,7 @@ Think of it this way:
 ## Ready?
 
 Let's get started! Click **"Next"** to build your first workflow.
+
+---
+
+**TODO:** This challenge needs more substantive content (slides, diagrams, or expanded explanations) to properly set the stage for the workshop.

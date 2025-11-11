@@ -60,10 +60,10 @@ Replace your *entire* `print_location` step with this:
     type: console
     with:
       message: | # <-- Use | for multi-line messages
-        {% if steps.get_geolocation.response.countryCode == "US" %}
-        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.city }}.
+        {% if steps.get_geolocation.response.data.countryCode == "US" %}
+        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.data.city }}.
         {% else %}
-        🌍 This is an international IP from {{ steps.get_geolocation.response.country }}.
+        🌍 This is an international IP from {{ steps.get_geolocation.response.data.country }}.
         {% endif %}
 ```
 
@@ -80,10 +80,10 @@ This logic block checks the `countryCode` from the API response and changes the 
    * **Run** with `ip_address`: `1.1.1.1`
    * **Check output:** `🌍 This is an international IP...`
 
-4. **Test 3 (The "Failure" path):**
-   * **Run** with `ip_address`: `10.0.0.1` (This is a private IP, the API will fail)
-   * **Observe:** The `get_geolocation` step will turn red and show "retrying..."
-   * The workflow will stop, as the `print_location` step *depended* on the failed step.
+4. **Test 3 (The "Private IP" path):**
+   * **Run** with `ip_address`: `10.0.0.1` (This is a private IP)
+   * **Observe:** The `get_geolocation` step will succeed (HTTP 200), but the API returns `status: "fail"` in the response data with no city/country fields
+   * You'll see the international path with empty country value because the API returns `status: fail` for private IPs
 
 You've built a workflow that can make decisions and handle errors!
 
