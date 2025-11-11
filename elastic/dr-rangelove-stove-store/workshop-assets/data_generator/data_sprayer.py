@@ -621,21 +621,44 @@ async def main():
     
     # Connect to Elasticsearch
     print("Connecting to Elasticsearch...")
+    print(f"[DEBUG] ES_CLOUD_ID value: {ES_CLOUD_ID}")
+    print(f"[DEBUG] ES_CLOUD_ID type: {type(ES_CLOUD_ID)}")
+    print(f"[DEBUG] ES_CLOUD_ID starts with http://: {ES_CLOUD_ID.startswith('http://') if ES_CLOUD_ID else False}")
+    print(f"[DEBUG] ES_CLOUD_ID starts with https://: {ES_CLOUD_ID.startswith('https://') if ES_CLOUD_ID else False}")
+    
     # Support both Cloud ID (traditional) and URL (serverless/local)
-    if ES_CLOUD_ID and (ES_CLOUD_ID.startswith("https://") or ES_CLOUD_ID.startswith("http://")):
-        # URL-based connection (http:// or https://)
-        es_client = AsyncElasticsearch(
-            hosts=[ES_CLOUD_ID],
-            api_key=ES_API_KEY,
-            request_timeout=60
-        )
-    else:
-        # Traditional Cloud ID connection
-        es_client = AsyncElasticsearch(
-            cloud_id=ES_CLOUD_ID,
-            api_key=ES_API_KEY,
-            request_timeout=60
-        )
+    es_client = None
+    try:
+        if ES_CLOUD_ID and (ES_CLOUD_ID.startswith("https://") or ES_CLOUD_ID.startswith("http://")):
+            # URL-based connection (http:// or https://)
+            print(f"[DEBUG] Using URL-based connection: {ES_CLOUD_ID}")
+            es_client = AsyncElasticsearch(
+                hosts=[ES_CLOUD_ID],
+                api_key=ES_API_KEY,
+                request_timeout=60
+            )
+        else:
+            # Traditional Cloud ID connection
+            print(f"[DEBUG] Using Cloud ID-based connection")
+            es_client = AsyncElasticsearch(
+                cloud_id=ES_CLOUD_ID,
+                api_key=ES_API_KEY,
+                request_timeout=60
+            )
+        print("[DEBUG] Elasticsearch client created successfully")
+    except Exception as e:
+        print("\n" + "=" * 70)
+        print("ERROR: Failed to create Elasticsearch client")
+        print("=" * 70)
+        print(f"ES_CLOUD_ID: {ES_CLOUD_ID}")
+        print(f"ES_API_KEY: {'*' * (len(ES_API_KEY) - 4) + ES_API_KEY[-4:] if ES_API_KEY else '(not set)'}")
+        print(f"\nException type: {type(e).__name__}")
+        print(f"Exception message: {str(e)}")
+        print("\nFull traceback:")
+        import traceback
+        traceback.print_exc()
+        print("=" * 70)
+        sys.exit(1)
     
     try:
         # Verify connection
@@ -655,12 +678,20 @@ async def main():
     except KeyboardInterrupt:
         print("\n\nShutting down gracefully...")
     except Exception as e:
-        print(f"\nError: {e}")
+        print("\n" + "=" * 70)
+        print("ERROR: Exception occurred during data generation")
+        print("=" * 70)
+        print(f"Exception type: {type(e).__name__}")
+        print(f"Exception message: {str(e)}")
+        print("\nFull traceback:")
         import traceback
         traceback.print_exc()
+        print("=" * 70)
+        sys.exit(1)
     finally:
-        await es_client.close()
-        print("Connection closed")
+        if es_client:
+            await es_client.close()
+            print("Connection closed")
 
 
 if __name__ == "__main__":
