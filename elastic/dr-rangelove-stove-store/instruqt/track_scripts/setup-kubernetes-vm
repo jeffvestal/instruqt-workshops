@@ -266,7 +266,7 @@ fi
 # 2. Backfill historical data (using parallel generation)
 echo "[Workshop] Backfilling ${BACKFILL_DAYS} days of data..."
 echo "[Workshop] (This should take ~15-20 seconds with parallel generation)"
-python3 data_sprayer.py --backfill
+PYTHONUNBUFFERED=1 python3 -u data_sprayer.py --backfill
 if [ $? -ne 0 ]; then
   echo "[Workshop] ERROR: Failed to backfill data"
   exit 1
@@ -289,7 +289,7 @@ fi
 
 # 4. Start live data sprayer in background
 echo "[Workshop] Starting live data sprayer..."
-nohup python3 data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &
+nohup PYTHONUNBUFFERED=1 python3 -u data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &
 DATA_SPRAYER_PID=$!
 sleep 1  # Give it a moment to start
 if ps -p $DATA_SPRAYER_PID > /dev/null 2>&1; then

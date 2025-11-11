@@ -14,6 +14,8 @@ import json
 import os
 import random
 import sys
+import threading
+import time
 import multiprocessing as mp
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any
@@ -167,6 +169,12 @@ class DataSprayer:
         start_time = datetime.fromisoformat(start_time_iso)
         chunk_output = f"{output_file}.chunk_{chunk_id}"
         
+        total = end_second - start_second
+        step = max(1, total // 10)  # log every 10%
+        processed = 0
+        
+        print(f"[Gen] Worker {chunk_id} started: seconds {start_second}-{end_second} (~{total:,} s)", flush=True)
+        
         with open(chunk_output, 'w') as f:
             for i in range(start_second, end_second):
                 timestamp = start_time + timedelta(seconds=i)
@@ -210,8 +218,19 @@ class DataSprayer:
                         }
                     
                     f.write(json.dumps(doc) + "\n")
+                
+                processed += 1
+                if processed % step == 0:
+                    pct = processed * 100.0 / total
+                    print(f"[Gen] Worker {chunk_id}: {pct:.0f}% ({processed:,}/{total:,} s)", flush=True)
         
-        return chunk_output, end_second - start_second
+        print(f"[Gen] Worker {chunk_id} complete: wrote ~{total*len(SERVICES):,} docs -> {chunk_output}", flush=True)
+        return chunk_output, total
+    
+    @staticmethod
+    def _generate_chunk_worker_args(args):
+        """Wrapper to unpack args tuple for imap_unordered"""
+        return DataSprayer._generate_chunk_worker(*args)
     
     async def _generate_to_file_parallel(self, output_file: str, progress_file: str, days: int = 90):
         """
@@ -250,7 +269,6 @@ class DataSprayer:
             chunks.append((i, start_second, end_second))
         
         # Start timing
-        import time
         start_gen_time = time.time()
         
         # Launch parallel processes
@@ -259,12 +277,45 @@ class DataSprayer:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         scenarios_path = os.path.join(script_dir, "scenarios.json")
         
+        # Build args list for imap_unordered
+        args_list = [
+            (chunk_id, start_sec, end_sec, start_time.isoformat(), output_file, scenarios_path)
+            for chunk_id, start_sec, end_sec in chunks]
+        
+        completed_seconds = 0
+        results = []
+        
+        # Heartbeat: prints every 15s until we flip the flag
+        heartbeat_running = True
+        
+        def _heartbeat():
+            while heartbeat_running:
+                elapsed = int(time.time() - start_gen_time)
+                print(f"[Gen] Heartbeat: still generating... elapsed {elapsed}s", flush=True)
+                time.sleep(15)
+        
+        hb = threading.Thread(target=_heartbeat, daemon=True)
+        hb.start()
+        
         with mp.Pool(processes=num_processes) as pool:
-            results = pool.starmap(
-                DataSprayer._generate_chunk_worker,
-                [(chunk_id, start_sec, end_sec, start_time.isoformat(), output_file, scenarios_path)
-                 for chunk_id, start_sec, end_sec in chunks]
-            )
+            for chunk_output, sec_count in pool.imap_unordered(DataSprayer._generate_chunk_worker_args, args_list, chunksize=1):
+                results.append((chunk_output, sec_count))
+                completed_seconds += sec_count
+                
+                pct = (completed_seconds / total_seconds) * 100.0
+                elapsed = time.time() - start_gen_time
+                produced_docs = completed_seconds * len(SERVICES)
+                rate = produced_docs / elapsed if elapsed > 0 else 0
+                print(
+                    f"[Gen] Progress: {pct:.1f}% ("
+                    f"{completed_seconds:,}/{total_seconds:,} s) | "
+                    f"Docs: {produced_docs:,} | Rate: {rate:,.0f} docs/sec",
+                    flush=True,
+                )
+        
+        # Stop heartbeat
+        heartbeat_running = False
+        hb.join(timeout=0.1)
         
         gen_time = time.time() - start_gen_time
         
