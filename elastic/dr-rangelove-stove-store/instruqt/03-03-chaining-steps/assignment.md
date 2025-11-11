@@ -5,13 +5,13 @@ type: challenge
 title: 'Chaining Steps: From Input to Output'
 teaser: Build a workflow that chains HTTP calls with data transformation
 tabs:
-- id: ol12t7c9c5vj
+- id: 0qyc30nxhg1y
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /app/management/kibana/workflows
   port: 30001
-- id: r8exwdlodzkd
+- id: wirjnngkijv3
   title: Terminal
   type: terminal
   hostname: host-1

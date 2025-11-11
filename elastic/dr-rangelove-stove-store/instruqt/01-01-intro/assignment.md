@@ -13,13 +13,13 @@ notes:
 
     We'll start with simple workflows and progress to building a complete self-healing AIOps system.
 tabs:
-- id: zynihsfdbhzj
+- id: c9pr996sb31a
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /
   port: 30001
-- id: ogy4q2snchjz
+- id: e0z8qrkti9bn
   title: Terminal
   type: terminal
   hostname: host-1

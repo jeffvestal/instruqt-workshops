@@ -5,19 +5,19 @@ type: challenge
 title: 'The ''Full Circle'': AI Agent Tools'
 teaser: Give an AI agent a workflow as a tool to perform complex operations
 tabs:
-- id: dewp65u4ki1g
+- id: vtbs6dxl9ui9
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /app/management/kibana/workflows
   port: 30001
-- id: iyqd2nynyok9
+- id: aovug3gwcqds
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
   path: /app/ai_agent_builder
   port: 30001
-- id: 4xkyqxeahom4
+- id: boqsyf6qjdpr
   title: Terminal
   type: terminal
   hostname: host-1

@@ -5,13 +5,13 @@ type: challenge
 title: Building Your First Workflow
 teaser: Create a simple workflow with inputs and console output
 tabs:
-- id: rq4xcismxetx
+- id: yjatgx2waodm
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /app/management/kibana/workflows
   port: 30001
-- id: y9fkfu4d5uxn
+- id: wjmvynnsyzla
   title: Terminal
   type: terminal
   hostname: host-1

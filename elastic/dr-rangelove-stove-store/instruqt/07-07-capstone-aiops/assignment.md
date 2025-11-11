@@ -5,19 +5,19 @@ type: challenge
 title: 'Capstone: Build a ''Self-Healing'' Workflow'
 teaser: Create an alert-triggered workflow that uses AI and calls external APIs
 tabs:
-- id: otj5bdykvl85
+- id: yn8vsudeseix
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /app/management/kibana/workflows
   port: 30001
-- id: wm6a1m2sw8u1
+- id: kzygfchylyuh
   title: Alerts
   type: service
   hostname: kubernetes-vm
   path: /app/observability/alerts
   port: 30001
-- id: wkwheg8hlckj
+- id: vbu8x6nbakbu
   title: Terminal
   type: terminal
   hostname: host-1
@@ -102,7 +102,7 @@ steps:
           on-failure:
             retry:
               max-attempts: 2
-        
+
         - name: log_action
           type: console
           with:

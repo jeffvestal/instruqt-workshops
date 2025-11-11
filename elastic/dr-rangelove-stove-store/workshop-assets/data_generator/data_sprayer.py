@@ -4,9 +4,11 @@ Data Sprayer - Synthetic Observability Data Generator for Louise's EARS
 
 Generates synthetic observability data and streams it to Elasticsearch.
 Supports two modes:
-- --backfill: Generate 30 days of historical data for ML training
+- --backfill: Generate 7 days of historical data for ML training
 - --live: Continuous generation with periodic anomaly injection
 """
+
+VERSION = "2025-11-11-v2"  # Update this with each significant change
 
 import argparse
 import asyncio
@@ -232,7 +234,7 @@ class DataSprayer:
         """Wrapper to unpack args tuple for imap_unordered"""
         return DataSprayer._generate_chunk_worker(*args)
     
-    async def _generate_to_file_parallel(self, output_file: str, progress_file: str, days: int = 30):
+    async def _generate_to_file_parallel(self, output_file: str, progress_file: str, days: int = 7):
         """
         Phase 1: Generate all documents to local JSONL file using multiprocessing.
         This version splits the work across CPU cores for 3-5x speedup.
@@ -449,8 +451,8 @@ class DataSprayer:
     
     async def _generate_to_file(self, output_file: str, progress_file: str):
         """Phase 1: Generate all documents to local JSONL file"""
-        # Call the parallel method with default 90 days for faster generation
-        await self._generate_to_file_parallel(output_file, progress_file, days=90)
+        # Call the parallel method with default 7 days for faster generation
+        await self._generate_to_file_parallel(output_file, progress_file, days=7)
     
     async def _ingest_from_file(self, input_file: str, progress_file: str):
         """Phase 2: Bulk ingest documents from local file to Elasticsearch"""
@@ -554,7 +556,33 @@ class DataSprayer:
         semaphore = asyncio.Semaphore(max_concurrent_batches)
         completed_batches = 0
         
+        # Heartbeat: prints every 10s during ingestion
+        # Use a shared dict for thread-safe progress tracking
+        progress_dict = {"indexed_total": 0, "total_lines": total_lines}
+        ingest_heartbeat_running = True
+        
+        def _ingest_heartbeat():
+            while ingest_heartbeat_running:
+                elapsed = (datetime.now() - start_time).total_seconds()
+                indexed = progress_dict["indexed_total"]
+                total = progress_dict["total_lines"]
+                if indexed > 0:
+                    progress_pct = (indexed / total) * 100
+                    rate = indexed / elapsed if elapsed > 0 else 0
+                    remaining = total - indexed
+                    eta_seconds = remaining / rate if rate > 0 else 0
+                    eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+                    print(f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, {progress_pct:.1f}% complete, ETA: {eta_str}", flush=True)
+                else:
+                    print(f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, starting batches...", flush=True)
+                time.sleep(10)
+        
+        hb_thread = threading.Thread(target=_ingest_heartbeat, daemon=True)
+        hb_thread.start()
+        
         async def ingest_with_semaphore(batch_data, batch_num, start_line_num):
+            # Log batch start immediately
+            print(f"[Batch {batch_num}/{total_batches}] Starting batch (lines {start_line_num}-{start_line_num + len(batch_data)})...", flush=True)
             async with semaphore:
                 result = await ingest_batch(batch_data, batch_num, start_line_num)
                 return result
@@ -568,6 +596,7 @@ class DataSprayer:
             success, failed_count, end_line_num = await task
             completed_batches += 1
             indexed_total += success
+            progress_dict["indexed_total"] = indexed_total  # Update for heartbeat
             
             if failed_count > 0:
                 print(f"\n⚠️  Warning: Batch {completed_batches}/{total_batches}: {failed_count} documents failed to index")
@@ -600,6 +629,10 @@ class DataSprayer:
                   f"ETA: {eta_str}",
                   end="", flush=True)
         
+        # Stop heartbeat
+        ingest_heartbeat_running = False
+        hb_thread.join(timeout=0.1)
+        
         elapsed_total = (datetime.now() - start_time).total_seconds()
         avg_rate = indexed_total / elapsed_total if elapsed_total > 0 else 0
         
@@ -608,12 +641,12 @@ class DataSprayer:
         print(f"   Total time: {int(elapsed_total // 60)}m {int(elapsed_total % 60)}s")
     
     async def backfill(self):
-        """Generate 30 days of historical data for ML training (local-first with resume)"""
+        """Generate 7 days of historical data for ML training (local-first with resume)"""
         output_file = "backfill_data.jsonl"
         progress_file = "backfill_progress.json"
         
         print("\n" + "=" * 70)
-        print("BACKFILL MODE: 30 Days Historical Data Generation")
+        print("BACKFILL MODE: 7 Days Historical Data Generation")
         print("=" * 70)
         print()
         print("This process has two phases:")
@@ -696,11 +729,14 @@ class DataSprayer:
 
 async def main():
     parser = argparse.ArgumentParser(description="Louise's EARS Data Sprayer - Synthetic Observability Data Generator")
-    parser.add_argument("--backfill", action="store_true", help="Generate 30 days of historical data")
+    parser.add_argument("--backfill", action="store_true", help="Generate 7 days of historical data")
     parser.add_argument("--live", action="store_true", help="Run in live mode with anomaly injection (default)")
     parser.add_argument("--generate-only", action="store_true", help="Generate to local file only (no ES connection required)")
-    parser.add_argument("--days", type=int, default=30, help="Number of days to generate (default: 30)")
+    parser.add_argument("--days", type=int, default=7, help="Number of days to generate (default: 7)")
     args = parser.parse_args()
+    
+    # Log version on startup
+    print(f"[Data Sprayer] Version: {VERSION}")
     
     # Generate-only mode doesn't need ES credentials
     if args.generate_only:

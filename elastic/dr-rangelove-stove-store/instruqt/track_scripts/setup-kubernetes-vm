@@ -160,6 +160,16 @@ git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_CLONE_DIR"
 cd "$TMP_CLONE_DIR"
 git sparse-checkout set "$REPO_PATH"
 
+# Log git commit info to verify we got the latest code
+echo "[Workshop] === GitHub Repository Info ==="
+COMMIT_HASH=$(git rev-parse HEAD)
+COMMIT_DATE=$(git log -1 --format=%ci)
+COMMIT_MSG=$(git log -1 --format=%s)
+echo "[Workshop] Commit hash: ${COMMIT_HASH}"
+echo "[Workshop] Commit date: ${COMMIT_DATE}"
+echo "[Workshop] Commit message: ${COMMIT_MSG}"
+echo "[Workshop] === END GitHub Info ==="
+
 # Debug: Show what we cloned
 echo "[Workshop] === DEBUG: Directory structure after clone ==="
 echo "[Workshop] Current directory: $(pwd)"
@@ -230,7 +240,7 @@ fi
 # Configuration
 USE_ML_AD="${USE_ML_AD:-false}"
 DATA_GEN_DIR="$WORKSHOP_ASSETS_DIR/data_generator"
-BACKFILL_DAYS="${BACKFILL_DAYS:-30}"
+BACKFILL_DAYS="${BACKFILL_DAYS:-7}"
 
 # Export env vars for data generator (map to its expected names)
 export ELASTIC_CLOUD_ID="${ELASTICSEARCH_URL}"

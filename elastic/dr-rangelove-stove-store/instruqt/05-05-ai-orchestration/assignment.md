@@ -5,19 +5,19 @@ type: challenge
 title: The AI 'Assembly Line'
 teaser: Orchestrate multiple AI agents in a generator-critic-remediator pattern
 tabs:
-- id: rlermfgmfouy
+- id: kkmk81byp0bq
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /app/management/kibana/workflows
   port: 30001
-- id: cxdzbwrqjkrx
+- id: 4yynyg92q4pw
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
   path: /app/ai_agent_builder
   port: 30001
-- id: 6gwx3dqsdxch
+- id: aax4rydycg19
   title: Terminal
   type: terminal
   hostname: host-1
@@ -99,10 +99,10 @@ Now for the magic. We'll call the `agent_pr_spin_specialist`, but we'll give it 
       input: |
         The following draft was written:
         "{{ steps.draft_content.output.response.message }}"
-        
+
         It was analyzed with this sentiment:
         "{{ steps.first_check.output.response.message.sentiment }}"
-        
+
         Please revise this draft to have a strongly positive spin.
 ```
 
@@ -128,7 +128,7 @@ Finally, let's check the "spun" draft and print a final report.
         Revised Draft: {{ steps.remediation_spin.output.response.message }}
         Final Sentiment: {{ steps.final_check.output.response.message.sentiment }}
         ---
-        
+
         {% if steps.final_check.output.response.message.sentiment == "POSITIVE" %}
         ✅ Content is approved and ready to send.
         {% else %}
