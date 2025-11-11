@@ -221,7 +221,7 @@ echo "[Workshop] Setting up data generator..."
 # Install Python dependencies (use python3 -m pip to avoid cwd issues)
 echo "[Workshop] Installing Python dependencies..."
 cd /tmp  # Ensure we're in a safe directory
-python3 -m pip install -q elasticsearch httpx
+python3 -m pip install -q elasticsearch httpx aiohttp
 if [ $? -ne 0 ]; then
   echo "[Workshop] ERROR: Failed to install Python dependencies"
   exit 1
