@@ -621,9 +621,9 @@ async def main():
     
     # Connect to Elasticsearch
     print("Connecting to Elasticsearch...")
-    # Support both Cloud ID (traditional) and URL (serverless)
-    if ES_CLOUD_ID and ES_CLOUD_ID.startswith("https://"):
-        # Serverless/URL-based connection
+    # Support both Cloud ID (traditional) and URL (serverless/local)
+    if ES_CLOUD_ID and (ES_CLOUD_ID.startswith("https://") or ES_CLOUD_ID.startswith("http://")):
+        # URL-based connection (http:// or https://)
         es_client = AsyncElasticsearch(
             hosts=[ES_CLOUD_ID],
             api_key=ES_API_KEY,

@@ -95,3 +95,238 @@ source /opt/workshops/elastic-start.sh
 
 # setup openai
 source /opt/workshops/llm-key.sh
+
+####################################################################### WAIT FOR KIBANA AND ENABLE WORKFLOWS FEATURE FLAG
+
+echo "[Workshop] Waiting for Kibana to be ready..."
+MAX_RETRIES=60
+RETRY_COUNT=0
+
+# Get Kibana URL and API key (may be set by elastic-start.sh or from env)
+KIBANA_URL_UI="${KIBANA_URL_UI:-${KIBANA_URL:-http://localhost:30001}}"
+ELASTICSEARCH_APIKEY="${ELASTICSEARCH_APIKEY:-${ELASTIC_API_KEY}}"
+
+until curl -fsS -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" "${KIBANA_URL_UI}/api/status" >/dev/null 2>&1; do
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+    echo "[Workshop] ERROR: Kibana did not become ready in time"
+    exit 1
+  fi
+  echo "  ... waiting for Kibana (attempt ${RETRY_COUNT}/${MAX_RETRIES})"
+  sleep 5
+done
+
+echo "[Workshop] ✓ Kibana is ready"
+
+# Enable workflows feature flag
+echo "[Workshop] Enabling workflows feature flag..."
+FEATURE_FLAG_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}/api/kibana/settings" \
+  -H "Content-Type: application/json" \
+  -H "kbn-xsrf: true" \
+  -H "x-elastic-internal-origin: featureflag" \
+  -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+  -d '{
+    "changes": {
+      "workflows:ui:enabled": true
+    }
+  }')
+
+HTTP_CODE=$(echo "$FEATURE_FLAG_RESPONSE" | tail -n1)
+if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
+  echo "[Workshop] ✓ Workflows feature flag enabled (HTTP $HTTP_CODE)"
+else
+  echo "[Workshop] ⚠️  Warning: Feature flag API returned HTTP $HTTP_CODE (may already be enabled or not available)"
+fi
+
+# Export for use in other scripts
+export KIBANA_URL="${KIBANA_URL_UI}"
+export ELASTICSEARCH_URL="${ELASTICSEARCH_URL:-http://localhost:30920}"
+export ELASTICSEARCH_APIKEY="${ELASTICSEARCH_APIKEY}"
+
+####################################################################### DOWNLOAD WORKSHOP ASSETS FROM GITHUB
+
+echo "[Workshop] Downloading workshop assets from GitHub..."
+
+WORKSHOP_ASSETS_DIR="/opt/workshop-assets"
+REPO_URL="https://github.com/jeffvestal/instruqt-workshops.git"
+REPO_PATH="elastic/dr-rangelove-stove-store/workshop-assets"
+
+# Create temporary directory for cloning
+TMP_CLONE_DIR="/tmp/instruqt-workshops-clone"
+rm -rf "$TMP_CLONE_DIR"
+
+echo "[Workshop] Cloning repository with sparse checkout..."
+git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_CLONE_DIR"
+cd "$TMP_CLONE_DIR"
+git sparse-checkout set "$REPO_PATH"
+
+# Debug: Show what we cloned
+echo "[Workshop] === DEBUG: Directory structure after clone ==="
+echo "[Workshop] Current directory: $(pwd)"
+echo "[Workshop] Contents of $(pwd):"
+ls -la
+echo "[Workshop] Looking for workshop-assets..."
+find . -name "workshop-assets" -type d
+echo "[Workshop] Contents of elastic/dr-rangelove-stove-store if it exists:"
+ls -la elastic/dr-rangelove-stove-store/ 2>/dev/null || echo "  (directory not found)"
+echo "[Workshop] === END DEBUG ==="
+
+# Find the actual workshop-assets directory
+if [ -d "$TMP_CLONE_DIR/$REPO_PATH" ]; then
+    echo "[Workshop] Found workshop-assets at: $TMP_CLONE_DIR/$REPO_PATH"
+    echo "[Workshop] Contents:"
+    ls -la "$TMP_CLONE_DIR/$REPO_PATH"
+    # Copy to final location
+    mkdir -p "$WORKSHOP_ASSETS_DIR"
+    cp -r "$TMP_CLONE_DIR/$REPO_PATH"/* "$WORKSHOP_ASSETS_DIR/"
+elif [ -d "$TMP_CLONE_DIR/workshop-assets" ]; then
+    echo "[Workshop] Found workshop-assets at: $TMP_CLONE_DIR/workshop-assets"
+    echo "[Workshop] Contents:"
+    ls -la "$TMP_CLONE_DIR/workshop-assets"
+    # Copy to final location
+    mkdir -p "$WORKSHOP_ASSETS_DIR"
+    cp -r "$TMP_CLONE_DIR/workshop-assets"/* "$WORKSHOP_ASSETS_DIR/"
+else
+    echo "[Workshop] ERROR: Could not find workshop-assets directory"
+    echo "[Workshop] Attempting to find it..."
+    find "$TMP_CLONE_DIR" -type d -name "workshop-assets" 2>/dev/null
+    exit 1
+fi
+
+# Clean up (change to safe directory first)
+cd /tmp
+rm -rf "$TMP_CLONE_DIR"
+
+# Debug: Show final location
+echo "[Workshop] === DEBUG: Final workshop-assets directory ==="
+echo "[Workshop] Location: $WORKSHOP_ASSETS_DIR"
+echo "[Workshop] Contents:"
+ls -la "$WORKSHOP_ASSETS_DIR"
+echo "[Workshop] Data generator contents:"
+ls -la "$WORKSHOP_ASSETS_DIR/data_generator/" 2>/dev/null || echo "  (data_generator not found)"
+echo "[Workshop] Setup scripts contents:"
+ls -la "$WORKSHOP_ASSETS_DIR/setup_scripts/" 2>/dev/null || echo "  (setup_scripts not found)"
+echo "[Workshop] === END DEBUG ==="
+
+# Make scripts executable
+chmod +x "$WORKSHOP_ASSETS_DIR/data_generator/"*.py 2>/dev/null
+chmod +x "$WORKSHOP_ASSETS_DIR/setup_scripts/"*.sh 2>/dev/null
+
+echo "[Workshop] ✓ Workshop assets downloaded to $WORKSHOP_ASSETS_DIR"
+
+####################################################################### DATA GENERATOR SETUP
+
+echo "[Workshop] Setting up data generator..."
+
+# Install Python dependencies (use python3 -m pip to avoid cwd issues)
+echo "[Workshop] Installing Python dependencies..."
+cd /tmp  # Ensure we're in a safe directory
+python3 -m pip install -q elasticsearch httpx
+if [ $? -ne 0 ]; then
+  echo "[Workshop] ERROR: Failed to install Python dependencies"
+  exit 1
+fi
+
+# Configuration
+USE_ML_AD="${USE_ML_AD:-false}"
+DATA_GEN_DIR="$WORKSHOP_ASSETS_DIR/data_generator"
+BACKFILL_DAYS="${BACKFILL_DAYS:-90}"
+
+# Export env vars for data generator (map to its expected names)
+export ELASTIC_CLOUD_ID="${ELASTICSEARCH_URL}"
+export ELASTIC_API_KEY="${ELASTICSEARCH_APIKEY}"
+
+# Debug: Show ES connection variables before running data sprayer
+echo "[Workshop] === DEBUG: Elasticsearch Connection Variables ==="
+echo "[Workshop] ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}"
+echo "[Workshop] ELASTIC_CLOUD_ID (exported): ${ELASTIC_CLOUD_ID}"
+if [ -n "${ELASTICSEARCH_APIKEY}" ]; then
+  API_KEY_MASKED=$(echo "${ELASTICSEARCH_APIKEY}" | sed 's/\(.*\)\(.\{4\}\)$/\1****\2/')
+  echo "[Workshop] ELASTICSEARCH_APIKEY: ${API_KEY_MASKED}"
+else
+  echo "[Workshop] ELASTICSEARCH_APIKEY: (not set)"
+fi
+if [ -n "${ELASTIC_API_KEY}" ]; then
+  API_KEY_MASKED=$(echo "${ELASTIC_API_KEY}" | sed 's/\(.*\)\(.\{4\}\)$/\1****\2/')
+  echo "[Workshop] ELASTIC_API_KEY (exported): ${API_KEY_MASKED}"
+else
+  echo "[Workshop] ELASTIC_API_KEY: (not set)"
+fi
+echo "[Workshop] === END DEBUG ==="
+
+# 1. Create index mappings
+echo "[Workshop] Creating o11y-heartbeat index..."
+cd "$DATA_GEN_DIR" || { echo "[Workshop] ERROR: Cannot cd to $DATA_GEN_DIR"; exit 1; }
+python3 setup.py
+if [ $? -ne 0 ]; then
+  echo "[Workshop] ERROR: Failed to create index mappings"
+  exit 1
+fi
+
+# 2. Backfill historical data (using parallel generation)
+echo "[Workshop] Backfilling ${BACKFILL_DAYS} days of data..."
+echo "[Workshop] (This should take ~15-20 seconds with parallel generation)"
+python3 data_sprayer.py --backfill
+if [ $? -ne 0 ]; then
+  echo "[Workshop] ERROR: Failed to backfill data"
+  exit 1
+fi
+
+# 3. Verify data loaded
+echo "[Workshop] Verifying data load..."
+COUNT_RESPONSE=$(curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+  "${ELASTICSEARCH_URL}/o11y-heartbeat/_count" 2>/dev/null)
+if [ $? -eq 0 ] && [ -n "$COUNT_RESPONSE" ]; then
+  DOC_COUNT=$(echo "$COUNT_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('count', 0))" 2>/dev/null || echo "0")
+  if [ "$DOC_COUNT" != "0" ]; then
+    echo "[Workshop] ✓ Loaded ${DOC_COUNT} documents into o11y-heartbeat"
+  else
+    echo "[Workshop] ⚠️  Warning: Could not verify document count (index may be empty or not exist yet)"
+  fi
+else
+  echo "[Workshop] ⚠️  Warning: Could not verify data load (curl failed)"
+fi
+
+# 4. Start live data sprayer in background
+echo "[Workshop] Starting live data sprayer..."
+nohup python3 data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &
+DATA_SPRAYER_PID=$!
+sleep 1  # Give it a moment to start
+if ps -p $DATA_SPRAYER_PID > /dev/null 2>&1; then
+echo "[Workshop] ✓ Live data sprayer started (PID: ${DATA_SPRAYER_PID})"
+else
+  echo "[Workshop] ⚠️  Warning: Live data sprayer may have failed to start (check /var/log/data-sprayer.log)"
+fi
+
+####################################################################### CREATE AGENTS
+
+echo "[Workshop] Creating AI agents..."
+bash "$WORKSHOP_ASSETS_DIR/setup_scripts/01-create-agents.sh"
+
+####################################################################### CREATE ALERT
+
+echo "[Workshop] Creating alert rule..."
+bash "$WORKSHOP_ASSETS_DIR/setup_scripts/02-create-alert.sh"
+
+####################################################################### FORCE INCIDENT (OPTIONAL)
+
+FORCE_INCIDENT="${FORCE_INCIDENT:-false}"
+if [[ "$FORCE_INCIDENT" == "true" ]]; then
+  echo "[Workshop] Forcing incident for immediate testing..."
+  sleep 5  # Give alert time to activate
+  bash "$WORKSHOP_ASSETS_DIR/setup_scripts/04-force-incident.sh"
+fi
+
+####################################################################### COMPLETE
+
+echo "========================================="
+echo "[Workshop] kubernetes-vm setup complete"
+echo "========================================="
+echo "Services:"
+echo "  - Elasticsearch: ${ELASTICSEARCH_URL}"
+echo "  - Kibana: ${KIBANA_URL}"
+echo ""
+echo "Configuration:"
+echo "  - USE_ML_AD: ${USE_ML_AD}"
+echo "  - FORCE_INCIDENT: ${FORCE_INCIDENT}"
+echo "========================================="
