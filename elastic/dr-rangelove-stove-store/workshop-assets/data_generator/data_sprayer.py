@@ -4,7 +4,7 @@ Data Sprayer - Synthetic Observability Data Generator for Louise's EARS
 
 Generates synthetic observability data and streams it to Elasticsearch.
 Supports two modes:
-- --backfill: Generate 3 months of historical data for ML training
+- --backfill: Generate 30 days of historical data for ML training
 - --live: Continuous generation with periodic anomaly injection
 """
 
@@ -232,7 +232,7 @@ class DataSprayer:
         """Wrapper to unpack args tuple for imap_unordered"""
         return DataSprayer._generate_chunk_worker(*args)
     
-    async def _generate_to_file_parallel(self, output_file: str, progress_file: str, days: int = 90):
+    async def _generate_to_file_parallel(self, output_file: str, progress_file: str, days: int = 30):
         """
         Phase 1: Generate all documents to local JSONL file using multiprocessing.
         This version splits the work across CPU cores for 3-5x speedup.
@@ -323,11 +323,24 @@ class DataSprayer:
         print(f"\n📦 Merging {num_processes} chunk files...")
         merge_start = time.time()
         
+        COPY_BUFFER = 1024 * 1024 * 10  # 10MB buffer for efficient I/O
+        
         with open(output_file, 'wb') as outfile:
-            for chunk_file, _ in results:
+            for idx, (chunk_file, _) in enumerate(results, 1):
+                chunk_size_mb = os.path.getsize(chunk_file) / (1024 * 1024)
+                print(f"[Merge] Merging chunk {idx}/{num_processes} ({chunk_size_mb:.1f} MB)...", flush=True)
+                
+                # Stream copy in chunks for better I/O
                 with open(chunk_file, 'rb') as infile:
-                    outfile.write(infile.read())
-                os.remove(chunk_file)  # Clean up chunk file
+                    while True:
+                        data = infile.read(COPY_BUFFER)
+                        if not data:
+                            break
+                        outfile.write(data)
+                
+                os.remove(chunk_file)
+                elapsed = time.time() - merge_start
+                print(f"[Merge] Chunk {idx}/{num_processes} complete (elapsed: {int(elapsed)}s)", flush=True)
         
         merge_time = time.time() - merge_start
         total_time = gen_time + merge_time
@@ -595,12 +608,12 @@ class DataSprayer:
         print(f"   Total time: {int(elapsed_total // 60)}m {int(elapsed_total % 60)}s")
     
     async def backfill(self):
-        """Generate 3 months of historical data for ML training (local-first with resume)"""
+        """Generate 30 days of historical data for ML training (local-first with resume)"""
         output_file = "backfill_data.jsonl"
         progress_file = "backfill_progress.json"
         
         print("\n" + "=" * 70)
-        print("BACKFILL MODE: 3 Months Historical Data Generation")
+        print("BACKFILL MODE: 30 Days Historical Data Generation")
         print("=" * 70)
         print()
         print("This process has two phases:")
@@ -683,10 +696,10 @@ class DataSprayer:
 
 async def main():
     parser = argparse.ArgumentParser(description="Louise's EARS Data Sprayer - Synthetic Observability Data Generator")
-    parser.add_argument("--backfill", action="store_true", help="Generate 3 months of historical data")
+    parser.add_argument("--backfill", action="store_true", help="Generate 30 days of historical data")
     parser.add_argument("--live", action="store_true", help="Run in live mode with anomaly injection (default)")
     parser.add_argument("--generate-only", action="store_true", help="Generate to local file only (no ES connection required)")
-    parser.add_argument("--days", type=int, default=90, help="Number of days to generate (default: 90)")
+    parser.add_argument("--days", type=int, default=30, help="Number of days to generate (default: 30)")
     args = parser.parse_args()
     
     # Generate-only mode doesn't need ES credentials

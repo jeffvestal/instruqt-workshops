@@ -230,7 +230,7 @@ fi
 # Configuration
 USE_ML_AD="${USE_ML_AD:-false}"
 DATA_GEN_DIR="$WORKSHOP_ASSETS_DIR/data_generator"
-BACKFILL_DAYS="${BACKFILL_DAYS:-90}"
+BACKFILL_DAYS="${BACKFILL_DAYS:-30}"
 
 # Export env vars for data generator (map to its expected names)
 export ELASTIC_CLOUD_ID="${ELASTICSEARCH_URL}"
