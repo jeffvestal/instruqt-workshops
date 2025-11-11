@@ -408,16 +408,37 @@ class DataSprayer:
         
         print(f"Total documents: {total_lines:,}")
         
-        # Bulk ingest settings
-        batch_size = 50000  # Large batches for better throughput
+        # Bulk ingest settings - optimized for performance
+        batch_size = 100000  # Increased batch size for better throughput
+        max_concurrent_batches = 4  # Process 4 batches in parallel
         batch = []
         batch_line = 0
         indexed_total = 0
         start_time = datetime.now()
-        last_update = datetime.now()
         
-        print(f"Ingesting with batch size: {batch_size:,}")
+        print(f"Ingesting with batch size: {batch_size:,} (parallel: {max_concurrent_batches} batches)")
         print()
+        
+        # Helper function to ingest a single batch
+        async def ingest_batch(batch_data: List[Dict], batch_num: int, start_line_num: int) -> tuple:
+            """Ingest a single batch and return (success_count, failed_count, end_line_num)"""
+            try:
+                success, failed = await async_bulk(
+                    self.es_client,
+                    batch_data,
+                    raise_on_error=False,
+                    chunk_size=batch_size
+                )
+                failed_count = len(failed) if failed else 0
+                end_line_num = start_line_num + len(batch_data)
+                return (success, failed_count, end_line_num)
+            except Exception as e:
+                print(f"\n⚠️  Error ingesting batch {batch_num}: {e}")
+                return (0, len(batch_data), start_line_num + len(batch_data))
+        
+        # Prepare all batches first
+        batches = []
+        batch_num = 0
         
         with open(input_file, "r") as f:
             # Skip already processed lines
@@ -434,59 +455,74 @@ class DataSprayer:
                     })
                     batch_line += 1
                     
-                    # Bulk index when batch is full
+                    # When batch is full, add it to batches list
                     if len(batch) >= batch_size:
-                        success, failed = await async_bulk(
-                            self.es_client, 
-                            batch, 
-                            raise_on_error=False,
-                            chunk_size=batch_size
-                        )
-                        
-                        indexed_total += success
-                        if failed:
-                            print(f"\n⚠️  Warning: {len(failed)} documents failed to index")
-                        
-                        # Update progress
-                        ingest_progress = {
-                            "last_line": batch_line,
-                            "total_lines": total_lines,
-                            "indexed_total": indexed_total,
-                            "last_updated": datetime.now(timezone.utc).isoformat()
-                        }
-                        self._save_progress(ingest_progress_file, ingest_progress)
-                        
-                        # Progress reporting
-                        progress_pct = (batch_line / total_lines) * 100
-                        elapsed = (datetime.now() - start_time).total_seconds()
-                        rate = indexed_total / elapsed if elapsed > 0 else 0
-                        remaining = total_lines - indexed_total
-                        eta_seconds = remaining / rate if rate > 0 else 0
-                        eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
-                        
-                        print(f"\rIngestion: {progress_pct:.2f}% | "
-                              f"{indexed_total:,}/{total_lines:,} docs | "
-                              f"Rate: {rate:.0f} docs/sec | "
-                              f"ETA: {eta_str}",
-                              end="", flush=True)
-                        
+                        batch_num += 1
+                        batches.append((batch.copy(), batch_num, batch_line - len(batch)))
                         batch = []
-                        last_update = datetime.now()
-                        
+                    
                 except json.JSONDecodeError as e:
                     print(f"\n⚠️  Warning: Failed to parse line {line_num}: {e}")
                     continue
         
-        # Index remaining documents
+        # Add remaining documents as final batch
         if batch:
-            success, failed = await async_bulk(
-                self.es_client,
-                batch,
-                raise_on_error=False
-            )
+            batch_num += 1
+            batches.append((batch.copy(), batch_num, batch_line - len(batch)))
+            batch = []
+        
+        total_batches = len(batches)
+        print(f"Prepared {total_batches:,} batches for parallel ingestion\n")
+        
+        # Process batches in parallel with semaphore to limit concurrency
+        semaphore = asyncio.Semaphore(max_concurrent_batches)
+        completed_batches = 0
+        
+        async def ingest_with_semaphore(batch_data, batch_num, start_line_num):
+            async with semaphore:
+                result = await ingest_batch(batch_data, batch_num, start_line_num)
+                return result
+        
+        # Process all batches
+        tasks = [ingest_with_semaphore(batch_data, batch_num, start_line_num) 
+                 for batch_data, batch_num, start_line_num in batches]
+        
+        # Process batches and track progress
+        for task in asyncio.as_completed(tasks):
+            success, failed_count, end_line_num = await task
+            completed_batches += 1
             indexed_total += success
-            if failed:
-                print(f"\n⚠️  Warning: {len(failed)} documents failed to index")
+            
+            if failed_count > 0:
+                print(f"\n⚠️  Warning: Batch {completed_batches}/{total_batches}: {failed_count} documents failed to index")
+            
+            # Update progress
+            ingest_progress = {
+                "last_line": end_line_num,
+                "total_lines": total_lines,
+                "indexed_total": indexed_total,
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+            self._save_progress(ingest_progress_file, ingest_progress)
+            
+            # Progress reporting with batch number
+            progress_pct = (indexed_total / total_lines) * 100
+            elapsed = (datetime.now() - start_time).total_seconds()
+            rate = indexed_total / elapsed if elapsed > 0 else 0
+            remaining = total_lines - indexed_total
+            eta_seconds = remaining / rate if rate > 0 else 0
+            eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+            
+            # Print batch completion message (new line for logs)
+            print(f"[Batch {completed_batches}/{total_batches}] Indexed {indexed_total:,}/{total_lines:,} docs ({progress_pct:.2f}%) | "
+                  f"Rate: {rate:.0f} docs/sec | ETA: {eta_str}")
+            
+            # Also update the inline progress
+            print(f"\rIngestion: {progress_pct:.2f}% | "
+                  f"{indexed_total:,}/{total_lines:,} docs | "
+                  f"Rate: {rate:.0f} docs/sec | "
+                  f"ETA: {eta_str}",
+                  end="", flush=True)
         
         elapsed_total = (datetime.now() - start_time).total_seconds()
         avg_rate = indexed_total / elapsed_total if elapsed_total > 0 else 0
@@ -635,7 +671,9 @@ async def main():
             es_client = AsyncElasticsearch(
                 hosts=[ES_CLOUD_ID],
                 api_key=ES_API_KEY,
-                request_timeout=60
+                request_timeout=300,  # Increased for large parallel batches
+                max_retries=3,
+                retry_on_timeout=True
             )
         else:
             # Traditional Cloud ID connection
@@ -643,7 +681,9 @@ async def main():
             es_client = AsyncElasticsearch(
                 cloud_id=ES_CLOUD_ID,
                 api_key=ES_API_KEY,
-                request_timeout=60
+                request_timeout=300,  # Increased for large parallel batches
+                max_retries=3,
+                retry_on_timeout=True
             )
         print("[DEBUG] Elasticsearch client created successfully")
     except Exception as e:
