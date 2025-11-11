@@ -151,11 +151,19 @@ class DataSprayer:
             json.dump(progress, f, indent=2)
     
     @staticmethod
-    def _generate_chunk_worker(chunk_id: int, start_second: int, end_second: int, start_time_iso: str, output_file: str, scenarios: List[Dict[str, Any]]):
+    def _generate_chunk_worker(chunk_id: int, start_second: int, end_second: int, start_time_iso: str, output_file: str, scenarios_path: str):
         """
         Worker function for multiprocessing - generates a chunk of time-series data.
-        This runs in a separate process.
+        This runs in a separate process. Loads scenarios from file to avoid pickling issues.
         """
+        # Load scenarios in worker process to avoid pickling issues
+        try:
+            with open(scenarios_path, "r") as f:
+                scenarios = json.load(f)
+        except Exception:
+            # Fallback if scenarios file not found
+            scenarios = []
+        
         start_time = datetime.fromisoformat(start_time_iso)
         chunk_output = f"{output_file}.chunk_{chunk_id}"
         
@@ -221,13 +229,13 @@ class DataSprayer:
         docs_per_second = len(SERVICES)
         total_docs = total_seconds * docs_per_second
         
-        # Determine number of processes (use all cores, but cap at reasonable number)
-        num_processes = min(mp.cpu_count(), 16)
+        # Determine number of processes (leave 2 CPUs for OS/other processes)
+        num_processes = max(1, mp.cpu_count() - 2)
         
         print(f"Generating {total_docs:,} documents to {output_file}")
         print(f"Time range: {start_time.isoformat()} to {end_time.isoformat()}")
         print(f"({total_seconds:,} seconds × {docs_per_second} services)")
-        print(f"Using {num_processes} parallel processes")
+        print(f"Using {num_processes} parallel processes (CPU count: {mp.cpu_count()})")
         
         # Calculate chunk boundaries
         chunk_size = total_seconds // num_processes
@@ -247,10 +255,14 @@ class DataSprayer:
         
         # Launch parallel processes
         print(f"\n⚡ Launching {num_processes} worker processes...")
+        # Get the directory where scenarios.json is located (same as script directory)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        scenarios_path = os.path.join(script_dir, "scenarios.json")
+        
         with mp.Pool(processes=num_processes) as pool:
             results = pool.starmap(
                 DataSprayer._generate_chunk_worker,
-                [(chunk_id, start_sec, end_sec, start_time.isoformat(), output_file, self.scenarios)
+                [(chunk_id, start_sec, end_sec, start_time.isoformat(), output_file, scenarios_path)
                  for chunk_id, start_sec, end_sec in chunks]
             )
         
