@@ -76,25 +76,31 @@ else
   ES_QUERY='{"query":{"bool":{"filter":[{"range":{"latency_ms":{"gte":'${LATENCY_THRESHOLD}'}}},{"term":{"service.name":"payment-service"}}]}}}'
   
   echo "[Alerting] Creating new alert rule..."
-  RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/alerting/rule" -d '{
-    "name": "latency-threshold-alert-critical",
-    "rule_type_id": ".es-query",
-    "consumer": "alerts",
-    "schedule": {"interval": "1m"},
-    "params": {
-      "index": ["o11y-heartbeat"],
-      "timeField": "@timestamp",
-      "esQuery": "'"${ES_QUERY}"'",
-      "threshold": [1],
-      "thresholdComparator": ">=",
-      "size": 100,
-      "timeWindowSize": 1,
-      "timeWindowUnit": "m"
-    },
-    "actions": [],
-    "notify_when": "onActiveAlert",
-    "enabled": true
-  }')
+  
+  # Use jq to build the JSON payload properly (avoids JSON escaping issues)
+  PAYLOAD=$(jq -n \
+    --arg esQuery "$ES_QUERY" \
+    '{
+      "name": "latency-threshold-alert-critical",
+      "rule_type_id": ".es-query",
+      "consumer": "alerts",
+      "schedule": {"interval": "1m"},
+      "params": {
+        "index": ["o11y-heartbeat"],
+        "timeField": "@timestamp",
+        "esQuery": $esQuery,
+        "threshold": [1],
+        "thresholdComparator": ">=",
+        "size": 100,
+        "timeWindowSize": 1,
+        "timeWindowUnit": "m"
+      },
+      "actions": [],
+      "notify_when": "onActiveAlert",
+      "enabled": true
+    }')
+  
+  RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/alerting/rule" -d "$PAYLOAD")
   
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
   BODY=$(echo "$RESPONSE" | sed '$d')

@@ -3,54 +3,71 @@ name: self_healing_aiops
 description: "Self-healing workflow triggered by alerts"
 enabled: true
 
-inputs: [] # No inputs needed, the alert is the input
+inputs: []
 
 triggers:
   - type: alert
-    params:
-      alert_ids: ["latency-threshold-alert-critical"] # Threshold alert (or ml-anomaly-alert-critical for ML)
 
 steps:
-  # Step 1: Extract the service name from the alert payload
+  # Step 1: Parse service name from the alert query
   - name: get_service_name
     type: console
     with:
-      # For threshold alerts, service name is in the matched documents
-      message: "Alert detected for service: {{ trigger.data.context.hits[0]._source.service.name }}"
+      message: |
+        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+        Alert '{{ event.alerts[0].rule.name }}' fired!
+        Service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
+        Alert ID: {{ event.alerts[0].id }}
 
-  # Step 2: Call an AI agent to decide what to do
+  # Step 2: Call AI agent for remediation decision
   - name: ai_analysis
     type: kibana.post_agent_builder_converse
     with:
       agent_id: agent_content_creator
       input: |
-        A critical latency anomaly was detected for service: {{ trigger.data.context.hits[0]._source.service.name }}
+        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+        A critical latency anomaly was detected for service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
         Respond ONLY with the following JSON:
         {"remediation": "restart_service"}
 
-  # Step 3: Use an "if" condition to check the AI's response
+  # Step 3: Parse and check AI response
+  - name: parse_ai_response
+    type: console
+    with:
+      message: |-
+        {% assign parsed = steps.ai_analysis.output.response.message | json_parse %}{{ parsed.remediation }}
+
   - name: check_remediation
     type: if
-    with:
-      condition: "{{ steps.ai_analysis.output.response.message.remediation == 'restart_service' }}"
-      then:
-        - name: call_remediation_api
-          type: http
-          with:
-            url: "http://host-1:3000/remediate_service"
-            method: POST
-            headers:
-              Content-Type: application/json
-            body:
-              service_name: "{{ trigger.data.context.hits[0]._source.service.name }}"
-          on-failure:
-            retry:
-              max-attempts: 2
-        
-        - name: log_action
-          type: console
-          with:
-            message: "✅ Successfully triggered remediation for {{ trigger.data.context.hits[0]._source.service.name }}"
+    condition: "${{ steps.parse_ai_response.output == 'restart_service' }}"
+    steps:
+      - name: call_remediation_api
+        type: http
+        with:
+          url: "http://host-1:3000/remediate_service"
+          method: POST
+          headers:
+            Content-Type: application/json
+          body:
+            service_name: "payment-service"
+        on-failure:
+          retry:
+            max-attempts: 2
+      
+      - name: log_action
+        type: console
+        with:
+          message: |
+            {{ steps.call_remediation_api.output.data.message }}
+            📋 Remediation ID: {{ steps.call_remediation_api.output.data.remediation_id }}
+            🔧 Service: {{ steps.call_remediation_api.output.data.service }}
+            ⚡ Action: {{ steps.call_remediation_api.output.data.action }}
+            ⏱️  Estimated Duration: {{ steps.call_remediation_api.output.data.details.estimated_duration }}
+    else:
+      - name: log_no_action
+        type: console
+        with:
+          message: "⚠️ No action taken."
 
   # Step 4: Index the results back into Elastic for auditing
   - name: log_to_elasticsearch
@@ -60,7 +77,7 @@ steps:
       document:
         timestamp: "{{ now() }}"
         workflow_name: "self_healing_aiops"
-        service: "{{ trigger.data.context.hits[0]._source.service.name }}"
-        alert_id: "{{ trigger.data.alert.id }}"
-        action_taken: "{{ steps.call_remediation_api.output.response.status }}"
-
+        alert_id: "{{ event.alerts[0].id }}"
+        alert_name: "{{ event.alerts[0].rule.name }}"
+        action_taken: "{{ steps.call_remediation_api.output.data.status }}"
+        remediation_id: "{{ steps.call_remediation_api.output.data.remediation_id }}"

@@ -240,6 +240,12 @@ echo "[Workshop] ✓ Workshop assets downloaded to $WORKSHOP_ASSETS_DIR"
 
 echo "[Workshop] Setting up data generator..."
 
+# Install jq for JSON processing in scripts
+if ! command -v jq &> /dev/null; then
+  echo "[Workshop] Installing jq..."
+  apt-get install -y jq
+fi
+
 # Install Python dependencies (use python3 -m pip to avoid cwd issues)
 echo "[Workshop] Installing Python dependencies..."
 cd /tmp  # Ensure we're in a safe directory
