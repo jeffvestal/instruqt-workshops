@@ -6,10 +6,10 @@ title: The AI 'Assembly Line'
 teaser: Orchestrate multiple AI agents in a generator-critic-remediator pattern
 tabs:
 - id: kkmk81byp0bq
-  title: Kibana
+  title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
-  path: /app/management/kibana/workflows
+  path: /app/workflows
   port: 30001
 - id: 4yynyg92q4pw
   title: Agent Builder

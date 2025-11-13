@@ -6,10 +6,10 @@ title: 'The ''Full Circle'': AI Agent Tools'
 teaser: Give an AI agent a workflow as a tool to perform complex operations
 tabs:
 - id: vtbs6dxl9ui9
-  title: Kibana
+  title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
-  path: /app/management/kibana/workflows
+  path: /app/workflows
   port: 30001
 - id: aovug3gwcqds
   title: Agent Builder
@@ -95,49 +95,74 @@ steps:
     with:
       message: |
         Triage Report for {{ inputs.service_name }}:
-        - P95 Latency is {{ steps.get_latency.response.aggregations.p95_latency.values["95.0"] }} ms.
-        - Found {{ steps.get_error_logs.response.hits.total.value }} error logs.
-        - Sample Error: {{ steps.get_error_logs.response.hits.hits[0]._source.log.message }}
+        - P95 Latency is {{ steps.get_latency.output.aggregations.p95_latency.values["95.0"] }} ms.
+        - Found {{ steps.get_error_logs.output.hits.total.value }} error logs.
+        - Sample Error: {{ steps.get_error_logs.output.hits.hits[0]._source.log.message }}
 ```
 
 3. **Save** this workflow. Do NOT run it yet.
 
 ## Part 2: Test the Workflow Manually
 
-Before giving it to the agent, let's verify it works:
+Before creating the tool, let's verify the workflow works:
 
 1. Click **"Run"** on the workflow.
 2. For `service_name`, enter: `payment-service`
 3. Observe the three steps execute.
 4. Check the `format_triage_report` output—you should see latency stats and error counts.
 
-## Part 3: Give the Agent its "Tool"
+## Part 3: Create the Workflow Tool
 
-Now we'll attach this workflow to the `sre_triage_bot` agent that was created during setup.
+Now we need to create a **Tool** that wraps this workflow. Tools are what agents use to interact with workflows.
 
-1. In Kibana, go to the menu and find **Agent Builder** (under AI & Machine Learning).
-2. Click on **"Agents"** and find `sre_triage_bot`.
-3. Click **"Edit"**.
-4. Scroll down to **"Tools"** and click **"Add tool"**.
-5. Select **"Workflow"** as the tool type.
-6. From the **Workflow** dropdown, select your `triage_service_incident` workflow.
-7. The `service_name` input should appear automatically.
-8. Click **"Save"** to save the tool, then **"Save"** again to save the agent.
+1. Click on the [button label="Agent Builder"](tab-1) tab
+2. Click on **"Manage Tools"** (under the text chat box).
+3. Click **"New tool"** (top right).
+4. Configure the tool:
+   - ** Type**: Select **"Workflow"**
+   - **Tool ID**: `triage_service_incident`
+   - **Description**: "Queries observability data for service triage"
+   - **Workflow**: Select `triage_service_incident` from the dropdown
+   - The `service_name` input parameter should appear automatically
+5. Click **"Save"** to create the tool.
 
-## Part 4: Run the "Full Circle"
+You've now created a reusable tool that agents can use!
 
-1. At the top of the Agent Builder screen, click the **"Chat"** tab.
+## Part 4: Attach the Tool to the Agent
+
+Now we'll attach this tool to the `sre_triage_bot` agent that was created during setup.
+
+1. Still in **Agent Builder**, click on **"Agents"** (in top description).
+    ![CleanShot 2025-11-12 at 12.25.56@2x.png](../assets/CleanShot%202025-11-12%20at%2012.25.56%402x.png)
+2. Find `SRE Triage Bot` and click ✏️ (edit).
+    ![CleanShot 2025-11-12 at 12.28.09@2x.png](../assets/CleanShot%202025-11-12%20at%2012.28.09%402x.png)
+3. Click on the **"Tools"** section at the top.
+4. Click **"Add tool"**.
+5. From the tool dropdown, select `triage_service_incident` (the tool you just created).
+    ![CleanShot 2025-11-12 at 12.30.03@2x.png](../assets/CleanShot%202025-11-12%20at%2012.30.03%402x.png)
+6. Click **"Save"** to save the agent configuration.
+
+The agent now has access to your workflow through the tool!
+
+## Part 5: Run the "Full Circle"
+
+1. On the line for `SRE Triage Bot` click on the 💬 (chat) bubble to start a chat using this bot.
+    ![CleanShot 2025-11-12 at 12.30.57@2x.png](../assets/CleanShot%202025-11-12%20at%2012.30.57%402x.png)
 2. In the chat window, type:
 
    ```
    Hey, can you please run triage on the "payment-service"?
    ```
+    ![CleanShot 2025-11-12 at 12.32.32@2x.png](../assets/CleanShot%202025-11-12%20at%2012.32.32%402x.png)
 
 3. **Observe:**
-   * The agent will respond that it is "using a tool."
+   * The agent will respond that it is "Thinking" or other such comments
    * In the background, it just triggered your workflow and passed it `payment-service` as the input.
    * It will get the formatted "Triage Report" message back from the workflow.
    * It will then present this data to you in natural language.
+
+Click on the `>` next to `Thinking Completed` to expand the full "thinking" stream the agent used
+    ![CleanShot 2025-11-12 at 12.33.10@2x.png](../assets/CleanShot%202025-11-12%20at%2012.33.10%402x.png)
 
 You have closed the loop. The AI is now a "conversational front-end" for your complex automation.
 

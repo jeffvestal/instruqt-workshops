@@ -25,5 +25,5 @@ steps:
   - name: print_location
     type: console
     with:
-      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.response.data.city }}, {{ steps.get_geolocation.response.data.country }}."
+      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.output.data.city }}, {{ steps.get_geolocation.output.data.country }}."
 

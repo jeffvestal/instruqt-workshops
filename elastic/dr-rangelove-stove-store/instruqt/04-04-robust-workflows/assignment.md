@@ -6,10 +6,10 @@ title: 'Making it Robust: Logic & Error Handling'
 teaser: Add retry logic and conditional branching to workflows
 tabs:
 - id: zfzdafxse1cd
-  title: Kibana
+  title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
-  path: /app/management/kibana/workflows
+  path: /app/workflows
   port: 30001
 - id: xtx0jr9h5wu2
   title: Terminal
@@ -59,11 +59,15 @@ Replace your *entire* `print_location` step with this:
   - name: print_location
     type: console
     with:
-      message: | # <-- Use | for multi-line messages
-        {% if steps.get_geolocation.response.data.countryCode == "US" %}
-        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.data.city }}.
+      message: >- # <-- Use >- to avoid extra newlines
+        {% if steps.get_geolocation.output.data.status == "success" %}
+          {% if steps.get_geolocation.output.data.countryCode == "US" %}
+          🇺🇸 This is a United States-based IP from {{ steps.get_geolocation.output.data.city }}.
+          {% else %}
+          🌍 This is an international IP from {{ steps.get_geolocation.output.data.country }}.
+          {% endif %}
         {% else %}
-        🌍 This is an international IP from {{ steps.get_geolocation.response.data.country }}.
+        This IP could not be geolocated (private or unknown range).
         {% endif %}
 ```
 
@@ -74,16 +78,17 @@ This logic block checks the `countryCode` from the API response and changes the 
 1. **Save** your workflow.
 2. **Test 1 (The "US" path):**
    * **Run** with `ip_address`: `8.8.8.8`
-   * **Check output:** `🇺🇸 This is a domestic IP...`
+   * **Check output:** `🇺🇸 This is a United States-based IP...`
 
 3. **Test 2 (The "International" path):**
-   * **Run** with `ip_address`: `1.1.1.1`
+   * **Run** with `ip_address`: `81.2.69.142` (European - United Kingdom)
    * **Check output:** `🌍 This is an international IP...`
+   * Or try `114.114.114.114` (Asian - China) for another international example
 
 4. **Test 3 (The "Private IP" path):**
    * **Run** with `ip_address`: `10.0.0.1` (This is a private IP)
    * **Observe:** The `get_geolocation` step will succeed (HTTP 200), but the API returns `status: "fail"` in the response data with no city/country fields
-   * You'll see the international path with empty country value because the API returns `status: fail` for private IPs
+   * You'll see: `This IP could not be geolocated (private or unknown range).`
 
 You've built a workflow that can make decisions and handle errors!
 

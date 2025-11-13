@@ -96,6 +96,18 @@ source /opt/workshops/elastic-start.sh
 # setup openai
 source /opt/workshops/llm-key.sh
 
+####################################################################### CONFIGURE KIBANA
+
+echo "[Workshop] Configuring Kibana publicBaseUrl..."
+# Set publicBaseUrl for proper Agent Builder and workflow callbacks
+kubectl patch kibana kibana -n default --type=merge -p '{
+  "spec": {
+    "config": {
+      "server.publicBaseUrl": "http://kubernetes-vm:30001"
+    }
+  }
+}' 2>/dev/null || echo "[Workshop] ⚠️  Could not patch Kibana config (may not be needed)"
+
 ####################################################################### WAIT FOR KIBANA AND ENABLE WORKFLOWS FEATURE FLAG
 
 echo "[Workshop] Waiting for Kibana to be ready..."
@@ -465,13 +477,15 @@ rm -f "$LAST_BODY_FILE"
 
 # 4. Start live data sprayer in background
 echo "[Workshop] Starting live data sprayer..."
-nohup PYTHONUNBUFFERED=1 python3 -u data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &
+PYTHONUNBUFFERED=1 nohup python3 -u data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &
 DATA_SPRAYER_PID=$!
 sleep 1  # Give it a moment to start
 if ps -p $DATA_SPRAYER_PID > /dev/null 2>&1; then
 echo "[Workshop] ✓ Live data sprayer started (PID: ${DATA_SPRAYER_PID})"
 else
-  echo "[Workshop] ⚠️  Warning: Live data sprayer may have failed to start (check /var/log/data-sprayer.log)"
+  echo "[Workshop] ⚠️  Warning: Live data sprayer failed to start"
+  echo "[Workshop] Last 20 lines of /var/log/data-sprayer.log:"
+  tail -20 /var/log/data-sprayer.log 2>/dev/null || echo "  (log file not found)"
 fi
 
 ####################################################################### CREATE AGENTS

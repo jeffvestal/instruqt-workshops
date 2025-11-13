@@ -62,5 +62,5 @@ steps:
         workflow_name: "self_healing_aiops"
         service: "{{ trigger.data.context.hits[0]._source.service.name }}"
         alert_id: "{{ trigger.data.alert.id }}"
-        action_taken: "{{ steps.call_remediation_api.response.status }}"
+        action_taken: "{{ steps.call_remediation_api.output.response.status }}"
 

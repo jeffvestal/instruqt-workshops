@@ -6,10 +6,10 @@ title: 'Capstone: Build a ''Self-Healing'' Workflow'
 teaser: Create an alert-triggered workflow that uses AI and calls external APIs
 tabs:
 - id: yn8vsudeseix
-  title: Kibana
+  title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
-  path: /app/management/kibana/workflows
+  path: /app/workflows
   port: 30001
 - id: kzygfchylyuh
   title: Alerts
@@ -28,7 +28,7 @@ enhanced_loading: null
 
 # 📖 Challenge 7: Capstone - Build a "Self-Healing" AIOps Workflow
 
-This is the "boss level." We will combine *everything* we've learned to build a "self-healing" workflow.
+We will combine what we've learned to build a "self-healing" workflow.
 
 **The Scenario:**
 
@@ -117,7 +117,7 @@ steps:
         workflow_name: "self_healing_aiops"
         service: "{{ trigger.data.context.hits[0]._source.service.name }}"
         alert_id: "{{ trigger.data.alert.id }}"
-        action_taken: "{{ steps.call_remediation_api.response.status }}"
+        action_taken: "{{ steps.call_remediation_api.output.response.status }}"
 ```
 
 ## 3. Save and Watch

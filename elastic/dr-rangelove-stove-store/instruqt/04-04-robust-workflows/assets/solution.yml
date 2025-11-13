@@ -29,10 +29,14 @@ steps:
   - name: print_location
     type: console
     with:
-      message: |
-        {% if steps.get_geolocation.response.data.countryCode == "US" %}
-        🇺🇸 This is a domestic IP from {{ steps.get_geolocation.response.data.city }}.
+      message: >-
+        {% if steps.get_geolocation.output.data.status == "success" %}
+          {% if steps.get_geolocation.output.data.countryCode == "US" %}
+          🇺🇸 This is a United States-based IP from {{ steps.get_geolocation.output.data.city }}.
+          {% else %}
+          🌍 This is an international IP from {{ steps.get_geolocation.output.data.country }}.
+          {% endif %}
         {% else %}
-        🌍 This is an international IP from {{ steps.get_geolocation.response.data.country }}.
+        This IP could not be geolocated (private or unknown range).
         {% endif %}
 

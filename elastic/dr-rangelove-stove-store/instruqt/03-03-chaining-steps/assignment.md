@@ -6,10 +6,10 @@ title: 'Chaining Steps: From Input to Output'
 teaser: Build a workflow that chains HTTP calls with data transformation
 tabs:
 - id: 0qyc30nxhg1y
-  title: Kibana
+  title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
-  path: /app/management/kibana/workflows
+  path: /app/workflows
   port: 30001
 - id: wirjnngkijv3
   title: Terminal
@@ -86,12 +86,12 @@ Add this *below* your `get_geolocation` step (inside the `steps` array):
   - name: print_location
     type: console
     with:
-      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.response.data.city }}, {{ steps.get_geolocation.response.data.country }}."
+      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.output.data.city }}, {{ steps.get_geolocation.output.data.country }}."
 ```
 
 **This is the most important concept:**
 
-* `steps.get_geolocation.response.data.city`: We are accessing the `response` of the step named `get_geolocation` and digging into its JSON structure (the actual data is nested under `response.data`).
+* `steps.get_geolocation.output.data.city`: We are accessing the `output` of the step named `get_geolocation` and digging into its JSON structure (the actual data is nested under `output.data`).
 
 ## 5. Run and Verify
 
@@ -99,7 +99,9 @@ Add this *below* your `get_geolocation` step (inside the `steps` array):
 2. **Run** it.
 3. For the `ip_address` input, use `8.8.8.8`.
 4. Let it run, then click the `print_location` step.
-5. Check the **Output** tab. You should see: `"IP 8.8.8.8 is in Mountain View, United States."`
+5. Check the **Output** tab. You should see: `"IP 8.8.8.8 is in Ashburn, United States."`
+    > [!NOTE]
+    > The exact city name may differ
 
 You just chained two steps!
 

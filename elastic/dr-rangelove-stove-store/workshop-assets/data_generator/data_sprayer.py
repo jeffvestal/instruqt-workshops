@@ -220,7 +220,7 @@ class DataSprayer:
                         }
                     
                     f.write(json.dumps(doc) + "\n")
-                
+        
                 processed += 1
                 if processed % step == 0:
                     pct = processed * 100.0 / total
@@ -595,40 +595,40 @@ class DataSprayer:
         for task in asyncio.as_completed(tasks):
             success, failed_count, end_line_num = await task
             completed_batches += 1
-            indexed_total += success
+                        indexed_total += success
             progress_dict["indexed_total"] = indexed_total  # Update for heartbeat
             
             if failed_count > 0:
                 print(f"\n⚠️  Warning: Batch {completed_batches}/{total_batches}: {failed_count} documents failed to index")
-            
-            # Update progress
-            ingest_progress = {
+                        
+                        # Update progress
+                        ingest_progress = {
                 "last_line": end_line_num,
-                "total_lines": total_lines,
-                "indexed_total": indexed_total,
-                "last_updated": datetime.now(timezone.utc).isoformat()
-            }
-            self._save_progress(ingest_progress_file, ingest_progress)
-            
+                            "total_lines": total_lines,
+                            "indexed_total": indexed_total,
+                            "last_updated": datetime.now(timezone.utc).isoformat()
+                        }
+                        self._save_progress(ingest_progress_file, ingest_progress)
+                        
             # Progress reporting with batch number
             progress_pct = (indexed_total / total_lines) * 100
-            elapsed = (datetime.now() - start_time).total_seconds()
-            rate = indexed_total / elapsed if elapsed > 0 else 0
-            remaining = total_lines - indexed_total
-            eta_seconds = remaining / rate if rate > 0 else 0
-            eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
-            
+                        elapsed = (datetime.now() - start_time).total_seconds()
+                        rate = indexed_total / elapsed if elapsed > 0 else 0
+                        remaining = total_lines - indexed_total
+                        eta_seconds = remaining / rate if rate > 0 else 0
+                        eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+                        
             # Print batch completion message (new line for logs)
             print(f"[Batch {completed_batches}/{total_batches}] Indexed {indexed_total:,}/{total_lines:,} docs ({progress_pct:.2f}%) | "
                   f"Rate: {rate:.0f} docs/sec | ETA: {eta_str}")
             
             # Also update the inline progress
-            print(f"\rIngestion: {progress_pct:.2f}% | "
-                  f"{indexed_total:,}/{total_lines:,} docs | "
-                  f"Rate: {rate:.0f} docs/sec | "
-                  f"ETA: {eta_str}",
-                  end="", flush=True)
-        
+                        print(f"\rIngestion: {progress_pct:.2f}% | "
+                              f"{indexed_total:,}/{total_lines:,} docs | "
+                              f"Rate: {rate:.0f} docs/sec | "
+                              f"ETA: {eta_str}",
+                              end="", flush=True)
+                        
         # Stop heartbeat
         ingest_heartbeat_running = False
         hb_thread.join(timeout=0.1)
@@ -780,19 +780,19 @@ async def main():
         if ES_CLOUD_ID and (ES_CLOUD_ID.startswith("https://") or ES_CLOUD_ID.startswith("http://")):
             # URL-based connection (http:// or https://)
             print(f"[DEBUG] Using URL-based connection: {ES_CLOUD_ID}")
-            es_client = AsyncElasticsearch(
-                hosts=[ES_CLOUD_ID],
-                api_key=ES_API_KEY,
+        es_client = AsyncElasticsearch(
+            hosts=[ES_CLOUD_ID],
+            api_key=ES_API_KEY,
                 request_timeout=300,  # Increased for large parallel batches
                 max_retries=3,
                 retry_on_timeout=True
-            )
-        else:
-            # Traditional Cloud ID connection
+        )
+    else:
+        # Traditional Cloud ID connection
             print(f"[DEBUG] Using Cloud ID-based connection")
-            es_client = AsyncElasticsearch(
-                cloud_id=ES_CLOUD_ID,
-                api_key=ES_API_KEY,
+        es_client = AsyncElasticsearch(
+            cloud_id=ES_CLOUD_ID,
+            api_key=ES_API_KEY,
                 request_timeout=300,  # Increased for large parallel batches
                 max_retries=3,
                 retry_on_timeout=True
@@ -842,8 +842,8 @@ async def main():
         sys.exit(1)
     finally:
         if es_client:
-            await es_client.close()
-            print("Connection closed")
+        await es_client.close()
+        print("Connection closed")
 
 
 if __name__ == "__main__":

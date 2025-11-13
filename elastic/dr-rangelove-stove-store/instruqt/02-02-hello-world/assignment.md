@@ -87,7 +87,8 @@ steps:
 You will see the workflow run in real-time.
 
 * Click on the `print_greeting` step.
-* In the **Output** tab, you should see your message: `"Hello, Alex!"`
+* In the **Output** tab, you should see your message: `"Hello, Alex!"` (or whatever name you enter!)
+![CleanShot 2025-11-12 at 09.17.22@2x.png](../assets/CleanShot%202025-11-12%20at%2009.17.22%402x.png)
 
 You've built and run your first workflow!
 
