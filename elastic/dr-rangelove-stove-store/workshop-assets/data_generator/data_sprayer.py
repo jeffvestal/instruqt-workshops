@@ -780,19 +780,19 @@ async def main():
         if ES_CLOUD_ID and (ES_CLOUD_ID.startswith("https://") or ES_CLOUD_ID.startswith("http://")):
             # URL-based connection (http:// or https://)
             print(f"[DEBUG] Using URL-based connection: {ES_CLOUD_ID}")
-        es_client = AsyncElasticsearch(
-            hosts=[ES_CLOUD_ID],
-            api_key=ES_API_KEY,
+            es_client = AsyncElasticsearch(
+                hosts=[ES_CLOUD_ID],
+                api_key=ES_API_KEY,
                 request_timeout=300,  # Increased for large parallel batches
                 max_retries=3,
                 retry_on_timeout=True
-        )
-    else:
-        # Traditional Cloud ID connection
+            )
+        else:
+            # Traditional Cloud ID connection
             print(f"[DEBUG] Using Cloud ID-based connection")
-        es_client = AsyncElasticsearch(
-            cloud_id=ES_CLOUD_ID,
-            api_key=ES_API_KEY,
+            es_client = AsyncElasticsearch(
+                cloud_id=ES_CLOUD_ID,
+                api_key=ES_API_KEY,
                 request_timeout=300,  # Increased for large parallel batches
                 max_retries=3,
                 retry_on_timeout=True
@@ -842,8 +842,8 @@ async def main():
         sys.exit(1)
     finally:
         if es_client:
-        await es_client.close()
-        print("Connection closed")
+            await es_client.close()
+            print("Connection closed")
 
 
 if __name__ == "__main__":
