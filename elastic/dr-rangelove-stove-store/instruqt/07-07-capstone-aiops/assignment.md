@@ -106,7 +106,7 @@ steps:
         on-failure:
           retry:
             max-attempts: 2
-      
+
       - name: log_action
         type: console
         with:
@@ -170,8 +170,7 @@ Go to Kibana **Dev Tools > Console** and run:
 ```
 GET workflow_actions-*/_search
 {
-  "size": 10,
-  "sort": [{"timestamp": "desc"}]
+  "size": 10
 }
 ```
 
