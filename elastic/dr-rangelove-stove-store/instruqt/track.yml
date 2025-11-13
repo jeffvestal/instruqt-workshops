@@ -1,6 +1,8 @@
-slug: dr-rangelove-stove-store
-id: bmusmpbufrmz
-title: 'From Findings to Outcomes: Automating with Elastic Workflows & AI'
+slug: workflows-agents-alerts
+id: tvu7yvg32vsk
+title: 'From Findings to Outcomes: Automating with Elastic Workflows & Agents'
+teaser: Transform alerts into automated actions. Build workflows that chain steps,
+  orchestrate Agent Builder agents, and create self-healing systems—all within Elastic.
 description: Learn to build, test, and orchestrate automated workflows and AI agents
   in Elastic. Build a self-healing system from scratch.
 icon: ""
@@ -26,5 +28,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "17872061137584912319"
+checksum: "10138979401211065445"
 enhanced_loading: false
