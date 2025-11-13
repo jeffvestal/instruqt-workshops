@@ -15,7 +15,7 @@ tabs:
   title: Docs - Kibana Workflows
   type: website
   url: https://www.elastic.co/guide/en/kibana/current/workflows.html
-difficulty: beginner
+difficulty: basic
 timelimit: 600
 enhanced_loading: null
 ---
