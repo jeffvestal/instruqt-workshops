@@ -28,18 +28,19 @@ enhanced_loading: null
 
 # 📖 Challenge 6: The "Full Circle" - The Observability Triage Bot
 
-So far, our workflows have called AI. Now, let's make an **AI call our workflow**.
+So far, our workflows have called Agent Builder Agents. Now, let's make an **Agent call our workflow**.
 
-This "full circle" integration is the key concept. We will give an AI Agent a "Workflow Tool" to run automation on its behalf.
+This "full circle" integration is the key concept. We will give an Agent Builder Agent a "Workflow Tool" to run automation on its behalf.
 
-**Goal:** We will build an "SRE Triage Bot." When we ask it to "triage a service," it will run a workflow to pull logs and metrics from our `o11y-heartbeat` index, then give us a summary.
+**Goal:** We will build an "SRE Triage Bot."  When we ask it to "triage a service," it will run a workflow to pull logs and metrics from our `o11y-heartbeat` index, then give us a summary.
 
 ## Part 1: Build the Workflow "Tool"
 
-An AI Agent can't query Elasticsearch on its own. We'll build a workflow that does the "dirty work" of data retrieval from our index.
+We'll build a workflow that handles data retrieval from our index.
 
-1. Create a new workflow named `triage_service_incident`.
-2. Paste this entire workflow. **Read it carefully.** It uses a new step type: `elasticsearch.search`, and queries our custom `o11y-heartbeat` index.
+1. Click on **Create a new workflow**
+2. Paste this entire workflow.
+   - **Read it carefully.** It uses a new step type: `elasticsearch.search`, and queries our custom `o11y-heartbeat` index.
 
 ```yaml
 version: "1"
@@ -71,8 +72,6 @@ steps:
                 http.status_code:
                   gte: 500
       size: 5
-      sort:
-        - "@timestamp": "desc"
 
   # Get the P95 latency
   - name: get_latency
@@ -102,15 +101,19 @@ steps:
 
 3. **Save** this workflow. Do NOT run it yet.
 
+---
 ## Part 2: Test the Workflow Manually
 
 Before creating the tool, let's verify the workflow works:
 
-1. Click **"Run"** on the workflow.
+1. Click ▶️ (run) on the workflow.
 2. For `service_name`, enter: `payment-service`
+    ![CleanShot 2025-11-13 at 14.27.22@2x.png](../assets/CleanShot%202025-11-13%20at%2014.27.22%402x.png)
 3. Observe the three steps execute.
 4. Check the `format_triage_report` output—you should see latency stats and error counts.
+    ![CleanShot 2025-11-13 at 14.29.08@2x.png](../assets/CleanShot%202025-11-13%20at%2014.29.08%402x.png)
 
+---
 ## Part 3: Create the Workflow Tool
 
 Now we need to create a **Tool** that wraps this workflow. Tools are what agents use to interact with workflows.
@@ -119,15 +122,16 @@ Now we need to create a **Tool** that wraps this workflow. Tools are what agents
 2. Click on **"Manage Tools"** (under the text chat box).
 3. Click **"New tool"** (top right).
 4. Configure the tool:
-   - ** Type**: Select **"Workflow"**
+   - **Type**: Select **"Workflow"**
    - **Tool ID**: `triage_service_incident`
-   - **Description**: "Queries observability data for service triage"
-   - **Workflow**: Select `triage_service_incident` from the dropdown
+   - **Description**: `Queries observability data for service triage`
+   - **Workflow** (Configuration Section): Select `triage_service_incident` from the dropdown
    - The `service_name` input parameter should appear automatically
 5. Click **"Save"** to create the tool.
 
 You've now created a reusable tool that agents can use!
 
+---
 ## Part 4: Attach the Tool to the Agent
 
 Now we'll attach this tool to the `sre_triage_bot` agent that was created during setup.
@@ -144,6 +148,7 @@ Now we'll attach this tool to the `sre_triage_bot` agent that was created during
 
 The agent now has access to your workflow through the tool!
 
+---
 ## Part 5: Run the "Full Circle"
 
 1. On the line for `SRE Triage Bot` click on the 💬 (chat) bubble to start a chat using this bot.
@@ -154,8 +159,9 @@ The agent now has access to your workflow through the tool!
    Hey, can you please run triage on the "payment-service"?
    ```
     ![CleanShot 2025-11-12 at 12.32.32@2x.png](../assets/CleanShot%202025-11-12%20at%2012.32.32%402x.png)
+3. Click *return* on your keyboard or click the ⬆️ button to send your question.
 
-3. **Observe:**
+4. **Observe:**
    * The agent will respond that it is "Thinking" or other such comments
    * In the background, it just triggered your workflow and passed it `payment-service` as the input.
    * It will get the formatted "Triage Report" message back from the workflow.
@@ -164,6 +170,6 @@ The agent now has access to your workflow through the tool!
 Click on the `>` next to `Thinking Completed` to expand the full "thinking" stream the agent used
     ![CleanShot 2025-11-12 at 12.33.10@2x.png](../assets/CleanShot%202025-11-12%20at%2012.33.10%402x.png)
 
-You have closed the loop. The AI is now a "conversational front-end" for your complex automation.
+You have closed the loop. The Agent is now a "conversational front-end" for your complex automation.
 
 **Click "Next" for the final capstone challenge.**

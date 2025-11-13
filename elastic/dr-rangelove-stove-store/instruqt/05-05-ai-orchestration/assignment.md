@@ -40,8 +40,9 @@ Let's build a workflow that uses all three.
 
 ## 1. Create a New Workflow
 
-1. Create a new workflow named `ai_content_chain`.
-2. Paste this as your starting block. Our `input` is just a `topic`.
+1. Click on **Create a new workflow**
+2. Paste this as your starting block (replace the placeholder text).
+   - Our `input` is just a `topic`.
 
 ```yaml
 version: "1"
@@ -119,28 +120,114 @@ Finally, let's check the "spun" draft and print a final report.
   - name: final_report
     type: console
     with:
-      message: |
+      message: >-
+        {% assign orig = steps.first_check.output.response.message | json_parse %}
+        {% assign fin = steps.final_check.output.response.message | json_parse %}
+
         ---
         Original Draft: {{ steps.draft_content.output.response.message }}
-        Original Sentiment: {{ steps.first_check.output.response.message.sentiment }}
+        Original Sentiment: {{ orig.sentiment }}
         ---
         Revised Draft: {{ steps.remediation_spin.output.response.message }}
-        Final Sentiment: {{ steps.final_check.output.response.message.sentiment }}
+        Final Sentiment: {{ fin.sentiment }}
         ---
-
-        {% if steps.final_check.output.response.message.sentiment == "POSITIVE" %}
-        ✅ Content is approved and ready to send.
+        {% if fin.sentiment == "POSITIVE" %}
+        ✅ PASSED: Content sentiment is positive after remediation.
         {% else %}
         ❌ FAILED: Content still has negative sentiment after remediation.
         {% endif %}
 ```
 
+<details>
+  <summary>Click here to expand full workflow YAML</summary>
+
+  <pre><code>
+version: "1"
+name: ai_content_chain
+description: "Orchestrate AI agents to generate, analyze, and improve content"
+enabled: true
+
+inputs:
+  - name: topic
+    type: string
+    required: true
+    description: "The topic for the press release"
+
+triggers:
+  - type: manual
+
+steps:
+  - name: draft_content
+    type: kibana.post_agent_builder_converse
+    with:
+      agent_id: agent_content_creator
+      input: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
+
+  - name: first_check
+    type: kibana.post_agent_builder_converse
+    with:
+      agent_id: agent_sentiment_analyzer
+      input: "{{ steps.draft_content.output.response.message }}"
+
+  - name: remediation_spin
+    type: kibana.post_agent_builder_converse
+    with:
+      agent_id: agent_pr_spin_specialist
+      input: |
+        The following draft was written:
+        "{{ steps.draft_content.output.response.message }}"
+
+        It was analyzed with this sentiment:
+        "{{ steps.first_check.output.response.message.sentiment }}"
+
+        Please revise this draft to have a strongly positive spin.
+
+  - name: final_check
+    type: kibana.post_agent_builder_converse
+    with:
+      agent_id: agent_sentiment_analyzer
+      input: "{{ steps.remediation_spin.output.response.message }}"
+
+  - name: final_report
+    type: console
+    with:
+      message: >-
+        {% assign orig = steps.first_check.output.response.message | json_parse %}
+        {% assign fin = steps.final_check.output.response.message | json_parse %}
+
+        ---
+        Original Draft: {{ steps.draft_content.output.response.message }}
+        Original Sentiment: {{ orig.sentiment }}
+        ---
+        Revised Draft: {{ steps.remediation_spin.output.response.message }}
+        Final Sentiment: {{ fin.sentiment }}
+        ---
+        {% if fin.sentiment == "POSITIVE" %}
+        ✅ PASSED: Content sentiment is positive after remediation.
+        {% else %}
+        ❌ FAILED: Content still has negative sentiment after remediation.
+        {% endif %}
+
+</code></pre>
+</details>
+
 ## 6. Run and Analyze
 
 1. **Save** your workflow.
 2. **Run** it.
-3. For the `topic`, enter something negative: `Our servers had an outage`.
-4. Run the workflow and inspect the `final_report` step. You'll see the full chain: the negative first draft, the "NEGATIVE" sentiment, the new "spun" draft, and (hopefully) the "POSITIVE" final sentiment.
+3. For the `topic`, enter something (in the `input Data` JSON) negative:
+    ```
+    Our servers had an outage
+    ```
+    ![CleanShot 2025-11-13 at 13.51.06@2x.png](../assets/CleanShot%202025-11-13%20at%2013.51.06%402x.png)
+4. Run the workflow click on each step to see what happens
+- `draft_conten` - The short status message is created based on your input.
+- `first_check` - the sentiment comes back `NEGATIVE` (assuming you put in the negative example).
+- `remediation_spin` - This agent puts a nice PR positive spin on a response that would be sent out after the issue is remediated.
+- `final_check` - We ensure the spin was positive.
+- `final_report` - We a PR friendly incident report
+
+![CleanShot 2025-11-13 at 14.11.45@2x.png](../assets/CleanShot%202025-11-13%20at%2014.11.45%402x.png)
 
 You just built an AI assembly line!
 

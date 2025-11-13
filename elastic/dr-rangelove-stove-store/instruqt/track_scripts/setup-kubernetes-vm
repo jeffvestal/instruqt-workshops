@@ -96,6 +96,40 @@ source /opt/workshops/elastic-start.sh
 # setup openai
 source /opt/workshops/llm-key.sh
 
+####################################################################### WAIT FOR K3S API
+
+# Ensure k3s API is up before any kubectl commands
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+wait_for_api() {
+  local timeout="$1"
+  echo "[k3s] Waiting for API server readiness (timeout ${timeout}s)..."
+  for i in $(seq 1 "$timeout"); do
+    if kubectl get --raw='/readyz' >/dev/null 2>&1; then
+      echo "[k3s] API server is responding"
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+if ! wait_for_api 300; then
+  echo "[k3s] API not ready after first wait; restarting k3s once..."
+  sudo systemctl restart k3s || true
+  sleep 5
+  if ! wait_for_api 180; then
+    echo "[k3s] ERROR: API server not ready after restart"
+    sudo systemctl status k3s --no-pager || true
+    sudo journalctl -u k3s --no-pager -n 200 || true
+    exit 1
+  fi
+fi
+
+echo "[k3s] Waiting for nodes to become Ready..."
+kubectl wait --for=condition=Ready node --all --timeout=300s
+kubectl get nodes -o wide
+
 ####################################################################### CONFIGURE KIBANA
 
 echo "[Workshop] Configuring Kibana publicBaseUrl..."
@@ -292,6 +326,16 @@ if [ $? -ne 0 ]; then
 fi
 
 # 2. Backfill historical data (using parallel generation)
+echo "[Workshop] Optimizing index settings for bulk..."
+curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+     -H "Content-Type: application/json" \
+     -X PUT "${ELASTICSEARCH_URL}/o11y-heartbeat/_settings" -d '{
+  "index": {
+    "refresh_interval": "-1",
+    "number_of_replicas": "0"
+  }
+}' >/dev/null || true
+
 echo "[Workshop] Backfilling ${BACKFILL_DAYS} days of data..."
 echo "[Workshop] (This should take ~15-20 seconds with parallel generation)"
 PYTHONUNBUFFERED=1 python3 -u data_sprayer.py --backfill
@@ -314,6 +358,15 @@ if [ $? -eq 0 ] && [ -n "$COUNT_RESPONSE" ]; then
 else
   echo "[Workshop] ⚠️  Warning: Could not verify data load (curl failed)"
 fi
+
+echo "[Workshop] Restoring index settings after bulk..."
+curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+     -H "Content-Type: application/json" \
+     -X PUT "${ELASTICSEARCH_URL}/o11y-heartbeat/_settings" -d '{
+  "index": {
+    "refresh_interval": "1s"
+  }
+}' >/dev/null || true
 
 ####################################################################### CREATE LLM CONNECTOR
 

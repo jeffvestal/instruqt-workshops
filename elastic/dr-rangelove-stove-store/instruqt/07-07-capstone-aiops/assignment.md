@@ -21,6 +21,12 @@ tabs:
   title: Terminal
   type: terminal
   hostname: host-1
+- id: 4j7drsblrwxf
+  title: Kibana - Discover
+  type: service
+  hostname: kubernetes-vm
+  path: /app/discover
+  port: 30001
 difficulty: advanced
 timelimit: 1800
 enhanced_loading: null
@@ -30,21 +36,25 @@ enhanced_loading: null
 
 We will combine what we've learned to build a "self-healing" workflow.
 
-**The Scenario:**
+## Scenario setup
 
-Our data sprayer is injecting live data with periodic anomalies. Our alert (`latency-threshold-alert-critical`) fires when latency spikes are detected.
+A background data sprayer has been running since the start of the workshop. It continuously generates synthetic observability data for several demo services (e.g., payment-service, order-processor), and periodically injects short “incident-level” anomalies (spikes in latency and errors). This creates realistic conditions to test alerting and automation without relying on external systems.
 
-We will build a workflow that **automatically triggers** from that alert, uses AI to get a remediation plan, and calls our Mock API to "remediate" the faulty service.
+We’ve already created a threshold alert rule: `latency-threshold-alert-critical`. When the data sprayer injects a latency spike, this alert fires automatically.
 
+In this challenge, you will build a workflow that:
+- Triggers automatically from that alert
+- Uses an Agent Builder agent to decide on a remediation action
+- Calls a Mock Remediation API to “restart” the impacted service
+- Log the outcome for auditing
+
+---
 ## 1. Create the Workflow
 
 1. Create a new workflow named `self_healing_aiops`.
-2. Paste this starting block. **Look at the `triggers` block!**
+2. Paste this starting block.
 
-   * `type: alert`: This is the new trigger type.
-   * This workflow will now run *automatically* every time any alert fires (we'll filter by alert name in the steps).
-
-```yaml
+ ```yaml
 version: "1"
 name: self_healing_aiops
 description: "Self-healing workflow triggered by alerts"
@@ -56,6 +66,12 @@ triggers:
   - type: alert
 ```
 
+ **Notice the `triggers` block**
+   * `type: alert`: This is the new trigger type.
+   * This workflow will now run *automatically* every time any alert fires (we'll configure the alert to trigger this below).
+
+
+---
 ## 2. Add the Steps
 
 Now, paste this entire `steps` block below your `triggers`. Read each step's comments to see how it combines all our concepts.
@@ -121,65 +137,72 @@ steps:
   - name: log_to_elasticsearch
     type: elasticsearch.index
     with:
-      index: "workflow_actions-{{ now() | date('YYYY-MM-DD') }}"
+      index: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
       document:
-        timestamp: "{{ now() }}"
+        timestamp: "{{ execution.startedAt }}"
         workflow_name: "self_healing_aiops"
         alert_id: "{{ event.alerts[0].id }}"
         alert_name: "{{ event.alerts[0].rule.name }}"
         action_taken: "{{ steps.call_remediation_api.output.data.status }}"
+        remediation_id: "{{ steps.call_remediation_api.output.data.remediation_id }}"
 ```
 
-## 3. Save and Watch
+---
+## 3. Test the Alert Trigger
+The normal process now is to configure the Alert to trigger this workflow when the alert fires. We will do that below (optionally), but first lets test.
+1. Click the ▶️ (run) button for this `self_healing_aiops` workflow
+2. Select one of the alerts that has fired while we have been working on our labs
+  - If you don't see an alert, extend the timepicker to a wider range, 60 minutes for example.
+    ![CleanShot 2025-11-13 at 15.07.40@2x.png](../assets/CleanShot%202025-11-13%20at%2015.07.40%402x.png)
+3. Click **Run**
+4. Watch it execute step-by-step:
+   * `get_service_name` - parses service name from alert query
+   * `ai_analysis` - gets `{"remediation": "restart_service"}`
+   * `parse_ai_response` - extracts remediation action
+   * `check_remediation` - condition is `true`
+   * `call_remediation_api` - sends a POST to our mock server
+   * `log_action` - logs success message
+   * `log_to_elasticsearch` - writes the audit log
+  ![CleanShot 2025-11-13 at 15.10.40@2x.png](../assets/CleanShot%202025-11-13%20at%2015.10.40%402x.png)
 
-1. **Save** your workflow.
-2. Now... we wait. The data sprayer running in the background injects an anomaly every 60-90 seconds.
-3. In a **new Kibana tab**, go to **Observability > Alerts**.
-4. Set your time-picker to **"Last 15 minutes"**.
-5. Within a few minutes, you should see the `latency-threshold-alert-critical` fire for a service (e.g., `payment-service`).
+---
+## 4. Verify Remediation
 
-## 4. Watch the Magic
+In the [button label="Terminal"](tab-2)  tab, check the mock API logs:
 
-1. Go back to your **Workflows** tab.
-2. Click on your `self_healing_aiops` workflow.
-3. You will see a **new run** has *automatically started* (it may take a few seconds after the alert fires).
-4. Click the run to inspect it.
-5. Watch it execute step-by-step:
-   * `get_service_name` (parses service name from alert query)
-   * `ai_analysis` (gets `{"remediation": "restart_service"}`)
-   * `parse_ai_response` (extracts remediation action)
-   * `check_remediation` (condition is `true`)
-   * `call_remediation_api` (sends a POST to our mock server)
-   * `log_action` (logs success message)
-   * `log_to_elasticsearch` (writes the audit log)
-
-## 5. Verify Remediation
-
-In the **Terminal** tab, check the mock API logs:
-
-```bash
+```bash,run
 pm2 logs mock-api --lines 20
 ```
 
 You should see a log entry showing the remediation was triggered!
+![CleanShot 2025-11-13 at 15.28.13@2x.png](../assets/CleanShot%202025-11-13%20at%2015.28.13%402x.png)
 
-## 6. Check the Audit Log
+---
+## 5. Check the Audit Log
+Click on the [button label="Kibana - Discover"](tab-3) tab
+1. Click on the **Data view** drop down
+2. Click on **Create a data view**
+    ![CleanShot 2025-11-13 at 15.34.22@2x.png](../assets/CleanShot%202025-11-13%20at%2015.34.22%402x.png)
+3. type in `workflow_actions*` in the **Index Pattern** text box
+   - You should see one matching index under **Matching sources**
+    ![CleanShot 2025-11-13 at 15.37.05@2x.png](../assets/CleanShot%202025-11-13%20at%2015.37.05%402x.png)
+4. Click **Save data view to Kibana** on the bottom of the form
 
-Go to Kibana **Dev Tools > Console** and run:
+You should see one or more documents depending on how many times you ran
+1. Click on the document expand arrows
+![CleanShot 2025-11-13 at 15.40.31@2x.png](../assets/CleanShot%202025-11-13%20at%2015.40.31%402x.png)
+2. You'll see details of the logged workflow run
+    ![CleanShot 2025-11-13 at 15.41.20@2x.png](../assets/CleanShot%202025-11-13%20at%2015.41.20%402x.png)
 
-```
-GET workflow_actions-*/_search
-{
-  "size": 10
-}
-```
-
-You'll see your workflow's audit trail indexed in Elasticsearch!
-
+---
 ## 6. Enhance the Logging (Optional)
 
-The mock remediation API returns rich metadata. Update your `log_action` step to display it:
+The mock remediation API returns rich metadata but we are only capturing if it was successful or not.
 
+1. Click on the [button label="Kibana - Workflows"](tab-0) tab
+2. Click on `self_healing_aiops`
+3. Update your Step 3 `log_action` step to display more information:
 ```yaml
 - name: log_action
   type: console
@@ -191,27 +214,36 @@ The mock remediation API returns rich metadata. Update your `log_action` step to
       ⚡ Action: {{ steps.call_remediation_api.output.data.action }}
       ⏱️  Estimated Duration: {{ steps.call_remediation_api.output.data.details.estimated_duration }}
 ```
-
-Save and trigger another alert to see the enhanced output!
+4. Save and trigger another alert to see the enhanced output!
 
 ---
+## 7. Configure the Alert
+*This step is optional*
+Since we already tested our workflow, we know it works. But follow these steps to see how to configure the alert to trigger the workflow
 
-## Workshop Complete!
+1. Click the [button label="Alerts"](tab-0) tab
+2. Click `Status` and select `recovered` to see the previously recovered
+   - *note*: they have recovered because the lookback time range is shorter than the frequency which which we are injecting anomalies
+    ![CleanShot 2025-11-13 at 15.14.24@2x.png](../assets/CleanShot%202025-11-13%20at%2015.14.24%402x.png)
+3. Click on **Manage Rules** at the top right
+4. Click on the one alert - `	latency-threshold-alert-critical`
+5. Click **Actions** in the top right
+6. Click **Edit**
+    ![CleanShot 2025-11-13 at 15.16.33@2x.png](../assets/CleanShot%202025-11-13%20at%2015.16.33%402x.png)
+7. **Save** your workflow.
+8. Now... we wait. The data sprayer running in the background injects an anomaly every 60-90 seconds.
+9. In a **new Kibana tab**, go to **Observability > Alerts**.
+10. Set your time-picker to **"Last 15 minutes"**.
+11. Within a few minutes, you should see the `latency-threshold-alert-critical` fire for a service (e.g., `payment-service`).
+12. Scroll down to the **Actions** section and click on `Add action`
+    ![CleanShot 2025-11-13 at 15.17.38@2x.png](../assets/CleanShot%202025-11-13%20at%2015.17.38%402x.png)
+13. Click on **Workflows**
+14. In the **Select Worflows** drop down, select `self_healing_aiops`
+    ![CleanShot 2025-11-13 at 15.18.08@2x.png](../assets/CleanShot%202025-11-13%20at%2015.18.08%402x.png)
+15. Scroll down and click on **Save rule**
+    ![CleanShot 2025-11-13 at 15.19.21@2x.png](../assets/CleanShot%202025-11-13%20at%2015.19.21%402x.png)
 
-You have successfully built an end-to-end, "self-healing" automation that triggers from a real alert, uses AI to reason, takes external action, and logs its own results back into Elastic.
+The next time the alert fires, it will run your new workflow!
 
-### What You've Learned
-
-1. **Building Workflows**: Inputs, steps, chaining, error handling, conditionals.
-2. **AI Orchestration**: Multi-agent pipelines for generate-critique-remediate patterns.
-3. **Bidirectional Integration**: Workflows call agents, agents use workflows as tools.
-4. **AIOps**: Alert-triggered automation with AI-driven decision-making.
-
-### Next Steps
-
-* Explore ML-based anomaly detection (set `USE_ML_AD=true` and update `alert_ids` to `ml-anomaly-alert-critical`).
-* Add more sophisticated AI agents for multi-step reasoning.
-* Integrate with real remediation APIs (Kubernetes, cloud providers, ticketing systems).
-* Build approval workflows with Slack/Teams integrations.
-
-**Congratulations!** 🎉
+---
+Click **Next** to view a final wrap up

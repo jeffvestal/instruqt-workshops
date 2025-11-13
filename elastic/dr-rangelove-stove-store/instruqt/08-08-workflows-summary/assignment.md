@@ -1,17 +1,17 @@
 ---
 slug: 08-workflows-summary
-id: z8wkflwsummary
+id: h0imm5sidjvb
 type: challenge
-title: "Workflows Summary and Next Steps"
+title: Workflows Summary and Next Steps
 teaser: A quick recap of Kibana Workflows, core concepts, and where to learn more
 tabs:
-- id: kb-workflows
+- id: rmfucpm1geq6
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: docs-workflows
+- id: fsbjsoaxiex4
   title: Docs - Kibana Workflows
   type: website
   url: https://www.elastic.co/guide/en/kibana/current/workflows.html

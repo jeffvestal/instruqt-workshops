@@ -25,12 +25,22 @@ app.use(express.json());
 app.post('/remediate_service', (req, res) => {
   const serviceName = req.body.service_name || 'unknown';
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [REMEDIATION] Triggered for service: ${serviceName}`);
+  const remediationId = `rem-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+  console.log(`[${timestamp}] [REMEDIATION] Triggered for service: ${serviceName} (ID: ${remediationId})`);
+
   res.json({
+    success: true,
     status: 'remediation_triggered',
+    remediation_id: remediationId,
     service: serviceName,
-    timestamp: timestamp,
-    action: 'restart_service'
+    action: 'restart_service',
+    timestamp,
+    message: `✅ Remediation initiated for ${serviceName}`,
+    details: {
+      steps: ['Draining connections', 'Restarting service', 'Health check'],
+      estimated_duration: '30s'
+    }
   });
 });
 

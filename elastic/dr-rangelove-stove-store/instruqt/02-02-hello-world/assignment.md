@@ -26,20 +26,23 @@ Let's start with the "Hello, World!" of automation. We will build a simple workf
 
 ## 1. Find the Workflow UI
 
-In the **Kibana** tab:
+In the [button label="Kibana"](tab-0) tab:
 
-1. Go to the main menu (the "hamburger" icon).
-2. Navigate to **Management > Workflows**.
-3. This opens the Workflows UI (a new Tech Preview feature).
+You should be in the **Workflows** UI. If you switched out of it:
+   1. Go to the main menu (the "hamburger" icon).
+   2. Navigate to **Management > Workflows**.
+   3. This opens the Workflows UI (a new Tech Preview feature).
 
 ## 2. Create a New Workflow
 
-1. Click **"Create workflow"**.
+1. Click **"Create a new workflow"**.
+    ![CleanShot 2025-11-13 at 11.12.10@2x.png](../assets/CleanShot%202025-11-13%20at%2011.12.10%402x.png)
 2. This will open the YAML editor. Delete all the boilerplate text.
 
 ## 3. Define the Inputs
 
-A workflow needs to know what data it expects. Paste this `inputs` block. It tells the workflow to expect one `string` called `username`.
+A workflow needs to know what data it expects. Paste this `inputs` block.
+- It tells the workflow to expect one `string` called `username`.
 
 ```yaml
 version: "1"
@@ -70,6 +73,36 @@ steps:
       message: "Hello, {{ inputs.username }}!"
 ```
 
+> [!IMPORTANT]
+> Spaces in YAML are important
+> `triggers` and `steps` should be at the beginning of the line, no indents.
+
+<details>
+  <summary>Click to see Full YAML</summary>
+
+```yaml
+version: "1"
+name: hello_world
+enabled: true
+
+inputs:
+  - name: username
+    type: string
+    required: true
+    description: "The name of the user to greet"
+
+triggers:
+  - type: manual
+
+steps:
+  - name: print_greeting
+    type: console
+    with:
+      message: "Hello, {{ inputs.username }}!"
+```
+
+</details>
+
 **Look closely at the `message`:**
 
 * We use `{{ ... }}` (Liquid templating) to access data.
@@ -77,10 +110,12 @@ steps:
 
 ## 5. Save and Run the Workflow
 
-1. Click **"Save"** in the bottom right.
-2. Now, click the **"Run"** button (top right).
+1. Click **"Save"** in the top right.
+2. Now, click the top ▶️ (run) button (next to save).
+    ![CleanShot 2025-11-13 at 11.37.47@2x.png](../assets/CleanShot%202025-11-13%20at%2011.37.47%402x.png)
 3. A panel will appear asking for the `username`.
 4. In the `username` field, replace the placeholder text "Enter a string" with your actual name (e.g., "Alex") and click **"Run"**.
+    ![CleanShot 2025-11-13 at 11.30.04@2x.png](../assets/CleanShot%202025-11-13%20at%2011.30.04%402x.png)
 
 ## 6. Check the Output
 

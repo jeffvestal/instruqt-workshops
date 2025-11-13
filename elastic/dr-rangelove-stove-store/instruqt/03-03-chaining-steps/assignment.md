@@ -28,12 +28,12 @@ Let's build a workflow that takes an IP address, enriches it with a free geoloca
 
 ## 1. Create a New Workflow
 
-1. In the **Kibana > Workflows** UI, create a new workflow.
-2. Name it `ip_geolocator`.
+1. Open the [button label="Kibana - Workflows"](tab-0) tab,
+2. Click **Create a new workflow**.
 
 ## 2. Define Inputs and Constants
 
-This time, we'll use `consts` to store our API's base URL. This is a best practice so you don't hardcode URLs or secrets.
+We'll centralize the API base URL so it's defined once. In production, pass it as an input or from config; don't hardcode secrets.
 
 Paste this as your base:
 
@@ -91,18 +91,58 @@ Add this *below* your `get_geolocation` step (inside the `steps` array):
 
 **This is the most important concept:**
 
-* `steps.get_geolocation.output.data.city`: We are accessing the `output` of the step named `get_geolocation` and digging into its JSON structure (the actual data is nested under `output.data`).
+`steps.get_geolocation.output.data.city`:
+- We are accessing the `output` of the step named `get_geolocation` and digging into its JSON structure
+  - The actual data is nested under `output.data`.
+
+<details>
+  <summary>Click here to expand full workflow YAML</summary>
+
+```yaml
+version: "1"
+name: ip_geolocator
+description: "Geolocate an IP address using a public API"
+enabled: true
+
+consts:
+  ip_api_base_url: http://ip-api.com/json
+
+inputs:
+  - name: ip_address
+    type: string
+    required: true
+    description: "The IP to geolocate (e.g., 8.8.8.8)"
+
+triggers:
+  - type: manual
+
+steps:
+  - name: get_geolocation
+    type: http
+    with:
+      url: "{{ consts.ip_api_base_url }}/{{ inputs.ip_address }}"
+      method: GET
+
+  - name: print_location
+    type: console
+    with:
+      message: "IP {{ inputs.ip_address }} is in {{ steps.get_geolocation.output.data.city }}, {{ steps.get_geolocation.output.data.country }}."
+```
+</details>
 
 ## 5. Run and Verify
 
 1. **Save** the workflow.
 2. **Run** it.
 3. For the `ip_address` input, use `8.8.8.8`.
+    ![CleanShot 2025-11-13 at 12.53.51@2x.png](../assets/CleanShot%202025-11-13%20at%2012.53.51%402x.png)
 4. Let it run, then click the `print_location` step.
 5. Check the **Output** tab. You should see: `"IP 8.8.8.8 is in Ashburn, United States."`
     > [!NOTE]
     > The exact city name may differ
 
+    ![CleanShot 2025-11-13 at 12.54.36@2x.png](../assets/CleanShot%202025-11-13%20at%2012.54.36%402x.png)
+
 You just chained two steps!
 
-**Click "Next" to make this workflow more sophisticated.**
+**Click "Next" to learn how to make this workflow more sophisticated.**
