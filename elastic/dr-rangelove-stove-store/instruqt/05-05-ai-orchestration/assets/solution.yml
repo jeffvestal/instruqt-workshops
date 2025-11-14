@@ -47,17 +47,19 @@ steps:
   - name: final_report
     type: console
     with:
-      message: |
+      message: >-
+        {% assign orig = steps.first_check.output.response.message | json_parse %}
+        {% assign fin = steps.final_check.output.response.message | json_parse %}
+
         ---
         Original Draft: {{ steps.draft_content.output.response.message }}
-        Original Sentiment: {{ steps.first_check.output.response.message.sentiment }}
+        Original Sentiment: {{ orig.sentiment }}
         ---
         Revised Draft: {{ steps.remediation_spin.output.response.message }}
-        Final Sentiment: {{ steps.final_check.output.response.message.sentiment }}
+        Final Sentiment: {{ fin.sentiment }}
         ---
-        
-        {% if steps.final_check.output.response.message.sentiment == "POSITIVE" %}
-        ✅ Content is approved and ready to send.
+        {% if fin.sentiment == "POSITIVE" %}
+        ✅ PASSED: Content sentiment is positive after remediation.
         {% else %}
         ❌ FAILED: Content still has negative sentiment after remediation.
         {% endif %}

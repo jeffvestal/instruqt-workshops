@@ -30,13 +30,24 @@ steps:
     type: console
     with:
       message: >-
-        {% if steps.get_geolocation.output.data.status == "success" %}
-          {% if steps.get_geolocation.output.data.countryCode == "US" %}
-          🇺🇸 This is a United States-based IP from {{ steps.get_geolocation.output.data.city }}.
+        {% assign status = steps.get_geolocation.output.data.status %}
+        {% assign cc = steps.get_geolocation.output.data.countryCode %}
+        {% assign city = steps.get_geolocation.output.data.city %}
+        {% assign country = steps.get_geolocation.output.data.country %}
+        {% assign europe = "AL,AD,AT,BA,BE,BG,BY,CH,HR,CY,CZ,DE,DK,EE,ES,FI,FO,FR,GG,GI,GR,HU,IE,IM,IS,IT,JE,LI,LT,LU,LV,MC,MD,ME,MK,MT,NL,NO,PL,PT,RO,RS,SE,SI,SK,SM,UA,UK,VA" %}
+        {% assign asia = "AE,AM,AZ,BH,BD,BN,BT,KH,CN,GE,HK,ID,IL,IN,IQ,IR,JO,JP,KG,KR,KW,KZ,LA,LB,LK,MM,MN,MO,MY,NP,OM,PH,PK,QA,SA,SG,SY,TH,TJ,TL,TM,TW,UZ,VN,YE" %}
+
+        {% if status == "success" %}
+          {% if cc == "US" %}
+            🇺🇸 United States-based IP from {{ city }}.
+          {% elsif europe contains cc %}
+            🇪🇺 Europe-based IP from {{ city }}, {{ country }}.
+          {% elsif asia contains cc %}
+            🌏 Asia-based IP from {{ city }}, {{ country }}.
           {% else %}
-          🌍 This is an international IP from {{ steps.get_geolocation.output.data.country }}.
+            🌍 IP from {{ country }}.
           {% endif %}
         {% else %}
-        This IP could not be geolocated (private or unknown range).
+          This IP could not be geolocated (private or unknown range).
         {% endif %}
 
