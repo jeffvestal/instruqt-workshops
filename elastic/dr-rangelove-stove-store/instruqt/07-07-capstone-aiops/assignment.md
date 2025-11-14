@@ -1,27 +1,27 @@
 ---
 slug: 07-capstone-aiops
-id: zykrcepib4on
+id: qgiakfohjqjp
 type: challenge
 title: 'Capstone: Build a ''Self-Healing'' Workflow'
 teaser: Create an alert-triggered workflow that uses AI and calls external APIs
 tabs:
-- id: yn8vsudeseix
+- id: ul3xucfkooqb
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: kzygfchylyuh
+- id: 1kicxttxlhty
   title: Alerts
   type: service
   hostname: kubernetes-vm
   path: /app/observability/alerts
   port: 30001
-- id: vbu8x6nbakbu
+- id: ssiguglwcx7i
   title: Terminal
   type: terminal
   hostname: host-1
-- id: 4j7drsblrwxf
+- id: d3nu5nqxcbvm
   title: Kibana - Discover
   type: service
   hostname: kubernetes-vm

@@ -1,6 +1,6 @@
 ---
 slug: 01-intro
-id: dr4d5kdosqjd
+id: tom9sadinbfe
 type: challenge
 title: 'The ''Why'': From Findings to Outcomes'
 teaser: Understand the 'Two-Vendor Problem' and how Workflows solve it
@@ -13,13 +13,13 @@ notes:
 
     We'll start with simple workflows and progress to building a complete self-healing AIOps system.
 tabs:
-- id: c9pr996sb31a
+- id: 5wlncph7b7pt
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /
   port: 30001
-- id: e0z8qrkti9bn
+- id: 6d8wv6pm17ce
   title: Terminal
   type: terminal
   hostname: host-1

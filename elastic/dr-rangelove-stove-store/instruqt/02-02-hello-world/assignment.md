@@ -1,17 +1,17 @@
 ---
 slug: 02-hello-world
-id: wxpgg5gsqcxx
+id: sunyyx6xqswh
 type: challenge
 title: Building Your First Workflow
 teaser: Create a simple workflow with inputs and console output
 tabs:
-- id: yjatgx2waodm
+- id: rtyf1nawuqkv
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: wjmvynnsyzla
+- id: kjq04qixcpft
   title: Terminal
   type: terminal
   hostname: host-1

@@ -1,17 +1,17 @@
 ---
 slug: 04-robust-workflows
-id: 99z4kizklpcy
+id: yhiyheqao8wq
 type: challenge
 title: 'Making it Robust: Logic & Error Handling'
 teaser: Add retry logic and conditional branching to workflows
 tabs:
-- id: zfzdafxse1cd
+- id: 0ivomx1tph00
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: xtx0jr9h5wu2
+- id: y0uwy6vpglv0
   title: Terminal
   type: terminal
   hostname: host-1

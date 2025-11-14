@@ -1,17 +1,17 @@
 ---
 slug: 03-chaining-steps
-id: yhqhz6pd1vza
+id: xx3y3isuah3c
 type: challenge
 title: 'Chaining Steps: From Input to Output'
 teaser: Build a workflow that chains HTTP calls with data transformation
 tabs:
-- id: 0qyc30nxhg1y
+- id: 9gltbwnxutnt
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: wirjnngkijv3
+- id: yj9jhnoy7vcs
   title: Terminal
   type: terminal
   hostname: host-1

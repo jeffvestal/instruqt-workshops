@@ -1,23 +1,23 @@
 ---
 slug: 05-ai-orchestration
-id: y6tmjjd8ywgm
+id: dikdylbhyer2
 type: challenge
 title: The AI 'Assembly Line'
 teaser: Orchestrate multiple AI agents in a generator-critic-remediator pattern
 tabs:
-- id: kkmk81byp0bq
+- id: 07caoimvmlzk
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: 4yynyg92q4pw
+- id: gcmmeeyjp6yg
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
   path: /app/agent_builder
   port: 30001
-- id: aax4rydycg19
+- id: xwppo2qxixmd
   title: Terminal
   type: terminal
   hostname: host-1

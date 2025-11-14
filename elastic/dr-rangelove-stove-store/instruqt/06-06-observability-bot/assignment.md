@@ -1,23 +1,23 @@
 ---
 slug: 06-observability-bot
-id: p7vdgfytqack
+id: 8t9mfavwlkum
 type: challenge
 title: 'The ''Full Circle'': AI Agent Tools'
 teaser: Give an AI agent a workflow as a tool to perform complex operations
 tabs:
-- id: vtbs6dxl9ui9
+- id: yjrnfpz7klxv
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: aovug3gwcqds
+- id: 46yfy3mgfzeq
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
   path: /app/agent_builder
   port: 30001
-- id: boqsyf6qjdpr
+- id: bxozzw2j6w9s
   title: Terminal
   type: terminal
   hostname: host-1
