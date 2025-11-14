@@ -44,6 +44,26 @@ app.post('/remediate_service', (req, res) => {
   });
 });
 
+app.post('/scale_service', (req, res) => {
+  const serviceName = req.body.service_name || 'unknown';
+  const currentInstances = Math.floor(Math.random() * 3) + 2; // 2-4 instances
+  const newInstances = currentInstances + 2;
+  const timestamp = new Date().toISOString();
+  
+  console.log(`[${timestamp}] [SCALE] ${serviceName}: ${currentInstances} → ${newInstances} instances`);
+  
+  res.json({
+    success: true,
+    service: serviceName,
+    action: 'scale_up',
+    previous_instances: currentInstances,
+    new_instances: newInstances,
+    timestamp: timestamp,
+    message: `✅ Auto-scaling triggered: ${serviceName} scaled from ${currentInstances} to ${newInstances} instances`,
+    estimated_time: '45s'
+  });
+});
+
 app.get('/health', (req, res) => {
   res.json({status: 'healthy', uptime: process.uptime()});
 });
@@ -63,5 +83,6 @@ pm2 save --force
 echo "[Mock API] Service started on port 3000"
 echo "[Mock API] Endpoints:"
 echo "  - POST http://localhost:3000/remediate_service"
+echo "  - POST http://localhost:3000/scale_service"
 echo "  - GET  http://localhost:3000/health"
 

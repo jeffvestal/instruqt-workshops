@@ -1,0 +1,123 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Challenge 8 Validation ==="
+echo ""
+
+# Get environment variables
+KIBANA_URL="${KIBANA_URL:-http://kubernetes-vm:30001}"
+ELASTICSEARCH_APIKEY="${ELASTICSEARCH_APIKEY:-}"
+WORKFLOW_NAME="business_impact_detector"
+ALERT_NAME="business-impact-payment-degradation"
+
+if [ -z "$ELASTICSEARCH_APIKEY" ]; then
+  echo "ERROR: ELASTICSEARCH_APIKEY environment variable not set"
+  exit 1
+fi
+
+CURL_OPTS=(-fsS -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" -H "kbn-xsrf: true" -H "Content-Type: application/json")
+
+# Step 1: Check if workflow exists
+echo "Step 1: Checking if workflow exists..."
+WORKFLOW_RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" "${KIBANA_URL}/api/workflows/workflows" || echo -e "\n000")
+HTTP_CODE=$(echo "$WORKFLOW_RESPONSE" | tail -n1)
+BODY=$(echo "$WORKFLOW_RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "  ✗ ERROR: Failed to query workflows API (HTTP ${HTTP_CODE})"
+  fail-message "Failed to query workflows API. Please check Kibana connectivity."
+  exit 1
+fi
+
+WORKFLOW_EXISTS=$(echo "$BODY" | grep -o "\"name\":\"${WORKFLOW_NAME}\"" || true)
+if [ -z "$WORKFLOW_EXISTS" ]; then
+  echo "  ✗ ERROR: Workflow '${WORKFLOW_NAME}' not found"
+  fail-message "Workflow '${WORKFLOW_NAME}' does not exist. Please create it first."
+  exit 1
+fi
+
+echo "  ✓ Workflow '${WORKFLOW_NAME}' exists"
+
+# Step 2: Verify alert trigger
+echo "Step 2: Verifying alert trigger configuration..."
+WORKFLOW_DETAIL=$(curl -s "${CURL_OPTS[@]}" "${KIBANA_URL}/api/workflows/workflows" | grep -A 50 "\"name\":\"${WORKFLOW_NAME}\"" || true)
+TRIGGER_CHECK=$(echo "$WORKFLOW_DETAIL" | grep -o '"type":"alert"' || true)
+
+if [ -z "$TRIGGER_CHECK" ]; then
+  echo "  ✗ ERROR: Workflow does not have alert trigger configured"
+  fail-message "Workflow must have 'type: alert' in triggers section."
+  exit 1
+fi
+
+echo "  ✓ Alert trigger configured"
+
+# Step 3: Check required steps
+echo "Step 3: Checking for required workflow steps..."
+REQUIRED_STEPS=("elasticsearch.search" "kibana.post_agent_builder_converse" "if" "http" "elasticsearch.index")
+MISSING_STEPS=()
+
+for step_type in "${REQUIRED_STEPS[@]}"; do
+  STEP_CHECK=$(echo "$WORKFLOW_DETAIL" | grep -o "\"type\":\"${step_type}\"" || true)
+  if [ -z "$STEP_CHECK" ]; then
+    MISSING_STEPS+=("$step_type")
+  fi
+done
+
+if [ ${#MISSING_STEPS[@]} -gt 0 ]; then
+  echo "  ✗ ERROR: Missing required step types: ${MISSING_STEPS[*]}"
+  fail-message "Workflow must include these step types: ${MISSING_STEPS[*]}"
+  exit 1
+fi
+
+echo "  ✓ All required step types present"
+
+# Step 4: Verify alert rule exists
+echo "Step 4: Checking if alert rule was created..."
+ALERT_RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" "${KIBANA_URL}/api/alerting/rules/_find?search=${ALERT_NAME}" || echo -e "\n000")
+ALERT_HTTP_CODE=$(echo "$ALERT_RESPONSE" | tail -n1)
+ALERT_BODY=$(echo "$ALERT_RESPONSE" | sed '$d')
+
+if [ "$ALERT_HTTP_CODE" != "200" ]; then
+  echo "  ⚠ WARNING: Could not verify alert rule (HTTP ${ALERT_HTTP_CODE})"
+  echo "  Continuing validation..."
+else
+  ALERT_EXISTS=$(echo "$ALERT_BODY" | grep -o "\"name\":\"${ALERT_NAME}\"" || true)
+  if [ -z "$ALERT_EXISTS" ]; then
+    echo "  ⚠ WARNING: Alert rule '${ALERT_NAME}' not found"
+    echo "  Make sure you created the alert rule as instructed."
+  else
+    echo "  ✓ Alert rule '${ALERT_NAME}' exists"
+  fi
+fi
+
+# Step 5: Test workflow execution (optional - just verify structure)
+echo "Step 5: Verifying workflow structure..."
+# Check for key step names
+KEY_STEPS=("get_error_rate" "get_payment_metrics" "ai_business_analysis" "scale_service")
+MISSING_KEY_STEPS=()
+
+for step_name in "${KEY_STEPS[@]}"; do
+  STEP_NAME_CHECK=$(echo "$WORKFLOW_DETAIL" | grep -o "\"name\":\"${step_name}\"" || true)
+  if [ -z "$STEP_NAME_CHECK" ]; then
+    MISSING_KEY_STEPS+=("$step_name")
+  fi
+done
+
+if [ ${#MISSING_KEY_STEPS[@]} -gt 0 ]; then
+  echo "  ⚠ WARNING: Some expected step names not found: ${MISSING_KEY_STEPS[*]}"
+  echo "  This may be okay if you used different naming."
+else
+  echo "  ✓ Expected step names found"
+fi
+
+echo ""
+echo "✅ All validation checks passed!"
+echo ""
+echo "Your workflow is ready! To test it:"
+echo "  1. Trigger the business incident: bash /opt/workshop-assets/setup_scripts/06-trigger-business-incident.sh"
+echo "  2. Wait for the alert to fire"
+echo "  3. Check workflow execution history in Kibana"
+echo "  4. Verify scaling action in mock API logs: pm2 logs mock-api"
+
+exit 0
+

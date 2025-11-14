@@ -1,8 +1,8 @@
 ---
-slug: 07-capstone-aiops
+slug: 07-self-healing-ai
 id: qgiakfohjqjp
 type: challenge
-title: 'Capstone: Build a ''Self-Healing'' Workflow'
+title: 'Self-Healing with AI'
 teaser: Create an alert-triggered workflow that uses AI and calls external APIs
 tabs:
 - id: ul3xucfkooqb

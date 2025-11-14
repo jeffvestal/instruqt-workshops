@@ -1,0 +1,172 @@
+version: "1"
+name: business_impact_detector
+description: "Detect and respond to business-critical payment service degradation"
+enabled: true
+
+inputs: []
+
+triggers:
+  - type: alert
+
+steps:
+  # Step 1: Parse service name from alert
+  - name: get_service_name
+    type: console
+    with:
+      message: |
+        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+        Alert '{{ event.alerts[0].rule.name }}' fired!
+        Service: {{ esQuery.query.bool.must[0].term['service.name'] }}
+        Alert ID: {{ event.alerts[0].id }}
+
+  # Step 2: Query error rate
+  - name: get_error_rate
+    type: elasticsearch.search
+    with:
+      index: "o11y-heartbeat"
+      query:
+        bool:
+          must:
+            - term:
+                service.name: "payment-service"
+            - range:
+                http.status_code:
+                  gte: 500
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-5m"
+      size: 0
+      aggs:
+        error_count:
+          value_count:
+            field: "_id"
+
+  # Step 3: Query payment transaction metrics
+  - name: get_payment_metrics
+    type: elasticsearch.search
+    with:
+      index: "o11y-heartbeat"
+      query:
+        bool:
+          must:
+            - term:
+                service.name: "payment-service"
+            - term:
+                transaction.status: "success"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-5m"
+      size: 0
+      aggs:
+        payment_count:
+          value_count:
+            field: "_id"
+        total_amount:
+          sum:
+            field: "transaction.amount"
+
+  # Step 4: Get baseline for comparison (previous hour)
+  - name: get_baseline_metrics
+    type: elasticsearch.search
+    with:
+      index: "o11y-heartbeat"
+      query:
+        bool:
+          must:
+            - term:
+                service.name: "payment-service"
+            - term:
+                transaction.status: "success"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-1h"
+                  lt: "now-5m"
+      size: 0
+      aggs:
+        baseline_payment_count:
+          value_count:
+            field: "_id"
+
+  # Step 5: Call AI agent for business impact analysis
+  - name: ai_business_analysis
+    type: kibana.post_agent_builder_converse
+    with:
+      agent_id: agent_business_slo
+      input: |
+        Payment service degradation detected:
+        - Current 5-minute error count: {{ steps.get_error_rate.output.response.aggregations.error_count.value }}
+        - Current 5-minute successful payments: {{ steps.get_payment_metrics.output.response.aggregations.payment_count.value }}
+        - Baseline (previous hour) successful payments: {{ steps.get_baseline_metrics.output.response.aggregations.baseline_payment_count.value }}
+        
+        Calculate the payment drop percentage and recommend an action.
+        Respond ONLY with JSON:
+        {"recommendation": "scale_up" | "investigate" | "no_action", "payment_drop_pct": <number>}
+    on-failure:
+      retry:
+        max-attempts: 2
+        delay: 1s
+
+  # Step 6: Parse AI response
+  - name: parse_ai_response
+    type: console
+    with:
+      message: |-
+        {% assign parsed = steps.ai_business_analysis.output.response.message | json_parse %}
+        Recommendation: {{ parsed.recommendation }}
+        Payment Drop: {{ parsed.payment_drop_pct }}%
+
+  # Step 7: Conditional logic - check if scaling needed
+  - name: check_scaling_needed
+    type: if
+    condition: "${{ steps.parse_ai_response.output contains 'scale_up' }}"
+    steps:
+      - name: scale_service
+        type: http
+        with:
+          url: "http://host-1:3000/scale_service"
+          method: POST
+          headers:
+            Content-Type: application/json
+          body:
+            service_name: "payment-service"
+        on-failure:
+          retry:
+            max-attempts: 2
+            delay: 1s
+
+      - name: log_scaling_action
+        type: console
+        with:
+          message: |
+            ✅ Auto-scaling triggered!
+            {{ steps.scale_service.output.data.message }}
+            Previous instances: {{ steps.scale_service.output.data.previous_instances }}
+            New instances: {{ steps.scale_service.output.data.new_instances }}
+    else:
+      - name: log_no_scaling
+        type: console
+        with:
+          message: "⚠️ AI recommended no scaling action. Manual investigation may be needed."
+
+  # Step 8: Audit log to Elasticsearch
+  - name: log_to_elasticsearch
+    type: elasticsearch.index
+    with:
+      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
+        timestamp: "{{ execution.startedAt }}"
+        workflow_name: "business_impact_detector"
+        alert_id: "{{ event.alerts[0].id }}"
+        alert_name: "{{ event.alerts[0].rule.name }}"
+        service_name: "payment-service"
+        error_count: "{{ steps.get_error_rate.output.response.aggregations.error_count.value }}"
+        current_payment_count: "{{ steps.get_payment_metrics.output.response.aggregations.payment_count.value }}"
+        baseline_payment_count: "{{ steps.get_baseline_metrics.output.response.aggregations.baseline_payment_count.value }}"
+        ai_recommendation: "{{ steps.parse_ai_response.output }}"
+        action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
+        scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
+

@@ -71,5 +71,20 @@ curl "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/agent_builder/agents" -d '{
   }
 }' > /dev/null 2>&1 && echo "  ✓ sre_triage_bot created" || echo "  ⚠️  sre_triage_bot may already exist"
 
+# Agent 5: agent_business_slo
+echo "[Agent Builder] Creating agent_business_slo..."
+curl "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/agent_builder/agents" -d '{
+  "id": "agent_business_slo",
+  "name": "Business SLO Analyst",
+  "description": "Analyzes business metrics and SLOs to recommend actions",
+  "labels": ["workshop", "business", "slo"],
+  "avatar_color": "#7B68EE",
+  "avatar_symbol": "BS",
+  "configuration": {
+    "instructions": "You are a Business SLO Analyst. You analyze technical metrics (error rates, latency) combined with business metrics (transaction counts, revenue impact) to recommend actions. Input: Error count, current payment count, baseline payment count. Task: Calculate payment drop percentage. If drop >30%, recommend '\''scale_up'\''. If drop 10-30%, recommend '\''investigate'\''. Otherwise recommend '\''no_action'\''. Respond ONLY with valid JSON: {\\\"recommendation\\\": \\\"scale_up\\\"|\\\"investigate\\\"|\\\"no_action\\\", \\\"payment_drop_pct\\\": <number>}. No prose, no markdown, only JSON.",
+    "tools": []
+  }
+}' > /dev/null 2>&1 && echo "  ✓ agent_business_slo created" || echo "  ⚠️  agent_business_slo may already exist"
+
 echo "[Agent Builder] All agents created successfully"
 

@@ -84,7 +84,7 @@ class DataSprayer:
                 }
             ]
     
-    def _generate_healthy_doc(self, timestamp: datetime, service: str) -> Dict[str, Any]:
+    def _generate_healthy_doc(self, timestamp: datetime, service: str, business_incident_active: bool = False) -> Dict[str, Any]:
         """Generate a healthy observability document"""
         min_latency, max_latency = HEALTHY_LATENCIES[service]
         
@@ -92,7 +92,7 @@ class DataSprayer:
         latency = random.gauss((min_latency + max_latency) / 2, (max_latency - min_latency) / 4)
         latency = max(min_latency * 0.8, min(max_latency * 1.1, latency))  # Clamp with slight variance
         
-        return {
+        doc = {
             "@timestamp": timestamp.isoformat(),
             "service.name": service,
             "http.status_code": random.choices([200, 201, 204], weights=[85, 10, 5])[0],
@@ -101,6 +101,38 @@ class DataSprayer:
             "trace.id": f"trace-{random.randint(100000, 999999)}",
             "span.id": f"span-{random.randint(100000, 999999)}"
         }
+        
+        # Add transaction fields for payment-service (and optionally others)
+        if service == "payment-service":
+            # Normal: 95% success rate, steady transaction amounts
+            if business_incident_active:
+                # During business incident: 60% success rate, 30% lower amounts
+                transaction_status = random.choices(["success", "failed", "cancelled"], weights=[60, 30, 10])[0]
+                transaction_type = random.choice(["payment", "checkout", "order"])
+                if transaction_type == "payment":
+                    base_amount = random.uniform(50.0, 500.0) * 0.7  # 30% reduction
+                elif transaction_type == "checkout":
+                    base_amount = random.uniform(25.0, 350.0) * 0.7
+                else:  # order
+                    base_amount = random.uniform(10.0, 200.0) * 0.7
+            else:
+                # Normal: 95% success rate
+                transaction_status = random.choices(["success", "failed", "cancelled"], weights=[95, 4, 1])[0]
+                transaction_type = random.choice(["payment", "checkout", "order"])
+                if transaction_type == "payment":
+                    base_amount = random.uniform(50.0, 500.0)
+                elif transaction_type == "checkout":
+                    base_amount = random.uniform(25.0, 350.0)
+                else:  # order
+                    base_amount = random.uniform(10.0, 200.0)
+            
+            doc["transaction"] = {
+                "type": transaction_type,
+                "amount": round(base_amount, 2),
+                "status": transaction_status
+            }
+        
+        return doc
     
     def _generate_anomaly_doc(self, timestamp: datetime, scenario: Dict[str, Any]) -> Dict[str, Any]:
         """Generate an anomalous observability document"""
@@ -199,6 +231,23 @@ class DataSprayer:
                             "trace.id": f"trace-{random.randint(100000, 999999)}",
                             "span.id": f"span-{random.randint(100000, 999999)}"
                         }
+                        
+                        # Add transaction fields for payment-service
+                        if service == "payment-service":
+                            transaction_status = random.choices(["success", "failed", "cancelled"], weights=[95, 4, 1])[0]
+                            transaction_type = random.choice(["payment", "checkout", "order"])
+                            if transaction_type == "payment":
+                                base_amount = random.uniform(50.0, 500.0)
+                            elif transaction_type == "checkout":
+                                base_amount = random.uniform(25.0, 350.0)
+                            else:  # order
+                                base_amount = random.uniform(10.0, 200.0)
+                            
+                            doc["transaction"] = {
+                                "type": transaction_type,
+                                "amount": round(base_amount, 2),
+                                "status": transaction_status
+                            }
                     else:
                         # Generate anomaly doc
                         scenario = random.choice(scenarios) if scenarios else {
@@ -681,25 +730,52 @@ class DataSprayer:
         """Run in live mode with continuous generation and anomaly injection"""
         print("Starting live mode - generating real-time data with periodic anomalies...")
         print(f"Services: {', '.join(SERVICES)}")
-        print(f"Anomaly injection: Every 60-90 seconds for 15 seconds\n")
+        print(f"Anomaly injection: Every 60-90 seconds for 15 seconds")
+        print(f"Business incident flag: /tmp/business_incident_active\n")
         
         last_anomaly_time = datetime.now(timezone.utc) - timedelta(seconds=60)
         anomaly_end_time = None
+        business_incident_end_time = None
         
         while True:
             current_time = datetime.now(timezone.utc)
             
-            # Check if it's time to inject an anomaly
+            # Check for business incident flag file
+            business_incident_active = os.path.exists("/tmp/business_incident_active")
+            if business_incident_active and business_incident_end_time is None:
+                # Start business incident (5 minutes = 300 seconds)
+                business_incident_end_time = current_time + timedelta(seconds=300)
+                print(f"\n💼 BUSINESS INCIDENT ACTIVE: Payment processing degradation")
+                print(f"   Service: payment-service")
+                print(f"   Duration: 5 minutes\n")
+            elif not business_incident_active and business_incident_end_time is not None:
+                # Business incident ended
+                business_incident_end_time = None
+                print(f"\n✅ Business incident ended. System returning to normal.\n")
+            elif business_incident_active and business_incident_end_time and current_time >= business_incident_end_time:
+                # Auto-end after 5 minutes
+                try:
+                    os.remove("/tmp/business_incident_active")
+                except:
+                    pass
+                business_incident_end_time = None
+                print(f"\n✅ Business incident auto-ended after 5 minutes.\n")
+            
+            # Check if it's time to inject an anomaly (but not during business incident for payment-service)
             if not self.injecting_anomaly:
                 time_since_last = (current_time - last_anomaly_time).total_seconds()
                 if time_since_last >= random.randint(60, 90):
-                    # Start anomaly injection
-                    self.injecting_anomaly = True
-                    self.current_scenario = random.choice(self.scenarios)
-                    anomaly_end_time = current_time + timedelta(seconds=15)
-                    print(f"\n🔥 INJECTING ANOMALY: {self.current_scenario['name']}")
-                    print(f"   Service: {self.current_scenario['service.name']}")
-                    print(f"   Duration: 15 seconds\n")
+                    # Start anomaly injection (skip if business incident is active for payment-service)
+                    available_scenarios = [s for s in self.scenarios if not s.get("business_impact", False)]
+                    if not business_incident_active:
+                        available_scenarios = self.scenarios  # Can use any scenario
+                    if available_scenarios:
+                        self.injecting_anomaly = True
+                        self.current_scenario = random.choice(available_scenarios)
+                        anomaly_end_time = current_time + timedelta(seconds=15)
+                        print(f"\n🔥 INJECTING ANOMALY: {self.current_scenario['name']}")
+                        print(f"   Service: {self.current_scenario['service.name']}")
+                        print(f"   Duration: 15 seconds\n")
             
             # Check if anomaly should end
             if self.injecting_anomaly and current_time >= anomaly_end_time:
@@ -713,14 +789,21 @@ class DataSprayer:
                 if self.injecting_anomaly and service == self.current_scenario["service.name"]:
                     doc = self._generate_anomaly_doc(current_time, self.current_scenario)
                 else:
-                    doc = self._generate_healthy_doc(current_time, service)
+                    # Pass business_incident_active flag for payment-service
+                    doc = self._generate_healthy_doc(current_time, service, 
+                                                      business_incident_active=(business_incident_active and service == "payment-service"))
                 batch.append(doc)
             
             # Index batch
             await self._bulk_index(batch)
             
             # Status update
-            status = "🔥 ANOMALY" if self.injecting_anomaly else "✅ HEALTHY"
+            if business_incident_active:
+                status = "💼 BUSINESS INCIDENT"
+            elif self.injecting_anomaly:
+                status = "🔥 ANOMALY"
+            else:
+                status = "✅ HEALTHY"
             print(f"[{current_time.strftime('%H:%M:%S')}] {status} - Indexed {len(batch)} documents", end='\r')
             
             # Wait 1 second

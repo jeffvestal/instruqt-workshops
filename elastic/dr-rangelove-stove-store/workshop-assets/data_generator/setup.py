@@ -62,7 +62,14 @@ def main():
                         "http.status_code": {"type": "integer"},
                         "log.message": {"type": "text"},
                         "trace.id": {"type": "keyword"},
-                        "span.id": {"type": "keyword"}
+                        "span.id": {"type": "keyword"},
+                        "transaction": {
+                            "properties": {
+                                "type": {"type": "keyword"},
+                                "amount": {"type": "float"},
+                                "status": {"type": "keyword"}
+                            }
+                        }
                     }
                 }
             }

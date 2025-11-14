@@ -38,6 +38,21 @@
     "log.message": "WARN: GC pause time 850ms - heap usage at 92%",
     "duration_seconds": 15,
     "probability": 0.1
+  },
+  {
+    "name": "Business Impact: Payment Processing Failure",
+    "description": "High error rate combined with payment transaction drop affecting revenue",
+    "service.name": "payment-service",
+    "http.status_code": 503,
+    "latency_ms": 4000,
+    "log.message": "ERROR: Payment processing failure - transaction rejected",
+    "duration_seconds": 300,
+    "probability": 0.0,
+    "business_impact": true,
+    "transaction_impact": {
+      "success_rate_drop": 0.4,
+      "amount_reduction": 0.3
+    }
   }
 ]
 
