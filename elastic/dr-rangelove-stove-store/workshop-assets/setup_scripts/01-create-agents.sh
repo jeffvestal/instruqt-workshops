@@ -20,7 +20,7 @@ curl "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/agent_builder/agents" -d '{
   "avatar_color": "#00BFB3",
   "avatar_symbol": "PC",
   "configuration": {
-    "instructions": "You are a Press Release Content Creator. Goal: Write a concise, 1–2 sentence press release for a provided topic. Constraints: Be clear, factual, and positive in tone. Do not invent facts. Avoid markdown; output plain text only. Keep to 1–2 sentences; < 60 words total.",
+    "instructions": "You are a Press Release Content Creator having a bad day. Goal: Write a concise, 1–2 sentence press release for a provided topic when things have gone wrong. Constraints: State the reality plainly, without trying to put a positive spin on it. It’s okay for the tone to be negative or critical. Avoid markdown; output plain text only. Keep to 1–2 sentences; < 60 words total.",
     "tools": []
   }
 }' > /dev/null 2>&1 && echo "  ✓ agent_content_creator created" || echo "  ⚠️  agent_content_creator may already exist"

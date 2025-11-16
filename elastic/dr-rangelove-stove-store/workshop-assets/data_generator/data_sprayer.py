@@ -247,7 +247,7 @@ class DataSprayer:
                                 "type": transaction_type,
                                 "amount": round(base_amount, 2),
                                 "status": transaction_status
-                            }
+                        }
                     else:
                         # Generate anomaly doc
                         scenario = random.choice(scenarios) if scenarios else {
@@ -535,9 +535,11 @@ class DataSprayer:
         
         print(f"Total documents: {total_lines:,}")
         
-        # Bulk ingest settings - optimized for performance
-        batch_size = 100000  # Increased batch size for better throughput
-        max_concurrent_batches = 4  # Process 4 batches in parallel
+        # Bulk ingest settings - optimized for performance vs reliability
+        batch_size = 100000  # Large batch size for good throughput
+        # Use a conservative concurrency to reduce the chance of ES getting overwhelmed
+        # and all batches stalling (which can cause sandbox timeouts).
+        max_concurrent_batches = 2  # Process 2 batches in parallel instead of 4
         batch = []
         batch_line = 0
         indexed_total = 0
@@ -607,7 +609,12 @@ class DataSprayer:
         
         # Heartbeat: prints every 10s during ingestion
         # Use a shared dict for thread-safe progress tracking
-        progress_dict = {"indexed_total": 0, "total_lines": total_lines}
+        progress_dict = {
+            "indexed_total": 0,
+            "total_lines": total_lines,
+            "completed_batches": 0,
+            "total_batches": total_batches,
+        }
         ingest_heartbeat_running = True
         
         def _ingest_heartbeat():
@@ -615,15 +622,33 @@ class DataSprayer:
                 elapsed = (datetime.now() - start_time).total_seconds()
                 indexed = progress_dict["indexed_total"]
                 total = progress_dict["total_lines"]
+                completed = progress_dict.get("completed_batches", 0)
+                total_b = progress_dict.get("total_batches", total_batches)
                 if indexed > 0:
                     progress_pct = (indexed / total) * 100
                     rate = indexed / elapsed if elapsed > 0 else 0
                     remaining = total - indexed
                     eta_seconds = remaining / rate if rate > 0 else 0
                     eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
-                    print(f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, {progress_pct:.1f}% complete, ETA: {eta_str}", flush=True)
+                    print(
+                        f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, "
+                        f"{progress_pct:.1f}% complete, {completed}/{total_b} batches done, ETA: {eta_str}",
+                        flush=True,
+                    )
                 else:
-                    print(f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, starting batches...", flush=True)
+                    # No batches have completed yet
+                    if elapsed > 120:
+                        # After 2 minutes with no completed batches, emit a more explicit warning
+                        print(
+                            f"[Ingest] Heartbeat: no batches completed after {int(elapsed)}s "
+                            f"({completed}/{total_b} batches done). Elasticsearch may be slow; still waiting...",
+                            flush=True,
+                        )
+                    else:
+                        print(
+                            f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, starting batches...",
+                            flush=True,
+                        )
                 time.sleep(10)
         
         hb_thread = threading.Thread(target=_ingest_heartbeat, daemon=True)
@@ -644,40 +669,42 @@ class DataSprayer:
         for task in asyncio.as_completed(tasks):
             success, failed_count, end_line_num = await task
             completed_batches += 1
-            indexed_total += success
-            progress_dict["indexed_total"] = indexed_total  # Update for heartbeat
+                        indexed_total += success
+            # Update for heartbeat
+            progress_dict["indexed_total"] = indexed_total
+            progress_dict["completed_batches"] = completed_batches
             
             if failed_count > 0:
                 print(f"\n⚠️  Warning: Batch {completed_batches}/{total_batches}: {failed_count} documents failed to index")
-            
-            # Update progress
-            ingest_progress = {
+                        
+                        # Update progress
+                        ingest_progress = {
                 "last_line": end_line_num,
-                "total_lines": total_lines,
-                "indexed_total": indexed_total,
-                "last_updated": datetime.now(timezone.utc).isoformat()
-            }
-            self._save_progress(ingest_progress_file, ingest_progress)
-            
+                            "total_lines": total_lines,
+                            "indexed_total": indexed_total,
+                            "last_updated": datetime.now(timezone.utc).isoformat()
+                        }
+                        self._save_progress(ingest_progress_file, ingest_progress)
+                        
             # Progress reporting with batch number
             progress_pct = (indexed_total / total_lines) * 100
-            elapsed = (datetime.now() - start_time).total_seconds()
-            rate = indexed_total / elapsed if elapsed > 0 else 0
-            remaining = total_lines - indexed_total
-            eta_seconds = remaining / rate if rate > 0 else 0
-            eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
-            
+                        elapsed = (datetime.now() - start_time).total_seconds()
+                        rate = indexed_total / elapsed if elapsed > 0 else 0
+                        remaining = total_lines - indexed_total
+                        eta_seconds = remaining / rate if rate > 0 else 0
+                        eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+                        
             # Print batch completion message (new line for logs)
             print(f"[Batch {completed_batches}/{total_batches}] Indexed {indexed_total:,}/{total_lines:,} docs ({progress_pct:.2f}%) | "
                   f"Rate: {rate:.0f} docs/sec | ETA: {eta_str}")
             
             # Also update the inline progress
-            print(f"\rIngestion: {progress_pct:.2f}% | "
-                  f"{indexed_total:,}/{total_lines:,} docs | "
-                  f"Rate: {rate:.0f} docs/sec | "
-                  f"ETA: {eta_str}",
-                  end="", flush=True)
-        
+                        print(f"\rIngestion: {progress_pct:.2f}% | "
+                              f"{indexed_total:,}/{total_lines:,} docs | "
+                              f"Rate: {rate:.0f} docs/sec | "
+                              f"ETA: {eta_str}",
+                              end="", flush=True)
+                        
         # Stop heartbeat
         ingest_heartbeat_running = False
         hb_thread.join(timeout=0.1)
@@ -770,12 +797,12 @@ class DataSprayer:
                     if not business_incident_active:
                         available_scenarios = self.scenarios  # Can use any scenario
                     if available_scenarios:
-                        self.injecting_anomaly = True
+                    self.injecting_anomaly = True
                         self.current_scenario = random.choice(available_scenarios)
-                        anomaly_end_time = current_time + timedelta(seconds=15)
-                        print(f"\n🔥 INJECTING ANOMALY: {self.current_scenario['name']}")
-                        print(f"   Service: {self.current_scenario['service.name']}")
-                        print(f"   Duration: 15 seconds\n")
+                    anomaly_end_time = current_time + timedelta(seconds=15)
+                    print(f"\n🔥 INJECTING ANOMALY: {self.current_scenario['name']}")
+                    print(f"   Service: {self.current_scenario['service.name']}")
+                    print(f"   Duration: 15 seconds\n")
             
             # Check if anomaly should end
             if self.injecting_anomaly and current_time >= anomaly_end_time:
@@ -863,19 +890,19 @@ async def main():
         if ES_CLOUD_ID and (ES_CLOUD_ID.startswith("https://") or ES_CLOUD_ID.startswith("http://")):
             # URL-based connection (http:// or https://)
             print(f"[DEBUG] Using URL-based connection: {ES_CLOUD_ID}")
-            es_client = AsyncElasticsearch(
-                hosts=[ES_CLOUD_ID],
-                api_key=ES_API_KEY,
+        es_client = AsyncElasticsearch(
+            hosts=[ES_CLOUD_ID],
+            api_key=ES_API_KEY,
                 request_timeout=300,  # Increased for large parallel batches
                 max_retries=3,
                 retry_on_timeout=True
-            )
-        else:
-            # Traditional Cloud ID connection
+        )
+    else:
+        # Traditional Cloud ID connection
             print(f"[DEBUG] Using Cloud ID-based connection")
-            es_client = AsyncElasticsearch(
-                cloud_id=ES_CLOUD_ID,
-                api_key=ES_API_KEY,
+        es_client = AsyncElasticsearch(
+            cloud_id=ES_CLOUD_ID,
+            api_key=ES_API_KEY,
                 request_timeout=300,  # Increased for large parallel batches
                 max_retries=3,
                 retry_on_timeout=True
@@ -925,8 +952,8 @@ async def main():
         sys.exit(1)
     finally:
         if es_client:
-            await es_client.close()
-            print("Connection closed")
+        await es_client.close()
+        print("Connection closed")
 
 
 if __name__ == "__main__":

@@ -333,7 +333,7 @@ curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
   "index": {
     "refresh_interval": "-1",
     "number_of_replicas": "0"
-  }
+                        }
 }' >/dev/null || true
 
 echo "[Workshop] Backfilling ${BACKFILL_DAYS} days of data..."
@@ -502,7 +502,7 @@ if [ -n "$CONNECTOR_ID" ]; then
   }')
   
   SETTING_HTTP_CODE=$(echo "$SETTING_RESPONSE" | tail -n1)
-  
+    
   if [ "$SETTING_HTTP_CODE" != "200" ] && [ "$SETTING_HTTP_CODE" != "204" ]; then
     # Fallback to public API endpoint
     echo "[Workshop] Internal endpoint failed (HTTP ${SETTING_HTTP_CODE}), trying public API..."

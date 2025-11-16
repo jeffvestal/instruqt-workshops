@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "[Alerting] Creating alert rule..."
+echo "[Alerting] Creating alert rule(s)..."
 
 # Validate required env vars
 : "${KIBANA_URL:?KIBANA_URL required}"
@@ -81,23 +81,23 @@ else
   PAYLOAD=$(jq -n \
     --arg esQuery "$ES_QUERY" \
     '{
-      "name": "latency-threshold-alert-critical",
-      "rule_type_id": ".es-query",
-      "consumer": "alerts",
-      "schedule": {"interval": "1m"},
-      "params": {
-        "index": ["o11y-heartbeat"],
-        "timeField": "@timestamp",
+    "name": "latency-threshold-alert-critical",
+    "rule_type_id": ".es-query",
+    "consumer": "alerts",
+    "schedule": {"interval": "1m"},
+    "params": {
+      "index": ["o11y-heartbeat"],
+      "timeField": "@timestamp",
         "esQuery": $esQuery,
-        "threshold": [1],
-        "thresholdComparator": ">=",
-        "size": 100,
-        "timeWindowSize": 1,
-        "timeWindowUnit": "m"
-      },
-      "actions": [],
-      "notify_when": "onActiveAlert",
-      "enabled": true
+      "threshold": [1],
+      "thresholdComparator": ">=",
+      "size": 100,
+      "timeWindowSize": 1,
+      "timeWindowUnit": "m"
+    },
+    "actions": [],
+    "notify_when": "onActiveAlert",
+    "enabled": true
     }')
   
   RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/alerting/rule" -d "$PAYLOAD")
@@ -118,8 +118,8 @@ else
   
 fi
 
-# Verify alert rule exists
-echo "[Alerting] Verifying alert rule exists..."
+# Verify primary alert rule exists
+echo "[Alerting] Verifying primary alert rule exists..."
 VERIFY_RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" -X GET "${KIBANA_URL}/api/alerting/rules/_find?search=${ALERT_NAME}")
 VERIFY_HTTP_CODE=$(echo "$VERIFY_RESPONSE" | tail -n1)
 VERIFY_BODY=$(echo "$VERIFY_RESPONSE" | sed '$d')
@@ -133,6 +133,62 @@ if [ "$VERIFY_HTTP_CODE" = "200" ]; then
   fi
 else
   echo "  ⚠️  Warning: Could not verify alert rule (HTTP ${VERIFY_HTTP_CODE})"
+fi
+
+echo "[Alerting] Ensuring business impact alert rule exists..."
+BUSINESS_ALERT_NAME="business-impact-payment-degradation"
+
+# Check if the business impact alert already exists
+BUSINESS_CHECK_RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" -X GET "${KIBANA_URL}/api/alerting/rules/_find?search=${BUSINESS_ALERT_NAME}")
+BUSINESS_CHECK_HTTP_CODE=$(echo "$BUSINESS_CHECK_RESPONSE" | tail -n1)
+BUSINESS_CHECK_BODY=$(echo "$BUSINESS_CHECK_RESPONSE" | sed '$d')
+
+BUSINESS_EXISTING_COUNT="0"
+if [ "$BUSINESS_CHECK_HTTP_CODE" = "200" ]; then
+  BUSINESS_EXISTING_COUNT=$(echo "$BUSINESS_CHECK_BODY" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('total', 0))" 2>/dev/null || echo "0")
+fi
+
+if [ "$BUSINESS_EXISTING_COUNT" -gt 0 ]; then
+  echo "  ✓ ${BUSINESS_ALERT_NAME} already exists"
+else
+  echo "[Alerting] Creating business impact alert rule..."
+
+  BUSINESS_ES_QUERY='{"query":{"bool":{"filter":[{"range":{"http.status_code":{"gte":500}}},{"term":{"service.name":"payment-service"}}]}}}'
+
+  BUSINESS_PAYLOAD=$(jq -n \
+    --arg esQuery "$BUSINESS_ES_QUERY" \
+    '{
+    "name": "business-impact-payment-degradation",
+    "rule_type_id": ".es-query",
+    "consumer": "alerts",
+    "schedule": {"interval": "1m"},
+    "params": {
+      "index": ["o11y-heartbeat"],
+      "timeField": "@timestamp",
+      "esQuery": $esQuery,
+      "threshold": [1],
+      "thresholdComparator": ">=",
+      "size": 100,
+      "timeWindowSize": 5,
+      "timeWindowUnit": "m"
+    },
+    "actions": [],
+    "notify_when": "onActiveAlert",
+    "enabled": true
+    }')
+
+  BUSINESS_RESPONSE=$(curl -s -w "\n%{http_code}" "${CURL_OPTS[@]}" -X POST "${KIBANA_URL}/api/alerting/rule" -d "$BUSINESS_PAYLOAD")
+
+  BUSINESS_HTTP_CODE=$(echo "$BUSINESS_RESPONSE" | tail -n1)
+  BUSINESS_BODY=$(echo "$BUSINESS_RESPONSE" | sed '$d')
+
+  if [ "$BUSINESS_HTTP_CODE" = "200" ] || [ "$BUSINESS_HTTP_CODE" = "201" ]; then
+    BUSINESS_ALERT_ID=$(echo "$BUSINESS_BODY" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get(\"id\", \"unknown\"))" 2>/dev/null || echo "unknown")
+    echo "  ✓ ${BUSINESS_ALERT_NAME} created successfully (ID: ${BUSINESS_ALERT_ID})"
+  else
+    echo "  ✗ ERROR: Business impact alert creation failed (HTTP ${BUSINESS_HTTP_CODE})"
+    echo "  Response: ${BUSINESS_BODY}"
+  fi
 fi
 
 echo "[Alerting] Alert rule creation complete"

@@ -47,92 +47,40 @@ This isn't just a technical alert—it's a **business-critical incident** that r
 
 Build a workflow that:
 
-1. **Triggers automatically** from an alert rule YOU create
-2. **Queries Elasticsearch** to analyze both error rates AND payment transaction metrics
-3. **Calls an AI agent** (`agent_business_slo`) to assess business impact
-4. **Makes a decision**: If payment drop >30%, trigger auto-scaling
-5. **Calls the mock API** (`/scale_service`) to scale up the service
-6. **Logs everything** to Elasticsearch for audit and analysis
+1. **Triggers automatically** from an alert on `payment-service` errors
+2. **Uses ES|QL** to query Elasticsearch for error rate and payment transaction metrics
+3. **Determines, deterministically**, whether payment volume has dropped enough to trigger scaling (e.g., payment_drop_pct > 30%)
+4. **Calls an AI Agent Builder agent** (`agent_business_slo`) to **explain the business impact** in human language
+5. **Simulates notifying a stakeholder** (e.g., email-style console output)
+6. **Indexes an audit record** of what happened
+
+The decision to scale is based on simple numeric thresholds (e.g., payment_drop_pct > 30%) using metrics from Elasticsearch. The AI agent is used to explain the impact and recommended follow-ups, not to make the final scaling decision.
 
 ## Step 1: Create Your Alert Rule
 
-First, you need to create an alert that fires when BOTH conditions are met:
-- High error rate (HTTP 5xx status codes)
-- AND payment transaction drop
-
-### Alert Requirements
-
-**Rule Type**: `.es-query`
-
-**Query Logic**:
-- Filter: `service.name: "payment-service"`
-- Condition 1: `http.status_code >= 500` (error rate threshold)
-- Condition 2: Count of `transaction.status: "success"` drops significantly
-
-**Time Window**: Compare last 5 minutes vs previous 1 hour baseline
-
-**Tip**: Use Kibana's Alerting UI to create this rule, or use the API. The alert should fire when payment success rate drops below 60% (normal is ~95%).
+First, you need to create an alert that fires when `payment-service` is experiencing 5xx errors. This alert is already pre-created for you during the lab setup.
 
 ### Alert Rule Name
-Name your alert: `business-impact-payment-degradation`
 
-<details>
-<summary>Show Solution: Alert Rule Creation</summary>
+The alert is named: `business-impact-payment-degradation`
 
-### Option 1: Via Kibana UI
+### Inspect the Alert
 
-1. Navigate to **Observability > Alerts > Rules**
-2. Click **Create rule**
-3. Select **Elasticsearch query**
-4. Configure:
-   - **Index**: `o11y-heartbeat`
-   - **Time field**: `@timestamp`
-   - **Query**:
-   ```json
-   {
-     "bool": {
-       "must": [
-         {"term": {"service.name": "payment-service"}},
-         {"range": {"http.status_code": {"gte": 500}}}
-       ],
-       "should": [
-         {"term": {"transaction.status": "success"}}
-       ],
-       "minimum_should_match": 1
-     }
-   }
-   ```
-   - **Threshold**: Count < 50 (adjust based on your data volume)
-   - **Time window**: Last 5 minutes
-5. Save as `business-impact-payment-degradation`
+1. In the [button label="Kibana - Workflows"](tab-0) tab, navigate to **Observability > Alerts > Rules**.
+2. Find and click on the `business-impact-payment-degradation` rule.
+3. Inspect its configuration. Notice that it's a simple technical alert (looking for 5xx errors on `payment-service`), without any complex business logic.
 
-### Option 2: Via API
+### Configure the Workflow Action
 
-```bash
-curl -X POST "${KIBANA_URL}/api/alerting/rule" \
-  -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
-  -H "Content-Type: application/json" \
-  -H "kbn-xsrf: true" \
-  -d '{
-    "name": "business-impact-payment-degradation",
-    "rule_type_id": ".es-query",
-    "consumer": "alerts",
-    "schedule": {"interval": "1m"},
-    "params": {
-      "index": ["o11y-heartbeat"],
-      "timeField": "@timestamp",
-      "esQuery": "{\"bool\":{\"must\":[{\"term\":{\"service.name\":\"payment-service\"}},{\"range\":{\"http.status_code\":{\"gte\":500}}}]}}",
-      "threshold": [50],
-      "thresholdComparator": "<",
-      "size": 100,
-      "timeWindowSize": 5,
-      "timeWindowUnit": "m"
-    },
-    "enabled": true
-  }'
-```
+Now, you need to configure this alert to trigger your workflow:
 
-</details>
+1. Click **Actions** in the top right, then **Edit**.
+2. Scroll down to the **Actions** section and click `Add action`.
+3. Select **Workflows**.
+4. In the **Select Workflows** dropdown, choose `business_impact_detector`.
+5. Scroll down and click **Save rule**.
+
+---
 
 ## Step 2: Build Your Workflow
 
@@ -157,59 +105,142 @@ steps:
   # TODO: Add your steps here
 ```
 
-### Required Steps
+### 2.1 ES|QL Building Blocks
 
-Your workflow must include:
+To keep the focus on orchestration (not wrestling with aggregations), here are the ES|QL query steps you can use directly in your workflow. Your job is to wire them together, compute the scaling decision deterministically, call the AI agent for explanation, and take action.
 
-1. **Parse alert data** - Extract service name from alert payload
-2. **Query error rate** - Elasticsearch query for HTTP 5xx errors for payment-service
-3. **Query payment metrics** - Elasticsearch query for successful payment transaction count
-4. **AI analysis** - Call `agent_business_slo` with error rate and payment data
-5. **Conditional logic** - If payment drop >30%, proceed to scaling
-6. **Scale service** - HTTP POST to `http://host-1:3000/scale_service`
-7. **Error handling** - Retry logic for API calls
-8. **Audit log** - Index decision and results to Elasticsearch
+#### Step: `get_error_rate`
 
-### Step Hints
+Add this step to query the error count:
 
-**Step 1: Parse Service Name**
 ```yaml
-- name: get_service_name
+- name: get_error_rate
+  type: elasticsearch.esql.query
+  with:
+    query: >
+      FROM o11y-heartbeat
+      | WHERE service.name == "payment-service"
+        AND @timestamp >= NOW() - 5 MINUTES
+        AND http.status_code >= 500
+      | STATS error_count = COUNT(*)
+```
+
+This produces a single row with `error_count`. Access it in later steps as:
+- `steps.get_error_rate.output.data[0].error_count`
+
+#### Step: `get_payment_metrics`
+
+Add this step to query current payment transaction metrics:
+
+```yaml
+- name: get_payment_metrics
+  type: elasticsearch.esql.query
+  with:
+    query: >
+      FROM o11y-heartbeat
+      | WHERE service.name == "payment-service"
+        AND @timestamp >= NOW() - 5 MINUTES
+        AND transaction.status == "success"
+      | STATS
+          payment_count = COUNT(*),
+          total_amount = SUM(transaction.amount)
+```
+
+Access the values as:
+- `steps.get_payment_metrics.output.data[0].payment_count`
+- `steps.get_payment_metrics.output.data[0].total_amount`
+
+#### Step: `get_baseline_metrics`
+
+Add this step to get the baseline payment count from the previous hour (for comparison):
+
+```yaml
+- name: get_baseline_metrics
+  type: elasticsearch.esql.query
+  with:
+    query: >
+      FROM o11y-heartbeat
+      | WHERE service.name == "payment-service"
+        AND @timestamp >= NOW() - 65 MINUTES
+        AND @timestamp < NOW() - 5 MINUTES
+        AND transaction.status == "success"
+      | STATS baseline_payment_count = COUNT(*)
+```
+
+Access it as:
+- `steps.get_baseline_metrics.output.data[0].baseline_payment_count`
+
+### 2.2 Compute the Payment Drop and Decide to Scale
+
+Using the ES|QL results, compute whether the payment drop is significant enough to trigger scaling.
+
+**Concept**: Calculate `payment_drop_pct` as approximately `(1 - current_payment_count / baseline_payment_count) * 100`.
+
+**Decision Logic**: 
+- If `payment_drop_pct > 30%`, trigger scaling
+- Otherwise, log the incident but don't scale
+
+You can implement this in one of two ways:
+1. **Compute in Liquid** (in a console step): Calculate the percentage and store it in a variable
+2. **Use a simple threshold in an `if` condition**: Compare `current_payment_count` directly to `baseline_payment_count` (e.g., `current_payment_count < 0.7 * baseline_payment_count`)
+
+The scaling decision should be **deterministic** based on these numeric thresholds, not based on AI output.
+
+### 2.3 Add AI Explanation of Business Impact
+
+After computing the metrics and making the scaling decision, call the AI agent to explain the business impact in human language:
+
+```yaml
+- name: ai_business_summary
+  type: kibana.post_agent_builder_converse
+  with:
+    agent_id: agent_business_slo
+    input: |
+      Here are the current metrics for payment-service:
+      - Error count (last 5m): {{ steps.get_error_rate.output.data[0].error_count }}
+      - Current successful payments (last 5m): {{ steps.get_payment_metrics.output.data[0].payment_count }}
+      - Baseline successful payments (previous hour): {{ steps.get_baseline_metrics.output.data[0].baseline_payment_count }}
+
+      The workflow will decide whether to scale based on numeric thresholds.
+      Your job is to explain the business impact in 2–3 sentences for an SRE and business audience.
+      Do not decide whether to scale; only explain impact and suggest follow-up checks.
+```
+
+**Important**: The AI agent is used for **explanation only**. The workflow makes the scaling decision deterministically based on the numeric thresholds you computed.
+
+### 2.4 Simulate Sending a Notification
+
+You can add a console step that simulates sending an email notification to stakeholders:
+
+```yaml
+- name: notify_stakeholder
   type: console
   with:
     message: |
-      {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
-      Service: {{ esQuery.query.bool.must[0].term['service.name'] }}
+      [EMAIL] To: sre-team@example.com
+      Subject: Payment service impact detected
+
+      {{ steps.ai_business_summary.output.response.message }}
 ```
 
-**Step 2 & 3: Elasticsearch Queries**
-- Use `elasticsearch.search` step type
-- Query `o11y-heartbeat` index
-- Filter by `service.name: "payment-service"`
-- For payments: Filter by `transaction.status: "success"` and aggregate count
-- For errors: Filter by `http.status_code >= 500`
+This is just for demonstration. In production, you would use an email or Slack connector.
 
-**Step 4: AI Agent**
-- Use `kibana.post_agent_builder_converse`
-- Agent ID: `agent_business_slo`
-- Input: Error rate, payment count, and ask for recommendation
+### 2.5 Wire It All Together
 
-**Step 5: Conditional Logic**
-- Use `if` step type
-- Condition: Check if payment drop percentage > 30%
-- Use KQL syntax: `steps.ai_analysis.output.response.message: "*scale_up*"`
+We've given you the ES|QL building blocks for metrics. Your job is to wire them together: compute whether the drop is big enough to scale (using deterministic thresholds), call the AI agent for explanation, call the mock API to scale if needed, and log everything to Elasticsearch for auditing.
 
-**Step 6: Scale Service**
-- Use `http` step type
-- URL: `http://host-1:3000/scale_service`
-- Method: POST
-- Body: `{"service_name": "payment-service"}`
-- Add retry logic with `on-failure`
+**Required Steps Summary**:
 
-**Step 7: Audit Log**
-- Use `elasticsearch.index` step type
-- Index: `business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}`
-- Document: Include service name, action taken, AI recommendation, timestamp
+1. **Parse alert data** - Extract service name from alert payload
+2. **Query error rate** - Use the `get_error_rate` ES|QL step above
+3. **Query payment metrics** - Use the `get_payment_metrics` ES|QL step above
+4. **Query baseline metrics** - Use the `get_baseline_metrics` ES|QL step above
+5. **Compute scaling decision** - Deterministically decide if scaling is needed
+6. **AI explanation** - Call `agent_business_slo` to explain business impact
+7. **Conditional logic** - If scaling needed, proceed to API call
+8. **Scale service** - HTTP POST to `http://host-1:3000/scale_service` (if needed)
+9. **Error handling** - Retry logic for API calls
+10. **Audit log** - Index decision and results to Elasticsearch
 
 ## Step 3: Test Your Workflow
 
@@ -269,109 +300,86 @@ steps:
         Service: {{ esQuery.query.bool.must[0].term['service.name'] }}
         Alert ID: {{ event.alerts[0].id }}
 
-  # Step 2: Query error rate
+  # Step 2: Query error rate using ES|QL
   - name: get_error_rate
-    type: elasticsearch.search
+    type: elasticsearch.esql.query
     with:
-      index: "o11y-heartbeat"
-      query:
-        bool:
-          must:
-            - term:
-                service.name: "payment-service"
-            - range:
-                http.status_code:
-                  gte: 500
-          filter:
-            - range:
-                "@timestamp":
-                  gte: "now-5m"
-      size: 0
-      aggs:
-        error_count:
-          value_count:
-            field: "_id"
+      query: >
+        FROM o11y-heartbeat
+        | WHERE service.name == "payment-service"
+          AND @timestamp >= NOW() - 5 MINUTES
+          AND http.status_code >= 500
+        | STATS error_count = COUNT(*)
 
-  # Step 3: Query payment transaction metrics
+  # Step 3: Query payment transaction metrics using ES|QL
   - name: get_payment_metrics
-    type: elasticsearch.search
+    type: elasticsearch.esql.query
     with:
-      index: "o11y-heartbeat"
-      query:
-        bool:
-          must:
-            - term:
-                service.name: "payment-service"
-            - term:
-                transaction.status: "success"
-          filter:
-            - range:
-                "@timestamp":
-                  gte: "now-5m"
-      size: 0
-      aggs:
-        payment_count:
-          value_count:
-            field: "_id"
-        total_amount:
-          sum:
-            field: "transaction.amount"
+      query: >
+        FROM o11y-heartbeat
+        | WHERE service.name == "payment-service"
+          AND @timestamp >= NOW() - 5 MINUTES
+          AND transaction.status == "success"
+        | STATS
+            payment_count = COUNT(*),
+            total_amount = SUM(transaction.amount)
 
-  # Step 4: Get baseline for comparison (previous hour)
+  # Step 4: Get baseline for comparison (previous hour) using ES|QL
   - name: get_baseline_metrics
-    type: elasticsearch.search
+    type: elasticsearch.esql.query
     with:
-      index: "o11y-heartbeat"
-      query:
-        bool:
-          must:
-            - term:
-                service.name: "payment-service"
-            - term:
-                transaction.status: "success"
-          filter:
-            - range:
-                "@timestamp":
-                  gte: "now-1h"
-                  lt: "now-5m"
-      size: 0
-      aggs:
-        baseline_payment_count:
-          value_count:
-            field: "_id"
+      query: >
+        FROM o11y-heartbeat
+        | WHERE service.name == "payment-service"
+          AND @timestamp >= NOW() - 65 MINUTES
+          AND @timestamp < NOW() - 5 MINUTES
+          AND transaction.status == "success"
+        | STATS baseline_payment_count = COUNT(*)
 
-  # Step 5: Call AI agent for business impact analysis
-  - name: ai_business_analysis
+  # Step 5: Compute payment drop percentage deterministically
+  - name: compute_payment_drop
+    type: console
+    with:
+      message: |-
+        {% assign current = steps.get_payment_metrics.output.data[0].payment_count %}
+        {% assign baseline = steps.get_baseline_metrics.output.data[0].baseline_payment_count %}
+        {% assign drop_pct = baseline | minus: current | times: 100.0 | divided_by: baseline %}
+        Payment drop: {{ drop_pct | round: 2 }}%
+        Current: {{ current }}, Baseline: {{ baseline }}
+
+  # Step 6: Call AI agent for business impact explanation
+  - name: ai_business_summary
     type: kibana.post_agent_builder_converse
     with:
       agent_id: agent_business_slo
       input: |
-        Payment service degradation detected:
-        - Current 5-minute error count: {{ steps.get_error_rate.output.response.aggregations.error_count.value }}
-        - Current 5-minute successful payments: {{ steps.get_payment_metrics.output.response.aggregations.payment_count.value }}
-        - Baseline (previous hour) successful payments: {{ steps.get_baseline_metrics.output.response.aggregations.baseline_payment_count.value }}
-        
-        Calculate the payment drop percentage and recommend an action.
-        Respond ONLY with JSON:
-        {"recommendation": "scale_up" | "investigate" | "no_action", "payment_drop_pct": <number>}
+        Here are the current metrics for payment-service:
+        - Error count (last 5m): {{ steps.get_error_rate.output.data[0].error_count }}
+        - Current successful payments (last 5m): {{ steps.get_payment_metrics.output.data[0].payment_count }}
+        - Baseline successful payments (previous hour): {{ steps.get_baseline_metrics.output.data[0].baseline_payment_count }}
+
+        The workflow will decide whether to scale based on numeric thresholds.
+        Your job is to explain the business impact in 2–3 sentences for an SRE and business audience.
+        Do not decide whether to scale; only explain impact and suggest follow-up checks.
     on-failure:
       retry:
         max-attempts: 2
         delay: 1s
 
-  # Step 6: Parse AI response
-  - name: parse_ai_response
+  # Step 7: Simulate notification (optional)
+  - name: notify_stakeholder
     type: console
     with:
-      message: |-
-        {% assign parsed = steps.ai_business_analysis.output.response.message | json_parse %}
-        Recommendation: {{ parsed.recommendation }}
-        Payment Drop: {{ parsed.payment_drop_pct }}%
+      message: |
+        [EMAIL] To: sre-team@example.com
+        Subject: Payment service impact detected
 
-  # Step 7: Conditional logic - check if scaling needed
+        {{ steps.ai_business_summary.output.response.message }}
+
+  # Step 8: Conditional logic - check if scaling needed (deterministic decision)
   - name: check_scaling_needed
     type: if
-    condition: "${{ steps.parse_ai_response.output contains 'scale_up' }}"
+    condition: "${{ steps.get_payment_metrics.output.data[0].payment_count < steps.get_baseline_metrics.output.data[0].baseline_payment_count * 0.7 }}"
     steps:
       - name: scale_service
         type: http
@@ -413,10 +421,10 @@ steps:
         alert_id: "{{ event.alerts[0].id }}"
         alert_name: "{{ event.alerts[0].rule.name }}"
         service_name: "payment-service"
-        error_count: "{{ steps.get_error_rate.output.response.aggregations.error_count.value }}"
-        current_payment_count: "{{ steps.get_payment_metrics.output.response.aggregations.payment_count.value }}"
-        baseline_payment_count: "{{ steps.get_baseline_metrics.output.response.aggregations.baseline_payment_count.value }}"
-        ai_recommendation: "{{ steps.parse_ai_response.output }}"
+        error_count: "{{ steps.get_error_rate.output.data[0].error_count }}"
+        current_payment_count: "{{ steps.get_payment_metrics.output.data[0].payment_count }}"
+        baseline_payment_count: "{{ steps.get_baseline_metrics.output.data[0].baseline_payment_count }}"
+        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
         action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
         scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```
@@ -427,12 +435,13 @@ steps:
 
 Congratulations! You've created a complete **business-critical automation system** that:
 
-- ✅ Detects technical AND business metrics
-- ✅ Uses AI to make intelligent decisions
-- ✅ Takes automated remediation actions
+- ✅ Uses ES|QL to query technical AND business metrics efficiently
+- ✅ Makes deterministic scaling decisions based on numeric thresholds
+- ✅ Uses AI to explain business impact in human language
+- ✅ Takes automated remediation actions when needed
 - ✅ Maintains a complete audit trail
 
-This is real-world automation that bridges the gap between observability and business outcomes.
+This is real-world automation that bridges the gap between observability and business outcomes, using ES|QL for fast data access and AI for clear communication.
 
 **Click "Next" to see a summary of everything you've learned!**
 
