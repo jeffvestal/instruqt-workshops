@@ -115,10 +115,6 @@ echo ""
 echo "✅ All validation checks passed!"
 echo ""
 echo "Your workflow structure is correct!"
-echo ""
-echo "Next steps:"
-echo "  • Step 4: Test your workflow using the Run button in Kibana"
-echo "  • Step 6: (Optional) Trigger a real incident to see end-to-end automation"
 
 exit 0
 
