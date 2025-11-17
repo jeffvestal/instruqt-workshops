@@ -50,8 +50,8 @@
     "probability": 0.0,
     "business_impact": true,
     "transaction_impact": {
-      "success_rate_drop": 0.4,
-      "amount_reduction": 0.3
+      "success_rate_drop": 0.6,
+      "amount_reduction": 0.5
     }
   }
 ]

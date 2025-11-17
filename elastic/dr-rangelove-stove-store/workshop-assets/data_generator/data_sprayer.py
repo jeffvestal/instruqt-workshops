@@ -106,15 +106,37 @@ class DataSprayer:
         if service == "payment-service":
             # Normal: 95% success rate, steady transaction amounts
             if business_incident_active:
-                # During business incident: 60% success rate, 30% lower amounts
-                transaction_status = random.choices(["success", "failed", "cancelled"], weights=[60, 30, 10])[0]
+                # During business incident: apply transaction_impact from scenario
+                # Find the business impact scenario to get the reduction factors
+                impact_scenario = next((s for s in self.scenarios if s.get("business_impact")), None)
+                if impact_scenario and "transaction_impact" in impact_scenario:
+                    success_rate_drop = impact_scenario["transaction_impact"]["success_rate_drop"]
+                    amount_reduction = impact_scenario["transaction_impact"]["amount_reduction"]
+                    
+                    # Calculate reduced success rate (e.g., 0.95 * (1 - 0.6) = 0.38 = 38%)
+                    success_rate = 0.95 * (1 - success_rate_drop)
+                    fail_rate = (1 - success_rate) * 0.75  # 75% of failures are "failed"
+                    cancel_rate = (1 - success_rate) * 0.25  # 25% of failures are "cancelled"
+                    
+                    transaction_status = random.choices(
+                        ["success", "failed", "cancelled"], 
+                        weights=[success_rate * 100, fail_rate * 100, cancel_rate * 100]
+                    )[0]
+                    
+                    # Reduce amounts (e.g., multiply by (1 - 0.5) = 0.5 for 50% reduction)
+                    amount_multiplier = (1 - amount_reduction)
+                else:
+                    # Fallback if scenario not found
+                    transaction_status = random.choices(["success", "failed", "cancelled"], weights=[40, 45, 15])[0]
+                    amount_multiplier = 0.5
+                
                 transaction_type = random.choice(["payment", "checkout", "order"])
                 if transaction_type == "payment":
-                    base_amount = random.uniform(50.0, 500.0) * 0.7  # 30% reduction
+                    base_amount = random.uniform(50.0, 500.0) * amount_multiplier
                 elif transaction_type == "checkout":
-                    base_amount = random.uniform(25.0, 350.0) * 0.7
+                    base_amount = random.uniform(25.0, 350.0) * amount_multiplier
                 else:  # order
-                    base_amount = random.uniform(10.0, 200.0) * 0.7
+                    base_amount = random.uniform(10.0, 200.0) * amount_multiplier
             else:
                 # Normal: 95% success rate
                 transaction_status = random.choices(["success", "failed", "cancelled"], weights=[95, 4, 1])[0]
