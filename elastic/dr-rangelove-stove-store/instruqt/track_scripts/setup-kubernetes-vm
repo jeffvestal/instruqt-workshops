@@ -164,8 +164,8 @@ done
 
 echo "[Workshop] ✓ Kibana is ready"
 
-# Enable workflows feature flag
-echo "[Workshop] Enabling workflows feature flag..."
+# Enable workflows feature flag and dark mode
+echo "[Workshop] Enabling workflows feature flag and dark mode..."
 FEATURE_FLAG_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}/api/kibana/settings" \
   -H "Content-Type: application/json" \
   -H "kbn-xsrf: true" \
@@ -173,13 +173,14 @@ FEATURE_FLAG_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}/ap
   -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
   -d '{
     "changes": {
-      "workflows:ui:enabled": true
+      "workflows:ui:enabled": true,
+      "theme:darkMode": true
     }
   }')
 
 HTTP_CODE=$(echo "$FEATURE_FLAG_RESPONSE" | tail -n1)
 if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
-  echo "[Workshop] ✓ Workflows feature flag enabled (HTTP $HTTP_CODE)"
+  echo "[Workshop] ✓ Workflows feature flag and dark mode enabled (HTTP $HTTP_CODE)"
 else
   echo "[Workshop] ⚠️  Warning: Feature flag API returned HTTP $HTTP_CODE (may already be enabled or not available)"
 fi

@@ -2,7 +2,7 @@
 slug: 07-self-healing-ai
 id: qgiakfohjqjp
 type: challenge
-title: 'Self-Healing with AI'
+title: Self-Healing with AI
 teaser: Create an alert-triggered workflow that uses AI and calls external APIs
 tabs:
 - id: ul3xucfkooqb

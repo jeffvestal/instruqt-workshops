@@ -11,7 +11,7 @@ notes:
 
     In this hands-on workshop, you'll learn to build robust automation that bridges the gap between findings and outcomes.
 
-    We'll start with simple workflows and progress to building a complete self-healing AIOps system.
+    We'll start with simple workflows and progress to building a complete business impact detection system that combines ES|QL queries, AI agents, and deterministic logic.
 tabs:
 - id: 5wlncph7b7pt
   title: Kibana
@@ -50,8 +50,11 @@ In this workshop, we will build:
 1. **Simple Workflows:** To automate simple tasks.
 2. **Robust Workflows:** That use logic, handle errors, and call external APIs.
 3. **AI-Powered Workflows:** That orchestrate multiple AI agents to perform complex reasoning.
+4. **Business-Critical Automation:** Using ES|QL for fast queries, deterministic logic for reliable decisions, and AI for human-readable explanations.
 
-By the end, you will build a "self-healing" workflow that triggers from a **real alert**, uses AI to decide on a fix, and calls an API to "remediate" the faulty service—all without human intervention.
+By the end, you will build two major systems:
+- A "self-healing" workflow that auto-remediates service issues
+- A "business impact detector" that monitors revenue-critical metrics and scales services automatically
 
 ## From Findings to Outcomes
 
@@ -59,7 +62,7 @@ This is the core philosophy of the workshop. Elastic gives you **findings** (ale
 
 Think of it this way:
 
-* **Findings**: "What's wrong?" (Elasticsearch, ML, Security)
+* **Findings**: "What's wrong?" (Search, Observability, Security)
 * **Outcomes**: "What do we do about it?" (Workflows, Agents, Actions)
 
 ## What You'll Learn
@@ -68,6 +71,8 @@ Think of it this way:
 2. **Challenge 5:** Orchestrate multiple AI agents in an "assembly line" pattern.
 3. **Challenge 6:** Give an AI agent a workflow as a "tool" to perform complex queries.
 4. **Challenge 7:** Build an end-to-end self-healing system triggered by a real alert.
+5. **Challenge 8:** **Capstone** - Build a business impact detection system from scratch using ES|QL, AI agents, and deterministic logic.
+6. **Challenge 9:** Workshop summary and next steps.
 
 ## Ready?
 
