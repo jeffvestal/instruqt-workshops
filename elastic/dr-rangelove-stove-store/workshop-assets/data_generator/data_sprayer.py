@@ -269,7 +269,7 @@ class DataSprayer:
                                 "type": transaction_type,
                                 "amount": round(base_amount, 2),
                                 "status": transaction_status
-                        }
+                            }
                     else:
                         # Generate anomaly doc
                         scenario = random.choice(scenarios) if scenarios else {
