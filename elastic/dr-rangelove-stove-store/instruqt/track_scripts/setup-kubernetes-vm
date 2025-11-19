@@ -203,7 +203,29 @@ TMP_CLONE_DIR="/tmp/instruqt-workshops-clone"
 rm -rf "$TMP_CLONE_DIR"
 
 echo "[Workshop] Cloning repository with sparse checkout..."
-git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_CLONE_DIR"
+
+# Retry logic for git clone (GitHub can have transient 500 errors)
+MAX_CLONE_RETRIES=3
+CLONE_RETRY_DELAY=5
+for attempt in $(seq 1 $MAX_CLONE_RETRIES); do
+  echo "[Workshop] Clone attempt $attempt/$MAX_CLONE_RETRIES..."
+  if git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_CLONE_DIR"; then
+    echo "[Workshop] ✓ Clone successful"
+    break
+  else
+    CLONE_EXIT_CODE=$?
+    if [ $attempt -lt $MAX_CLONE_RETRIES ]; then
+      echo "[Workshop] ⚠️  Clone attempt $attempt failed (exit code: $CLONE_EXIT_CODE). Retrying in ${CLONE_RETRY_DELAY}s..."
+      rm -rf "$TMP_CLONE_DIR"  # Clean up partial clone
+      sleep $CLONE_RETRY_DELAY
+    else
+      echo "[Workshop] ❌ ERROR: All clone attempts failed after $MAX_CLONE_RETRIES tries"
+      echo "[Workshop] This is likely a temporary GitHub issue. Please restart the sandbox."
+      exit 1
+    fi
+  fi
+done
+
 cd "$TMP_CLONE_DIR"
 git sparse-checkout set "$REPO_PATH"
 
