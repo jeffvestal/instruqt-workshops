@@ -73,7 +73,7 @@ The alert is named: `business-impact-payment-degradation`
 3. Find and click on the `business-impact-payment-degradation` rule.
 4. Inspect its configuration under the **Definition** section.
    - Notice that it's a simple technical alert:
-   - It fires when `payment-service` has 5xx errors in the last 5 minutes.
+   - It fires when `payment-service` has 5xx errors in the last 5 minutes (the workflow uses a 1-minute window for more precise detection).
 
 This is intentionally simple—the **workflow** will add the business logic.
 
@@ -111,21 +111,25 @@ steps:
 Instead of making three separate ES|QL queries, we can efficiently query all the metrics we need in a single query. This demonstrates ES|QL's power to handle multiple time windows and aggregations efficiently.
 
 Create an ES|QL step named `get_all_metrics` that returns:
-- Error count (5xx errors in last 5 minutes)
-- Current payment count (successful payments in last 5 minutes)
-- Current total amount (sum of successful payment amounts in last 5 minutes)
-- Baseline payment count (successful payments from 65 minutes ago to 5 minutes ago)
+- Error count (5xx errors in last 1 minute)
+- Current payment count (successful payments in last 1 minute)
+- Current total amount (sum of successful payment amounts in last 1 minute)
+- Baseline payment count (successful payments from 61 minutes ago to 1 minute ago)
 
 **ES|QL Query:**
 ```esql
 FROM o11y-heartbeat
 | WHERE service.name == "payment-service"
-| EVAL
-    is_error = CASE(http.status_code >= 500 AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-    is_current_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-    is_baseline_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 65 MINUTES AND @timestamp < NOW() - 5 MINUTES, 1, 0),
+| WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+  AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
+| EVAL 
+    is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
+    is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
+    is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
     current_amount = CASE(is_current_success == 1, transaction.amount, 0)
-| STATS
+| STATS 
     error_count = SUM(is_error),
     current_payment_count = SUM(is_current_success),
     current_total_amount = SUM(current_amount),
@@ -156,12 +160,16 @@ FROM o11y-heartbeat
     query: >
       FROM o11y-heartbeat
       | WHERE service.name == "payment-service"
-      | EVAL
-          is_error = CASE(http.status_code >= 500 AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-          is_current_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-          is_baseline_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 65 MINUTES AND @timestamp < NOW() - 5 MINUTES, 1, 0),
+      | WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+        AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
+      | EVAL 
+          is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
+          is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
+          is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
           current_amount = CASE(is_current_success == 1, transaction.amount, 0)
-      | STATS
+      | STATS 
           error_count = SUM(is_error),
           current_payment_count = SUM(is_current_success),
           current_total_amount = SUM(current_amount),
@@ -204,12 +212,12 @@ Add a `console` step that simulates sending an email with the AI's explanation.
     agent_id: agent_business_slo
     input: |
       Here are the current metrics for payment-service:
-      - Error count (last 5m): {{ steps.get_all_metrics.output.values[0][0] }}
-      - Current successful payments (last 5m): {{ steps.get_all_metrics.output.values[0][1] }}
+      - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
+      - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
       - Baseline successful payments (previous 60m total): {{ steps.get_all_metrics.output.values[0][3] }}
 
-      For context: The baseline covers 60 minutes, so to compare to the 5-minute current window,
-      the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 12 | round }} payments per 5 minutes.
+      For context: The baseline covers 60 minutes, so to compare to the 1-minute current window,
+      the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 60 | round }} payments per minute.
 
       Calculate the percentage drop: if current is significantly below the normalized baseline (drop >= 30%),
       this indicates a business-critical issue affecting revenue.
@@ -240,12 +248,12 @@ Add a `console` step that simulates sending an email with the AI's explanation.
 
 Use conditional logic to check if scaling is needed, then call the scaling API if the payment drop exceeds the threshold.
 
-Create an `if` step that calculates the payment drop percentage inline and checks if it's >= 30%. The baseline covers 60 minutes, so normalize it to a 5-minute equivalent for comparison.
+Create an `if` step that checks if the current payment count is below 70% of the normalized baseline. The baseline covers 60 minutes, so normalize it to a 1-minute equivalent for comparison.
 
 **Decision Logic:**
-- Calculate drop percentage: `(normalized_baseline - current) / normalized_baseline * 100`
-- Normalize baseline: `baseline_total / 12.0` (60 minutes ÷ 5 minutes = 12)
-- If `drop_pct >= 30%`, trigger scaling
+- Normalize baseline: `baseline_total / 60` (60 minutes ÷ 1 minute = 60)
+- Calculate threshold: `normalized_baseline * 0.7` (70% of baseline)
+- If `current_payment_count < threshold`, trigger scaling
 - Otherwise, log that no scaling action was taken
 
 **Inside the `if` block:**
@@ -268,12 +276,7 @@ Create an `if` step that calculates the payment drop percentage inline and check
 ```yaml
 - name: check_scaling_needed
   type: if
-  condition: |
-    {% assign current = steps.get_all_metrics.output.values[0][1] | plus: 0 %}
-    {% assign baseline_total = steps.get_all_metrics.output.values[0][3] | plus: 0 %}
-    {% assign normalized_baseline = baseline_total | divided_by: 12.0 %}
-    {% assign drop_pct = normalized_baseline | minus: current | times: 100.0 | divided_by: normalized_baseline %}
-    {% if drop_pct >= 30 %}true{% else %}false{% endif %}
+  condition: "steps.get_all_metrics.output.values.0.1 < {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{% assign threshold = baseline | divided_by: 60 | times: 0.7 | round %}{{ threshold }}"
   steps:
     - name: scale_service
       type: http
@@ -301,7 +304,13 @@ Create an `if` step that calculates the payment drop percentage inline and check
     - name: log_no_scaling
       type: console
       with:
-        message: "⚠️ No scaling action needed. Manual investigation may be required."
+        message: |
+          ⚠️ No scaling action needed. Manual investigation may be required.
+          
+          📊 Debug Info:
+          - Current payments (1m): {{ steps.get_all_metrics.output.values[0][1] }}
+          - Baseline payments (60m): {{ steps.get_all_metrics.output.values[0][3] }}
+          - Threshold (70% of baseline/min): {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{{ baseline | divided_by: 60 | times: 0.7 | round }}
 ```
 
 </details>
@@ -457,18 +466,23 @@ triggers:
 
 steps:
   # Step 1: Get all metrics in one efficient ES|QL query
+  # Uses deterministic time windows based on alert execution timestamp
   - name: get_all_metrics
     type: elasticsearch.esql.query
     with:
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
-        | EVAL
-            is_error = CASE(http.status_code >= 500 AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-            is_current_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-            is_baseline_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 65 MINUTES AND @timestamp < NOW() - 5 MINUTES, 1, 0),
+        | WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
+        | EVAL 
+            is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
+            is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
+            is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
             current_amount = CASE(is_current_success == 1, transaction.amount, 0)
-        | STATS
+        | STATS 
             error_count = SUM(is_error),
             current_payment_count = SUM(is_current_success),
             current_total_amount = SUM(current_amount),
@@ -481,16 +495,16 @@ steps:
       agent_id: agent_business_slo
       input: |
         Here are the current metrics for payment-service:
-        - Error count (last 5m): {{ steps.get_all_metrics.output.values[0][0] }}
-        - Current successful payments (last 5m): {{ steps.get_all_metrics.output.values[0][1] }}
+        - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
+        - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
         - Baseline successful payments (previous 60m total): {{ steps.get_all_metrics.output.values[0][3] }}
-
-        For context: The baseline covers 60 minutes, so to compare to the 5-minute current window,
-        the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 12 | round }} payments per 5 minutes.
-
+        
+        For context: The baseline covers 60 minutes, so to compare to the 1-minute current window,
+        the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 60 | round }} payments per minute.
+        
         Calculate the percentage drop: if current is significantly below the normalized baseline (drop >= 30%),
         this indicates a business-critical issue affecting revenue.
-
+        
         Your job is to explain the business impact in 2–3 sentences for an SRE and business audience.
         Focus on: Is revenue at risk? What might be the cause? What should teams investigate?
         Do not decide whether to scale; only explain impact and suggest follow-up checks.
@@ -510,14 +524,10 @@ steps:
         {{ steps.ai_business_summary.output.response.message }}
 
   # Step 4: Conditional logic - check if scaling needed (deterministic decision)
+  # Uses KQL field comparison with computed threshold (70% of normalized baseline)
   - name: check_scaling_needed
     type: if
-    condition: |
-      {% assign current = steps.get_all_metrics.output.values[0][1] | plus: 0 %}
-      {% assign baseline_total = steps.get_all_metrics.output.values[0][3] | plus: 0 %}
-      {% assign normalized_baseline = baseline_total | divided_by: 12.0 %}
-      {% assign drop_pct = normalized_baseline | minus: current | times: 100.0 | divided_by: normalized_baseline %}
-      {% if drop_pct >= 30 %}true{% else %}false{% endif %}
+    condition: "steps.get_all_metrics.output.values.0.1 < {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{% assign threshold = baseline | divided_by: 60 | times: 0.7 | round %}{{ threshold }}"
     steps:
       - name: scale_service
         type: http
@@ -545,7 +555,13 @@ steps:
       - name: log_no_scaling
         type: console
         with:
-          message: "⚠️ No scaling action needed. Manual investigation may be required."
+          message: |
+            ⚠️ No scaling action needed. Manual investigation may be required.
+            
+            📊 Debug Info:
+            - Current payments (1m): {{ steps.get_all_metrics.output.values[0][1] }}
+            - Baseline payments (60m): {{ steps.get_all_metrics.output.values[0][3] }}
+            - Threshold (70% of baseline/min): {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{{ baseline | divided_by: 60 | times: 0.7 | round }}
 
   # Step 5: Audit log to Elasticsearch
   - name: log_to_elasticsearch

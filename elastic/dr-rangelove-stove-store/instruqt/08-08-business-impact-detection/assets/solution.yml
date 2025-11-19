@@ -10,16 +10,21 @@ triggers:
 
 steps:
   # Step 1: Get all metrics in one efficient ES|QL query
+  # Uses deterministic time windows based on alert execution timestamp
   - name: get_all_metrics
     type: elasticsearch.esql.query
     with:
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
+        | WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
         | EVAL 
-            is_error = CASE(http.status_code >= 500 AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-            is_current_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 5 MINUTES, 1, 0),
-            is_baseline_success = CASE(transaction.status == "success" AND @timestamp >= NOW() - 65 MINUTES AND @timestamp < NOW() - 5 MINUTES, 1, 0),
+            is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
+            is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
+            is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
             current_amount = CASE(is_current_success == 1, transaction.amount, 0)
         | STATS 
             error_count = SUM(is_error),
@@ -34,12 +39,12 @@ steps:
       agent_id: agent_business_slo
       input: |
         Here are the current metrics for payment-service:
-        - Error count (last 5m): {{ steps.get_all_metrics.output.values[0][0] }}
-        - Current successful payments (last 5m): {{ steps.get_all_metrics.output.values[0][1] }}
+        - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
+        - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
         - Baseline successful payments (previous 60m total): {{ steps.get_all_metrics.output.values[0][3] }}
         
-        For context: The baseline covers 60 minutes, so to compare to the 5-minute current window,
-        the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 12 | round }} payments per 5 minutes.
+        For context: The baseline covers 60 minutes, so to compare to the 1-minute current window,
+        the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 60 | round }} payments per minute.
         
         Calculate the percentage drop: if current is significantly below the normalized baseline (drop >= 30%),
         this indicates a business-critical issue affecting revenue.
@@ -63,14 +68,10 @@ steps:
         {{ steps.ai_business_summary.output.response.message }}
 
   # Step 4: Conditional logic - check if scaling needed (deterministic decision)
+  # Uses KQL field comparison with computed threshold (70% of normalized baseline)
   - name: check_scaling_needed
     type: if
-    condition: |
-      {% assign current = steps.get_all_metrics.output.values[0][1] | plus: 0 %}
-      {% assign baseline_total = steps.get_all_metrics.output.values[0][3] | plus: 0 %}
-      {% assign normalized_baseline = baseline_total | divided_by: 12.0 %}
-      {% assign drop_pct = normalized_baseline | minus: current | times: 100.0 | divided_by: normalized_baseline %}
-      {% if drop_pct >= 30 %}true{% else %}false{% endif %}
+    condition: "steps.get_all_metrics.output.values.0.1 < {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{% assign threshold = baseline | divided_by: 60 | times: 0.7 | round %}{{ threshold }}"
     steps:
       - name: scale_service
         type: http
@@ -98,7 +99,13 @@ steps:
       - name: log_no_scaling
         type: console
         with:
-          message: "⚠️ No scaling action needed. Manual investigation may be required."
+          message: |
+            ⚠️ No scaling action needed. Manual investigation may be required.
+            
+            📊 Debug Info:
+            - Current payments (1m): {{ steps.get_all_metrics.output.values[0][1] }}
+            - Baseline payments (60m): {{ steps.get_all_metrics.output.values[0][3] }}
+            - Threshold (70% of baseline/min): {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{{ baseline | divided_by: 60 | times: 0.7 | round }}
 
   # Step 5: Audit log to Elasticsearch
   - name: log_to_elasticsearch
