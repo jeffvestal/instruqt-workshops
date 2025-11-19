@@ -20,7 +20,7 @@ tabs:
 - id: qh7f07uf14qd
   title: Terminal
   type: terminal
-  hostname: host-1
+  hostname: kubernetes-vm
 - id: esjvv2gabwdg
   title: Documentation
   type: website
