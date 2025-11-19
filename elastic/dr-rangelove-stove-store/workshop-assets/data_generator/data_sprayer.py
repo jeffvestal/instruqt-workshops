@@ -8,7 +8,7 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2025-11-11-v2"  # Update this with each significant change
+VERSION = "2025-11-19-v3-exit-on-fatal"  # Force immediate exit on fatal errors
 
 import argparse
 import asyncio
@@ -670,7 +670,8 @@ class DataSprayer:
                         print("ACTION REQUIRED: Please STOP and RESTART this sandbox.", flush=True)
                         print("=" * 70 + "\n", flush=True)
                         progress_dict["bailout"] = True
-                        return  # Exit heartbeat thread
+                        # Force immediate exit - don't wait for main thread
+                        os._exit(1)
                     elif elapsed > 180:  # Stage 1 - Warning at 3 minutes
                         print(
                             f"⚠️  WARNING: No batches completed after {int(elapsed)}s "
@@ -712,7 +713,7 @@ class DataSprayer:
                 ingest_heartbeat_running = False
                 hb_thread.join(timeout=1)
                 print("\n❌ Ingestion aborted due to poor performance", flush=True)
-                sys.exit(1)
+                os._exit(1)
             
             success, failed_count, end_line_num = await task
             completed_batches += 1
@@ -734,8 +735,9 @@ class DataSprayer:
                     print("", flush=True)
                     print("ACTION REQUIRED: Please STOP and RESTART this sandbox.", flush=True)
                     print("=" * 70 + "\n", flush=True)
-                    progress_dict["bailout"] = True
-                    break  # Exit the batch processing loop
+                    print("", flush=True)
+                    # Force immediate process termination - don't wait for cleanup
+                    os._exit(1)
             
             if failed_count > 0:
                 print(f"\n⚠️  Warning: Batch {completed_batches}/{total_batches}: {failed_count} documents failed to index")
@@ -775,7 +777,7 @@ class DataSprayer:
         # Final bailout check
         if progress_dict.get("bailout", False):
             print("\n❌ Setup aborted due to slow ingestion", flush=True)
-            sys.exit(1)
+            os._exit(1)
         
         elapsed_total = (datetime.now() - start_time).total_seconds()
         avg_rate = indexed_total / elapsed_total if elapsed_total > 0 else 0
