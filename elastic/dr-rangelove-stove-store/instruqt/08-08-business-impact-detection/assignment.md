@@ -12,6 +12,12 @@ tabs:
   path: /app/workflows
   port: 30001
 - id: 7wmw8dvh87fw
+  title: Kibana - Alerts
+  type: service
+  hostname: kubernetes-vm
+  path: /app/observability/alerts
+  port: 30001
+- id: jdbzzjvuswqv
   title: Kibana - Discover
   type: service
   hostname: kubernetes-vm
@@ -68,7 +74,7 @@ The alert is named: `business-impact-payment-degradation`
 
 ### Inspect the Alert
 
-1. Navigate to **Observability > Alerts > Rules** (or use the [button label="Kibana - Workflows"](tab-0) tab and navigate from there).
+1. Click the [button label="Kibana - Alerts"](tab-1) tab.
 2. Click on **Manage Rules** in the upper right corner.
 3. Find and click on the `business-impact-payment-degradation` rule.
 4. Inspect its configuration under the **Definition** section.
@@ -120,16 +126,16 @@ Create an ES|QL step named `get_all_metrics` that returns:
 ```esql
 FROM o11y-heartbeat
 | WHERE service.name == "payment-service"
-| WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-  AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
-| EVAL 
-    is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-    is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+| WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+  AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+| EVAL
+    is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
     is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
     is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
     is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
     current_amount = CASE(is_current_success == 1, transaction.amount, 0)
-| STATS 
+| STATS
     error_count = SUM(is_error),
     current_payment_count = SUM(is_current_success),
     current_total_amount = SUM(current_amount),
@@ -160,16 +166,16 @@ FROM o11y-heartbeat
     query: >
       FROM o11y-heartbeat
       | WHERE service.name == "payment-service"
-      | WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-        AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
-      | EVAL 
-          is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-          is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+      | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+        AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+      | EVAL
+          is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
           is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
           is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
           is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
           current_amount = CASE(is_current_success == 1, transaction.amount, 0)
-      | STATS 
+      | STATS
           error_count = SUM(is_error),
           current_payment_count = SUM(is_current_success),
           current_total_amount = SUM(current_amount),
@@ -306,7 +312,7 @@ Create an `if` step that checks if the current payment count is below 70% of the
       with:
         message: |
           ⚠️ No scaling action needed. Manual investigation may be required.
-          
+
           📊 Debug Info:
           - Current payments (1m): {{ steps.get_all_metrics.output.values[0][1] }}
           - Baseline payments (60m): {{ steps.get_all_metrics.output.values[0][3] }}
@@ -371,9 +377,9 @@ Create an `elasticsearch.index` step that writes all the key metrics, AI explana
 
 Now that your workflow exists, wire it to the alert:
 
-1. Navigate to **Observability > Alerts > Rules** (or use the [button label="Kibana - Workflows"](tab-0) tab and navigate from there)
-2. Find the `business-impact-payment-degradation` rule and click it
-3. Click **Actions** (top right), then **Edit**
+1. Click the [button label="Kibana - Alerts"](tab-1) tab.
+2. Find the `business-impact-payment-degradation` rule and click it.
+3. Click **Actions** (top right), then **Edit**.
 4. Scroll to **Actions** section and click **Add action**
 5. Select **Workflows**
 6. Choose `business_impact_detector` from the dropdown
@@ -407,7 +413,7 @@ If any step fails, review the error message and fix your workflow YAML.
 
 ## Step 5: Validate Your Solution
 
-1. Open the [button label="Terminal"](tab-2) tab
+1. Open the [button label="Terminal"](tab-3) tab
 2. click `▶️ run` on the code box below
     - This will run the check script to validate your implementation:
 
@@ -428,24 +434,26 @@ This will verify:
 
 Want to see the full automation in action with real data? Trigger a business incident!
 
-1. Open the [button label="Terminal"](tab-2) tab
+1. Open the [button label="Terminal"](tab-3) tab
 2. click `▶️ run` on the code box below
 1. **Trigger the incident**:
    ```bash,run
    bash /opt/workshop-assets/setup_scripts/06-trigger-business-incident.sh
    ```
-2. **Wait for alert to fire** (~1-2 minutes) - navigate to **Observability > Alerts** to check
+2. **Wait for alert to fire** (~1-2 minutes) - check [button label="Kibana - Alerts"](tab-1)
 3. **Verify workflow was triggered automatically**:
    - Check workflow execution history in [button label="Kibana - Workflows"](tab-0)
    - Verify scaling action was logged
 
-4. **Check the mock API logs** (optional):
+4. **Check the mock API** (optional):
    ```bash
-   pm2 logs mock-api --lines 20
+   # Check if the mock API received the scaling request
+   curl -s http://host-1:3000/health | jq .
    ```
+   > **Note**: The mock API runs on `host-1`. If you want to see pm2 logs, SSH to host-1: `ssh host-1` then run `pm2 logs mock-api --lines 20`
 
 5. **View the audit trail**:
-   - In [button label="Kibana - Discover"](tab-1), search index: `business_actions-*`
+   - In [button label="Kibana - Discover"](tab-2), search index: `business_actions-*`
    - Verify your workflow action was logged with all metrics
 
 ---
@@ -473,16 +481,16 @@ steps:
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
-        | WHERE @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-          AND @timestamp <= "{{ event.alerts[0].rule.execution.timestamp }}"
-        | EVAL 
-            is_in_current_window = @timestamp >= "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-            is_in_baseline_window = @timestamp < "{{ event.alerts[0].rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+        | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+        | EVAL
+            is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
             is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
             is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
             is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
             current_amount = CASE(is_current_success == 1, transaction.amount, 0)
-        | STATS 
+        | STATS
             error_count = SUM(is_error),
             current_payment_count = SUM(is_current_success),
             current_total_amount = SUM(current_amount),
@@ -498,13 +506,13 @@ steps:
         - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
         - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
         - Baseline successful payments (previous 60m total): {{ steps.get_all_metrics.output.values[0][3] }}
-        
+
         For context: The baseline covers 60 minutes, so to compare to the 1-minute current window,
         the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 60 | round }} payments per minute.
-        
+
         Calculate the percentage drop: if current is significantly below the normalized baseline (drop >= 30%),
         this indicates a business-critical issue affecting revenue.
-        
+
         Your job is to explain the business impact in 2–3 sentences for an SRE and business audience.
         Focus on: Is revenue at risk? What might be the cause? What should teams investigate?
         Do not decide whether to scale; only explain impact and suggest follow-up checks.
@@ -557,7 +565,7 @@ steps:
         with:
           message: |
             ⚠️ No scaling action needed. Manual investigation may be required.
-            
+
             📊 Debug Info:
             - Current payments (1m): {{ steps.get_all_metrics.output.values[0][1] }}
             - Baseline payments (60m): {{ steps.get_all_metrics.output.values[0][3] }}

@@ -4,7 +4,25 @@ set -euo pipefail
 echo "=== Challenge 8 Validation ==="
 echo ""
 
-# Get environment variables
+# Source environment variables if not already set
+if [ -z "${ELASTICSEARCH_APIKEY:-}" ]; then
+  echo "[Setup] Loading environment variables..."
+  # Run in subshell to avoid exit calls in sourced scripts terminating us
+  ELASTICSEARCH_APIKEY=$(bash -c '
+    source /etc/profile.d/instruqt-env.sh 2>/dev/null || true
+    source /opt/workshops/elastic-start.sh >/dev/null 2>&1 || true
+    echo "$ELASTICSEARCH_APIKEY"
+  ' 2>/dev/null) || true
+  export ELASTICSEARCH_APIKEY
+  KIBANA_URL=$(bash -c '
+    source /etc/profile.d/instruqt-env.sh 2>/dev/null || true
+    source /opt/workshops/elastic-start.sh >/dev/null 2>&1 || true
+    echo "${KIBANA_URL:-http://kubernetes-vm:30001}"
+  ' 2>/dev/null) || true
+  export KIBANA_URL
+fi
+
+# Get environment variables (after sourcing)
 KIBANA_URL="${KIBANA_URL:-http://kubernetes-vm:30001}"
 ELASTICSEARCH_APIKEY="${ELASTICSEARCH_APIKEY:-}"
 WORKFLOW_NAME="business_impact_detector"
@@ -12,6 +30,10 @@ ALERT_NAME="business-impact-payment-degradation"
 
 if [ -z "$ELASTICSEARCH_APIKEY" ]; then
   echo "ERROR: ELASTICSEARCH_APIKEY environment variable not set"
+  echo ""
+  echo "Try running these commands first:"
+  echo "  source /etc/profile.d/instruqt-env.sh"
+  echo "  source /opt/workshops/elastic-start.sh"
   exit 1
 fi
 

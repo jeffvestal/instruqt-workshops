@@ -1,0 +1,846 @@
+2025-12-10T14:51:40Z 6wmyqdk4qzju INFO: Setting up environment
+2025-12-10T14:51:40Z 6wmyqdk4qzju INFO: Running terraform init; workdir: /terraform/tvu7yvg32vsk/6wmyqdk4qzju/plans/core
+2025-12-10T14:51:42Z 6wmyqdk4qzju INFO: Terraform has been successfully initialised.
+2025-12-10T14:51:42Z 6wmyqdk4qzju INFO: Running terraform apply; workdir: /terraform/tvu7yvg32vsk/6wmyqdk4qzju/plans/core
+2025-12-10T14:53:25Z 6wmyqdk4qzju INFO: Terraform apply has been successful
+2025-12-10T14:53:29Z 6wmyqdk4qzju INFO: executing track lifecycle script
+2025-12-10T14:53:29Z 6wmyqdk4qzju INFO: Starting script: setup-host-1
+2025-12-10T14:53:44Z 6wmyqdk4qzju INFO: setup-host-1: Wait for the Instruqt host bootstrap to finish
+2025-12-10T14:53:44Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:45Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:46Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:47Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:48Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:49Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:50Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:51Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:52Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:53Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:54Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:55Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:56Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:57Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:58Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:53:59Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:00Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:01Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:02Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:03Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:04Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:05Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:06Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:07Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:08Z 6wmyqdk4qzju INFO: setup-host-1: Waiting for Instruqt to finish booting the virtual machine
+2025-12-10T14:54:09Z 6wmyqdk4qzju INFO: setup-host-1: [Workshop] Downloading workshop assets...
+2025-12-10T14:54:09Z 6wmyqdk4qzju INFO: setup-host-1: Cloning into 'temp-repo'...
+2025-12-10T14:54:10Z 6wmyqdk4qzju INFO: setup-host-1: Your branch is up to date with 'origin/main'.
+2025-12-10T14:54:10Z 6wmyqdk4qzju INFO: setup-host-1: [Workshop] Installing Node.js and pm2...
+2025-12-10T14:54:10Z 6wmyqdk4qzju INFO: setup-host-1: [38;5;79m2025-12-10 14:54:10 - Installing pre-requisites[0m
+2025-12-10T14:54:10Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:10Z 6wmyqdk4qzju INFO: setup-host-1: WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2025-12-10T14:54:10Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:2 https://download.docker.com/linux/ubuntu jammy InRelease [48.5 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Hit:3 https://deb.nodesource.com/node_23.x nodistro InRelease
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:4 https://download.docker.com/linux/ubuntu jammy/stable amd64 Packages [65.1 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Hit:5 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy InRelease
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:6 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:7 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:8 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [2852 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:9 http://security.ubuntu.com/ubuntu jammy-security/main Translation-en [411 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:10 http://security.ubuntu.com/ubuntu jammy-security/main amd64 c-n-f Metadata [13.9 kB]
+2025-12-10T14:54:11Z 6wmyqdk4qzju INFO: setup-host-1: Get:11 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [4790 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:12 http://security.ubuntu.com/ubuntu jammy-security/restricted Translation-en [897 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:13 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1006 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:14 http://security.ubuntu.com/ubuntu jammy-security/universe Translation-en [220 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:15 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [22.3 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:16 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [3112 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:17 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [478 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:18 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/main amd64 c-n-f Metadata [19.0 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:19 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [4944 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:20 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [923 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:21 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1244 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:22 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [310 kB]
+2025-12-10T14:54:12Z 6wmyqdk4qzju INFO: setup-host-1: Get:23 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [30.0 kB]
+2025-12-10T14:54:32Z 6wmyqdk4qzju INFO: setup-host-1: Fetched 21.8 MB in 5s (4039 kB/s)
+2025-12-10T14:54:33Z 6wmyqdk4qzju INFO: setup-host-1: Reading package lists...
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: Building dependency tree...
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: Reading state information...
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: 80 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: Reading package lists...
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: Building dependency tree...
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: Reading state information...
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: ca-certificates is already the newest version (20240203~22.04.1).
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: curl is already the newest version (7.81.0-1ubuntu1.21).
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: gnupg is already the newest version (2.2.27-3ubuntu2.4).
+2025-12-10T14:54:34Z 6wmyqdk4qzju INFO: setup-host-1: apt-transport-https is already the newest version (2.4.14).
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1: 0 upgraded, 0 newly installed, 0 to remove and 80 not upgraded.
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1: WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1: Hit:1 https://download.docker.com/linux/ubuntu jammy InRelease
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1: Get:2 https://deb.nodesource.com/node_20.x nodistro InRelease [12.1 kB]
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1: Hit:3 http://security.ubuntu.com/ubuntu jammy-security InRelease
+2025-12-10T14:54:35Z 6wmyqdk4qzju INFO: setup-host-1: Get:4 https://deb.nodesource.com/node_20.x nodistro/main amd64 Packages [13.2 kB]
+2025-12-10T14:54:36Z 6wmyqdk4qzju INFO: setup-host-1: Hit:5 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy InRelease
+2025-12-10T14:54:36Z 6wmyqdk4qzju INFO: setup-host-1: Hit:6 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-updates InRelease
+2025-12-10T14:54:37Z 6wmyqdk4qzju INFO: setup-host-1: Hit:7 http://us-central1.gce.archive.ubuntu.com/ubuntu jammy-backports InRelease
+2025-12-10T14:54:37Z 6wmyqdk4qzju INFO: setup-host-1: Fetched 25.3 kB in 2s (11.9 kB/s)
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: Reading package lists...
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: Building dependency tree...
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: Reading state information...
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: 80 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: [1;34m2025-12-10 14:54:39 - Repository configured successfully.[0m
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: [38;5;79m2025-12-10 14:54:39 - To install Node.js, run: apt install nodejs -y[0m
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: [38;5;79m2025-12-10 14:54:39 - You can use N|solid Runtime as a node.js alternative[0m
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: [1;32m2025-12-10 14:54:39 - To install N|solid Runtime, run: apt install nsolid -y
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: [0m
+2025-12-10T14:54:39Z 6wmyqdk4qzju INFO: setup-host-1: Reading package lists...
+2025-12-10T14:54:40Z 6wmyqdk4qzju INFO: setup-host-1: Building dependency tree...
+2025-12-10T14:54:40Z 6wmyqdk4qzju INFO: setup-host-1: Reading state information...
+2025-12-10T14:54:40Z 6wmyqdk4qzju INFO: setup-host-1: nodejs is already the newest version (23.11.1-1nodesource1).
+2025-12-10T14:54:40Z 6wmyqdk4qzju INFO: setup-host-1: 0 upgraded, 0 newly installed, 0 to remove and 80 not upgraded.
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: added 133 packages in 7s
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: 13 packages are looking for funding
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1:   run `npm fund` for details
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: npm notice
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: npm notice New major version of npm available! 10.9.2 -> 11.7.0
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: npm notice To update run: npm install -g npm@11.7.0
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: npm notice
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: [Workshop] Setting up mock remediation API...
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: [Mock API] Creating remediation API service...
+2025-12-10T14:54:47Z 6wmyqdk4qzju INFO: setup-host-1: [Mock API] Installing dependencies...
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: [Mock API] Starting with pm2...
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                         -------------
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: __/\\\\\\\\\\\\\____/\\\\____________/\\\\____/\\\\\\\\\_____
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:  _\/\\\/////////\\\_\/\\\\\\________/\\\\\\__/\\\///////\\\___
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:   _\/\\\_______\/\\\_\/\\\//\\\____/\\\//\\\_\///______\//\\\__
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:    _\/\\\\\\\\\\\\\/__\/\\\\///\\\/\\\/_\/\\\___________/\\\/___
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:     _\/\\\/////////____\/\\\__\///\\\/___\/\\\________/\\\//_____
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:      _\/\\\_____________\/\\\____\///_____\/\\\_____/\\\//________
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:       _\/\\\_____________\/\\\_____________\/\\\___/\\\/___________
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:        _\/\\\_____________\/\\\_____________\/\\\__/\\\\\\\\\\\\\\\_
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:         _\///______________\///______________\///__\///////////////__
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                           Runtime Edition
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:         PM2 is a Production Process Manager for Node.js applications
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                      with a built-in Load Balancer.
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 Start and Daemonize any application:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 $ pm2 start app.js
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 Load Balance 4 instances of api.js:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 $ pm2 start api.js -i 4
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 Monitor in production:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 $ pm2 monitor
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 Make pm2 auto-boot at server restart:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 $ pm2 startup
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 To go further checkout:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                 http://pm2.io/
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:                         -------------
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Spawning PM2 daemon with pm2_home=/root/.pm2
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] PM2 Successfully daemonized
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Starting /opt/mock-remediation-api/server.js in fork_mode (1 instance)
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Done.
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: ┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: │ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: ├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: │ 0  │ mock-api    │ default     │ 1.0.0   │ fork    │ 5539     │ 0s     │ 0    │ online    │ 0%       │ 30.3mb   │ root     │ disabled │
+2025-12-10T14:54:50Z 6wmyqdk4qzju INFO: setup-host-1: └────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Saving current process list...
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Successfully saved in /root/.pm2/dump.pm2
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [Mock API] Service started on port 3000
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [Mock API] Endpoints:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:   - POST http://localhost:3000/remediate_service
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:   - POST http://localhost:3000/scale_service
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:   - GET  http://localhost:3000/health
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Init System found: systemd
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Platform systemd
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Template
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [Unit]
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Description=PM2 process manager
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Documentation=https://pm2.keymetrics.io/
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: After=network.target
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [Service]
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Type=forking
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: User=root
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: LimitNOFILE=infinity
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: LimitNPROC=infinity
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: LimitCORE=infinity
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Environment=PM2_HOME=/root/.pm2
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: PIDFile=/root/.pm2/pm2.pid
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Restart=on-failure
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: ExecStart=/usr/lib/node_modules/pm2/bin/pm2 resurrect
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: ExecReload=/usr/lib/node_modules/pm2/bin/pm2 reload all
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: ExecStop=/usr/lib/node_modules/pm2/bin/pm2 kill
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [Install]
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: WantedBy=multi-user.target
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Target path
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: /etc/systemd/system/pm2-root.service
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Command list
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [ 'systemctl enable pm2-root' ]
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Writing init configuration in /etc/systemd/system/pm2-root.service
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Making script booting at startup...
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] [-] Executing: systemctl enable pm2-root...
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: Created symlink /etc/systemd/system/multi-user.target.wants/pm2-root.service → /etc/systemd/system/pm2-root.service.
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] [v] Command successfully executed.
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: +---------------------------------------+
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Freeze a process list on reboot via:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: $ pm2 save
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Remove init script via:
+2025-12-10T14:54:51Z 6wmyqdk4qzju INFO: setup-host-1: $ pm2 unstartup systemd
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Saving current process list...
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: [PM2] Successfully saved in /root/.pm2/dump.pm2
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: [Workshop] Mock API ready on port 3000
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: Wait for the Kubernetes API server to become available
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: k8s is up and running: 0
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: Added to /etc/hosts: 10.32.1.9 elasticsearch-es-http.default.svc
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: New entry in /etc/hosts:
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: 10.32.1.9 elasticsearch-es-http.default.svc
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: configmap/coredns-custom created
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: deployment.apps/coredns restarted
+2025-12-10T14:54:52Z 6wmyqdk4qzju INFO: setup-host-1: Restart NGINX
+2025-12-10T14:54:53Z 6wmyqdk4qzju INFO: Finished running script: setup-host-1
+2025-12-10T14:54:53Z 6wmyqdk4qzju INFO: Starting script: setup-kubernetes-vm
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Wait for the Instruqt host bootstrap to finish
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: _SANDBOX_ID=6wmyqdk4qzju
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: INSTRUQT=true
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: LLM_KEY_DURATION=1d
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: LLM_KEY_MAX_BUDGET=25
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: LLM_MODELS=["gpt-3.5-turbo","gpt-4.1","gpt-4o","gpt-4o-westus","eval-gpt-4o","anthropic","cohere","gemini-1.0","claude-sonnet-4"]
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: LLM_PROXY_URL=litellm-proxy-service-1059491012611.us-central1.run.app
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Wait for the Kubernetes API server to become available
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: k8s is up and running: 0
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: obtain trial license
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: secret/eck-trial-license created
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: setup google cloud storage for gcs
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Warning: resource secrets/gcs-credentials is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+2025-12-10T14:54:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: secret/gcs-credentials configured
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: setup google cloud storage for sa snapshots
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Warning: resource secrets/gcs-credentials-sa is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: secret/gcs-credentials-sa configured
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: setup google cloud storage for eden snapshots
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Warning: resource secrets/gcs-credentials-eden is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: secret/gcs-credentials-eden configured
+2025-12-10T14:55:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: setup google cloud storage for education snapshots
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Warning: resource secrets/gcs-credentials-education is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: secret/gcs-credentials-education configured
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: configure ingress
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ingress.networking.k8s.io/apm-ing created
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Warning: annotation "kubernetes.io/ingress.class" is deprecated, please use 'spec.ingressClassName' instead
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ingressroute.traefik.containo.us/kibana-ing created
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Waiting for Elasticsearch
+2025-12-10T14:55:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Waiting for Kibana
+2025-12-10T14:55:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: waiting for fleet-server
+2025-12-10T14:55:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: waiting for elastic-agent
+2025-12-10T14:55:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Waiting for Elasticsearch to be ready
+2025-12-10T14:55:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elastic-agent-agent-69d4cbbf45-rqltv condition met
+2025-12-10T14:55:23Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elasticsearch-es-default-0 condition met
+2025-12-10T14:55:23Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/fleet-server-agent-7cfb776999-5kwk4 condition met
+2025-12-10T14:55:32Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: error: timed out waiting for the condition on pods/kibana-kb-66998f676-t9j4z
+2025-12-10T14:55:32Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Attempt 1 failed! Retrying in 2 seconds...
+2025-12-10T14:55:34Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elastic-agent-agent-69d4cbbf45-rqltv condition met
+2025-12-10T14:55:35Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elasticsearch-es-default-0 condition met
+2025-12-10T14:55:35Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/fleet-server-agent-7cfb776999-5kwk4 condition met
+2025-12-10T14:56:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: error: timed out waiting for the condition on pods/kibana-kb-66998f676-t9j4z
+2025-12-10T14:56:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Attempt 2 failed! Retrying in 2 seconds...
+2025-12-10T14:56:07Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elastic-agent-agent-69d4cbbf45-rqltv condition met
+2025-12-10T14:56:37Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: timed out waiting for the condition on pods/elasticsearch-es-default-0
+2025-12-10T14:56:37Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: timed out waiting for the condition on pods/fleet-server-agent-7cfb776999-5kwk4
+2025-12-10T14:56:37Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: timed out waiting for the condition on pods/kibana-kb-66998f676-t9j4z
+2025-12-10T14:56:37Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Attempt 3 failed! Retrying in 2 seconds...
+2025-12-10T14:56:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elastic-agent-agent-69d4cbbf45-rqltv condition met
+2025-12-10T14:57:09Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: timed out waiting for the condition on pods/elasticsearch-es-default-0
+2025-12-10T14:57:09Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: timed out waiting for the condition on pods/fleet-server-agent-7cfb776999-5kwk4
+2025-12-10T14:57:09Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: timed out waiting for the condition on pods/kibana-kb-66998f676-t9j4z
+2025-12-10T14:57:09Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Attempt 4 failed! Retrying in 2 seconds...
+2025-12-10T14:57:11Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elastic-agent-agent-69d4cbbf45-rqltv condition met
+2025-12-10T14:57:21Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/elasticsearch-es-default-0 condition met
+2025-12-10T14:57:21Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/fleet-server-agent-7cfb776999-5kwk4 condition met
+2025-12-10T14:57:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: pod/kibana-kb-66998f676-t9j4z condition met
+2025-12-10T14:57:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: license: activated
+2025-12-10T14:57:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: es is licensed: 0
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: {"_index":"test","_id":"Ix3ECJsBLo8K7aVrk5FH","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":0,"_primary_term":1}
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: check_es_health: doc created
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: check_es_health: doc searched
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: check_es_health: index deleted
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Getting OpenAI Key
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Request successful and API key extracted on attempt 1
+2025-12-10T14:57:39Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [k3s] Waiting for API server readiness (timeout 300s)...
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [k3s] API server is responding
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [k3s] Waiting for nodes to become Ready...
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: node/kubernetes condition met
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: NAME         STATUS   ROLES                  AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION   CONTAINER-RUNTIME
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: kubernetes   Ready    control-plane,master   46d   v1.31.6+k3s1   10.32.1.9     <none>        Ubuntu 22.04.5 LTS   6.8.0-1034-gcp   containerd://2.0.2-k3s2
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Configuring Kibana publicBaseUrl...
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: kibana.kibana.k8s.elastic.co/kibana patched
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Waiting for Kibana to be ready...
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ Kibana is ready
+2025-12-10T14:57:40Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Enabling workflows feature flag and dark mode...
+2025-12-10T14:57:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ Workflows feature flag and dark mode enabled (HTTP 200)
+2025-12-10T14:57:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Downloading workshop assets from GitHub...
+2025-12-10T14:57:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Cloning repository with sparse checkout...
+2025-12-10T14:57:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Clone attempt 1/3...
+2025-12-10T14:57:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Cloning into '/tmp/instruqt-workshops-clone'...
+2025-12-10T14:57:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ Clone successful
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === GitHub Repository Info ===
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Commit hash: 19cc12b15dbf203955cdf74c0c3b92367ba7d860
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Commit date: 2025-11-19 15:19:06 -0600
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Commit message: fixed conditional esql
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === END GitHub Info ===
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === DEBUG: Directory structure after clone ===
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Current directory: /tmp/instruqt-workshops-clone
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Contents of /tmp/instruqt-workshops-clone:
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: total 16
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x  4 root root 4096 Dec 10 14:57 .
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxrwxrwt 12 root root 4096 Dec 10 14:57 ..
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x  8 root root 4096 Dec 10 14:57 .git
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x  3 root root 4096 Dec 10 14:57 elastic
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Looking for workshop-assets...
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ./elastic/dr-rangelove-stove-store/workshop-assets
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Contents of elastic/dr-rangelove-stove-store if it exists:
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: total 12
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 3 root root 4096 Dec 10 14:57 .
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 3 root root 4096 Dec 10 14:57 ..
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 4 root root 4096 Dec 10 14:57 workshop-assets
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === END DEBUG ===
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Found workshop-assets at: /tmp/instruqt-workshops-clone/elastic/dr-rangelove-stove-store/workshop-assets
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Contents:
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: total 16
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 4 root root 4096 Dec 10 14:57 .
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 3 root root 4096 Dec 10 14:57 ..
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 2 root root 4096 Dec 10 14:57 data_generator
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 2 root root 4096 Dec 10 14:57 setup_scripts
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === DEBUG: Final workshop-assets directory ===
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Location: /opt/workshop-assets
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Contents:
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: total 16
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 4 root root 4096 Dec 10 14:57 .
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 6 root root 4096 Dec 10 14:57 ..
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 2 root root 4096 Dec 10 14:57 data_generator
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 2 root root 4096 Dec 10 14:57 setup_scripts
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Data generator contents:
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: total 64
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 2 root root  4096 Dec 10 14:57 .
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 4 root root  4096 Dec 10 14:57 ..
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 48340 Dec 10 14:57 data_sprayer.py
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rw-r--r-- 1 root root  1961 Dec 10 14:57 scenarios.json
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root  2732 Dec 10 14:57 setup.py
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Setup scripts contents:
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: total 48
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 2 root root 4096 Dec 10 14:57 .
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: drwxr-xr-x 4 root root 4096 Dec 10 14:57 ..
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 5518 Dec 10 14:57 01-create-agents.sh
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 7494 Dec 10 14:57 02-create-alert.sh
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 2545 Dec 10 14:57 03-mock-api-service.sh
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 1354 Dec 10 14:57 04-force-incident.sh
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 1682 Dec 10 14:57 05-restore-snapshot.sh
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 1066 Dec 10 14:57 06-trigger-business-incident.sh
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: -rwxr-xr-x 1 root root 4301 Dec 10 14:57 solve-08-business-impact-detection
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === END DEBUG ===
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ Workshop assets downloaded to /opt/workshop-assets
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Setting up data generator...
+2025-12-10T14:57:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Installing Python dependencies...
+2025-12-10T14:57:53Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === DEBUG: Elasticsearch Connection Variables ===
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ELASTICSEARCH_URL: http://kubernetes-vm:30920
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ELASTIC_CLOUD_ID (exported): http://kubernetes-vm:30920
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ELASTICSEARCH_APIKEY: S01XTkY1b0JUTFhVb1luODFzY246MjJqN3ZIU1NhVzl3OHozbVdSdngt****UQ==
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ELASTIC_API_KEY (exported): S01XTkY1b0JUTFhVb1luODFzY246MjJqN3ZIU1NhVzl3OHozbVdSdngt****UQ==
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] === END DEBUG ===
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Creating o11y-heartbeat index...
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Setup] Connecting to http://kubernetes-vm:30920
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Setup] ✓ Connected to Elasticsearch 9.3.0-SNAPSHOT
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Setup] Creating index: o11y-heartbeat
+2025-12-10T14:57:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Setup] ✓ Index created: o11y-heartbeat
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Optimizing index settings for bulk...
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Backfilling 7 days of data...
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] (This should take ~15-20 seconds with parallel generation)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Data Sprayer] Version: 2025-11-19-v3-exit-on-fatal
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Connecting to Elasticsearch...
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [DEBUG] ES_CLOUD_ID value: http://kubernetes-vm:30920
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [DEBUG] ES_CLOUD_ID type: <class 'str'>
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [DEBUG] ES_CLOUD_ID starts with http://: True
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [DEBUG] ES_CLOUD_ID starts with https://: False
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [DEBUG] Using URL-based connection: http://kubernetes-vm:30920
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [DEBUG] Elasticsearch client created successfully
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Connected to Elasticsearch 9.3.0-SNAPSHOT
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: BACKFILL MODE: 7 Days Historical Data Generation
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: This process has two phases:
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   1. Generate all documents to local file (fast, can be paused/resumed)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   2. Bulk ingest to Elasticsearch (can be paused/resumed)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: PHASE 1: Generating documents to local file (PARALLEL)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Generating 2,419,200 documents to backfill_data.jsonl
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Time range: 2025-12-03T14:57:55.562180+00:00 to 2025-12-10T14:57:55.562180+00:00
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: (604,800 seconds × 4 services)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Using 14 parallel processes (CPU count: 16)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ⚡ Launching 14 worker processes...
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Heartbeat: still generating... elapsed 0s
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0 started: seconds 0-43200 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1 started: seconds 43200-86400 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2 started: seconds 86400-129600 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3 started: seconds 129600-172800 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4 started: seconds 172800-216000 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5 started: seconds 216000-259200 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6 started: seconds 259200-302400 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7 started: seconds 302400-345600 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8 started: seconds 345600-388800 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9 started: seconds 388800-432000 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10 started: seconds 432000-475200 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11 started: seconds 475200-518400 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13 started: seconds 561600-604800 (~43,200 s)
+2025-12-10T14:57:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12 started: seconds 518400-561600 (~43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 10% (4,320/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 20% (8,640/43,200 s)
+2025-12-10T14:57:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 20% (8,640/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 30% (12,960/43,200 s)
+2025-12-10T14:57:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 30% (12,960/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 40% (17,280/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 50% (21,600/43,200 s)
+2025-12-10T14:57:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 50% (21,600/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 60% (25,920/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 70% (30,240/43,200 s)
+2025-12-10T14:57:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 70% (30,240/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 80% (34,560/43,200 s)
+2025-12-10T14:58:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 80% (34,560/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 90% (38,880/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 4 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_4
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 7.1% (43,200/604,800 s) | Docs: 172,800 | Rate: 28,477 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 13 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_13
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 14.3% (86,400/604,800 s) | Docs: 345,600 | Rate: 56,332 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 10 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_10
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 21.4% (129,600/604,800 s) | Docs: 518,400 | Rate: 83,422 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 0 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_0
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 28.6% (172,800/604,800 s) | Docs: 691,200 | Rate: 110,754 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 7 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_7
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 35.7% (216,000/604,800 s) | Docs: 864,000 | Rate: 138,150 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 9 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_9
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 42.9% (259,200/604,800 s) | Docs: 1,036,800 | Rate: 164,789 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 11 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_11
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 50.0% (302,400/604,800 s) | Docs: 1,209,600 | Rate: 191,908 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 2 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_2
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 57.1% (345,600/604,800 s) | Docs: 1,382,400 | Rate: 217,414 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 8 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_8
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 64.3% (388,800/604,800 s) | Docs: 1,555,200 | Rate: 244,349 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 5 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_5
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 71.4% (432,000/604,800 s) | Docs: 1,728,000 | Rate: 271,281 docs/sec
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3: 100% (43,200/43,200 s)
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 3 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_3
+2025-12-10T14:58:01Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 78.6% (475,200/604,800 s) | Docs: 1,900,800 | Rate: 298,234 docs/sec
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6: 100% (43,200/43,200 s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 6 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_6
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 85.7% (518,400/604,800 s) | Docs: 2,073,600 | Rate: 323,895 docs/sec
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12: 100% (43,200/43,200 s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 12 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_12
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 92.9% (561,600/604,800 s) | Docs: 2,246,400 | Rate: 349,938 docs/sec
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1: 100% (43,200/43,200 s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Worker 1 complete: wrote ~172,800 docs -> backfill_data.jsonl.chunk_1
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Gen] Progress: 100.0% (604,800/604,800 s) | Docs: 2,419,200 | Rate: 376,258 docs/sec
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 📦 Merging 14 chunk files...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 1/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 1/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 2/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 2/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 3/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 3/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 4/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 4/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 5/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 5/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 6/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 6/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 7/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 7/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 8/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 8/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 9/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 9/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 10/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 10/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 11/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 11/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 12/14 (41.1 MB)...
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 12/14 complete (elapsed: 0s)
+2025-12-10T14:58:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 13/14 (41.1 MB)...
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 13/14 complete (elapsed: 0s)
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Merging chunk 14/14 (41.1 MB)...
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Merge] Chunk 14/14 complete (elapsed: 0s)
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ✅ Generation complete!
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Total documents: 2,419,200
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Generation time: 6.5s
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Merge time: 1.0s
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Total time: 7.5s
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Rate: 322,445 docs/sec
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: PHASE 2: Bulk ingesting documents to Elasticsearch
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: File size: 575.19 MB
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Counting total lines...
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Total documents: 2,419,200
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Ingesting with batch size: 100,000 (parallel: 2 batches)
+2025-12-10T14:58:03Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:58:31Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Prepared 25 batches for parallel ingestion
+2025-12-10T14:58:31Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T14:58:31Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Ingest] Heartbeat: ingesting... elapsed 27s, starting batches...
+2025-12-10T14:58:31Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 12/25] Starting batch (lines 1100000-1200000)...
+2025-12-10T14:58:36Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 13/25] Starting batch (lines 1200000-1300000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 14/25] Starting batch (lines 1300000-1400000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 15/25] Starting batch (lines 1400000-1500000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 16/25] Starting batch (lines 1500000-1600000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 17/25] Starting batch (lines 1600000-1700000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 18/25] Starting batch (lines 1700000-1800000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 19/25] Starting batch (lines 1800000-1900000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 1/25] Starting batch (lines 0-100000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 20/25] Starting batch (lines 1900000-2000000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 2/25] Starting batch (lines 100000-200000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 21/25] Starting batch (lines 2000000-2100000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 3/25] Starting batch (lines 200000-300000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 22/25] Starting batch (lines 2100000-2200000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 4/25] Starting batch (lines 300000-400000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 23/25] Starting batch (lines 2200000-2300000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 5/25] Starting batch (lines 400000-500000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 24/25] Starting batch (lines 2300000-2400000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 6/25] Starting batch (lines 500000-600000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 25/25] Starting batch (lines 2400000-2419200)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 7/25] Starting batch (lines 600000-700000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 8/25] Starting batch (lines 700000-800000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 9/25] Starting batch (lines 800000-900000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 10/25] Starting batch (lines 900000-1000000)...
+2025-12-10T14:58:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 11/25] Starting batch (lines 1000000-1100000)...
+2025-12-10T14:58:41Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Ingest] Heartbeat: ingesting... elapsed 37s, starting batches...
+2025-12-10T14:58:47Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 1/25] Indexed 100,000/2,419,200 docs (4.13%) | Rate: 2306 docs/sec | ETA: 16m 45s
+2025-12-10T14:58:51Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 4.13% | 100,000/2,419,200 docs | Rate: 2306 docs/sec | ETA: 16m 45s[Ingest] Heartbeat: ingesting... elapsed 47s, 4.1% complete, 1/25 batches done, ETA: 18m 26s
+2025-12-10T14:58:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 2/25] Indexed 200,000/2,419,200 docs (8.27%) | Rate: 4090 docs/sec | ETA: 9m 2s
+2025-12-10T14:58:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 8.27% | 200,000/2,419,200 docs | Rate: 4090 docs/sec | ETA: 9m 2s[Batch 3/25] Indexed 300,000/2,419,200 docs (12.40%) | Rate: 5460 docs/sec | ETA: 6m 28s
+2025-12-10T14:59:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 12.40% | 300,000/2,419,200 docs | Rate: 5460 docs/sec | ETA: 6m 28s[Ingest] Heartbeat: ingesting... elapsed 58s, 12.4% complete, 3/25 batches done, ETA: 6m 56s
+2025-12-10T14:59:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 4/25] Indexed 400,000/2,419,200 docs (16.53%) | Rate: 6588 docs/sec | ETA: 5m 6s
+2025-12-10T14:59:10Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 16.53% | 400,000/2,419,200 docs | Rate: 6588 docs/sec | ETA: 5m 6s[Batch 5/25] Indexed 500,000/2,419,200 docs (20.67%) | Rate: 7506 docs/sec | ETA: 4m 15s
+2025-12-10T14:59:15Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 20.67% | 500,000/2,419,200 docs | Rate: 7506 docs/sec | ETA: 4m 15s[Ingest] Heartbeat: ingesting... elapsed 71s, 20.7% complete, 5/25 batches done, ETA: 4m 33s
+2025-12-10T14:59:16Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 6/25] Indexed 600,000/2,419,200 docs (24.80%) | Rate: 8278 docs/sec | ETA: 3m 39s
+2025-12-10T14:59:22Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 24.80% | 600,000/2,419,200 docs | Rate: 8278 docs/sec | ETA: 3m 39s[Batch 7/25] Indexed 700,000/2,419,200 docs (28.94%) | Rate: 8905 docs/sec | ETA: 3m 13s
+2025-12-10T14:59:28Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 28.94% | 700,000/2,419,200 docs | Rate: 8905 docs/sec | ETA: 3m 13s[Ingest] Heartbeat: ingesting... elapsed 84s, 28.9% complete, 7/25 batches done, ETA: 3m 27s
+2025-12-10T14:59:28Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 8/25] Indexed 800,000/2,419,200 docs (33.07%) | Rate: 9442 docs/sec | ETA: 2m 51s
+2025-12-10T14:59:34Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 33.07% | 800,000/2,419,200 docs | Rate: 9442 docs/sec | ETA: 2m 51s[Batch 9/25] Indexed 900,000/2,419,200 docs (37.20%) | Rate: 9939 docs/sec | ETA: 2m 32s
+2025-12-10T14:59:37Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 37.20% | 900,000/2,419,200 docs | Rate: 9939 docs/sec | ETA: 2m 32s[Batch 10/25] Indexed 1,000,000/2,419,200 docs (41.34%) | Rate: 10716 docs/sec | ETA: 2m 12s
+2025-12-10T14:59:38Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 41.34% | 1,000,000/2,419,200 docs | Rate: 10716 docs/sec | ETA: 2m 12s[Ingest] Heartbeat: ingesting... elapsed 94s, 41.3% complete, 10/25 batches done, ETA: 2m 14s
+2025-12-10T14:59:46Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 11/25] Indexed 1,100,000/2,419,200 docs (45.47%) | Rate: 10742 docs/sec | ETA: 2m 2s
+2025-12-10T14:59:48Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 45.47% | 1,100,000/2,419,200 docs | Rate: 10742 docs/sec | ETA: 2m 2s[Ingest] Heartbeat: ingesting... elapsed 104s, 45.5% complete, 11/25 batches done, ETA: 2m 5s
+2025-12-10T14:59:48Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 12/25] Indexed 1,200,000/2,419,200 docs (49.60%) | Rate: 11429 docs/sec | ETA: 1m 46s
+2025-12-10T14:59:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 49.60% | 1,200,000/2,419,200 docs | Rate: 11429 docs/sec | ETA: 1m 46s[Batch 13/25] Indexed 1,300,000/2,419,200 docs (53.74%) | Rate: 11369 docs/sec | ETA: 1m 38s
+2025-12-10T14:59:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 53.74% | 1,300,000/2,419,200 docs | Rate: 11369 docs/sec | ETA: 1m 38s[Ingest] Heartbeat: ingesting... elapsed 114s, 53.7% complete, 13/25 batches done, ETA: 1m 38s
+2025-12-10T15:00:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 14/25] Indexed 1,400,000/2,419,200 docs (57.87%) | Rate: 11968 docs/sec | ETA: 1m 25s
+2025-12-10T15:00:08Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 57.87% | 1,400,000/2,419,200 docs | Rate: 11968 docs/sec | ETA: 1m 25s[Ingest] Heartbeat: ingesting... elapsed 125s, 57.9% complete, 14/25 batches done, ETA: 1m 31s
+2025-12-10T15:00:10Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 15/25] Indexed 1,500,000/2,419,200 docs (62.00%) | Rate: 11884 docs/sec | ETA: 1m 17s
+2025-12-10T15:00:12Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 62.00% | 1,500,000/2,419,200 docs | Rate: 11884 docs/sec | ETA: 1m 17s[Batch 16/25] Indexed 1,600,000/2,419,200 docs (66.14%) | Rate: 12403 docs/sec | ETA: 1m 6s
+2025-12-10T15:00:21Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 66.14% | 1,600,000/2,419,200 docs | Rate: 12403 docs/sec | ETA: 1m 6s[Ingest] Heartbeat: ingesting... elapsed 137s, 66.1% complete, 16/25 batches done, ETA: 1m 10s
+2025-12-10T15:00:21Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 17/25] Indexed 1,700,000/2,419,200 docs (70.27%) | Rate: 12331 docs/sec | ETA: 0m 58s
+2025-12-10T15:00:22Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 70.27% | 1,700,000/2,419,200 docs | Rate: 12331 docs/sec | ETA: 0m 58s[Batch 18/25] Indexed 1,800,000/2,419,200 docs (74.40%) | Rate: 12955 docs/sec | ETA: 0m 47s
+2025-12-10T15:00:25Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 74.40% | 1,800,000/2,419,200 docs | Rate: 12955 docs/sec | ETA: 0m 47s[Batch 19/25] Indexed 1,819,200/2,419,200 docs (75.20%) | Rate: 12848 docs/sec | ETA: 0m 46s
+2025-12-10T15:00:28Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 75.20% | 1,819,200/2,419,200 docs | Rate: 12848 docs/sec | ETA: 0m 46s[Batch 20/25] Indexed 1,919,200/2,419,200 docs (79.33%) | Rate: 13295 docs/sec | ETA: 0m 37s
+2025-12-10T15:00:31Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 79.33% | 1,919,200/2,419,200 docs | Rate: 13295 docs/sec | ETA: 0m 37s[Ingest] Heartbeat: ingesting... elapsed 147s, 79.3% complete, 20/25 batches done, ETA: 0m 38s
+2025-12-10T15:00:33Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 21/25] Indexed 2,019,200/2,419,200 docs (83.47%) | Rate: 13456 docs/sec | ETA: 0m 29s
+2025-12-10T15:00:36Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 83.47% | 2,019,200/2,419,200 docs | Rate: 13456 docs/sec | ETA: 0m 29s[Batch 22/25] Indexed 2,119,200/2,419,200 docs (87.60%) | Rate: 13871 docs/sec | ETA: 0m 21s
+2025-12-10T15:00:42Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 87.60% | 2,119,200/2,419,200 docs | Rate: 13871 docs/sec | ETA: 0m 21s[Ingest] Heartbeat: ingesting... elapsed 159s, 87.6% complete, 22/25 batches done, ETA: 0m 22s
+2025-12-10T15:00:45Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Batch 23/25] Indexed 2,219,200/2,419,200 docs (91.73%) | Rate: 13746 docs/sec | ETA: 0m 14s
+2025-12-10T15:00:45Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 91.73% | 2,219,200/2,419,200 docs | Rate: 13746 docs/sec | ETA: 0m 14s[Batch 24/25] Indexed 2,319,200/2,419,200 docs (95.87%) | Rate: 14303 docs/sec | ETA: 0m 6s
+2025-12-10T15:00:49Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 95.87% | 2,319,200/2,419,200 docs | Rate: 14303 docs/sec | ETA: 0m 6s[Batch 25/25] Indexed 2,419,200/2,419,200 docs (100.00%) | Rate: 14597 docs/sec | ETA: calculating...
+2025-12-10T15:00:50Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: 
+Ingestion: 100.00% | 2,419,200/2,419,200 docs | Rate: 14597 docs/sec | ETA: calculating...
+2025-12-10T15:00:50Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ✅ Ingestion complete! 2,419,200 documents indexed
+2025-12-10T15:00:50Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Average rate: 14509 docs/sec
+2025-12-10T15:00:50Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:    Total time: 2m 46s
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ✅ BACKFILL COMPLETE!
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ======================================================================
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: ML job can now be trained on this historical data
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Data file: backfill_data.jsonl (0.56 GB)
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Connection closed
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Verifying data load...
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ⚠️  Warning: Could not verify document count (index may be empty or not exist yet)
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Restoring index settings after bulk...
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Creating LLM connector...
+2025-12-10T15:00:52Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Attempting to create LLM connector (attempt 1/5)...
+2025-12-10T15:00:53Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ LLM connector created successfully (ID: 950fa68d-eb52-4fc0-ad89-e91ecb6d2ceb)
+2025-12-10T15:00:53Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Setting LLM connector as default GenAI connector...
+2025-12-10T15:00:53Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ LLM connector set as default GenAI connector
+2025-12-10T15:00:53Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Starting live data sprayer...
+2025-12-10T15:00:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] ✓ Live data sprayer started (PID: 19072)
+2025-12-10T15:00:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Creating AI agents...
+2025-12-10T15:00:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] Creating workshop agents...
+2025-12-10T15:00:54Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] Creating agent_content_creator...
+2025-12-10T15:00:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ agent_content_creator created
+2025-12-10T15:00:55Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] Creating agent_sentiment_analyzer...
+2025-12-10T15:00:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ agent_sentiment_analyzer created
+2025-12-10T15:00:56Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] Creating agent_pr_spin_specialist...
+2025-12-10T15:00:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ agent_pr_spin_specialist created
+2025-12-10T15:00:57Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] Creating sre_triage_bot (workflow tool to be added in Challenge 6)...
+2025-12-10T15:00:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ sre_triage_bot created
+2025-12-10T15:00:58Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] Creating agent_business_slo...
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ agent_business_slo created
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Agent Builder] All agents created successfully
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] Creating alert rule...
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Creating alert rule(s)...
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Creating threshold-based ES query rule (latency >= 800ms)...
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Using Kibana URL: http://kubernetes-vm:30001
+2025-12-10T15:00:59Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Checking for existing alert...
+2025-12-10T15:01:00Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Creating new alert rule...
+2025-12-10T15:01:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ latency-threshold-alert-critical created successfully (ID: 8aaf3f4e-d603-4614-aa97-47217e85b541)
+2025-12-10T15:01:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Verifying primary alert rule exists...
+2025-12-10T15:01:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ Verified: latency-threshold-alert-critical exists in Kibana
+2025-12-10T15:01:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Ensuring business impact alert rule exists...
+2025-12-10T15:01:02Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Creating business impact alert rule...
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   ✓ business-impact-payment-degradation created successfully (ID: 4c054c28-a062-4843-b207-3052af4574f9)
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Alerting] Alert rule creation complete
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: =========================================
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: [Workshop] kubernetes-vm setup complete
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: =========================================
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Services:
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   - Elasticsearch: http://kubernetes-vm:30920
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   - Kibana: http://kubernetes-vm:30001
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: Configuration:
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   - USE_ML_AD: false
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm:   - FORCE_INCIDENT: false
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: setup-kubernetes-vm: =========================================
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: Finished running script: setup-kubernetes-vm
+2025-12-10T15:01:04Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:13Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:13Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: tom9sadinbfe
+2025-12-10T15:12:13Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:13Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:13Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: tom9sadinbfe
+2025-12-10T15:12:13Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: setup for challenge: sunyyx6xqswh
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: sunyyx6xqswh
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: sunyyx6xqswh
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: setup for challenge: xx3y3isuah3c
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: xx3y3isuah3c
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: xx3y3isuah3c
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: setup for challenge: yhiyheqao8wq
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: yhiyheqao8wq
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: yhiyheqao8wq
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: setup for challenge: dikdylbhyer2
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: dikdylbhyer2
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: dikdylbhyer2
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: setup for challenge: 8t9mfavwlkum
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: 8t9mfavwlkum
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: 8t9mfavwlkum
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: setup for challenge: qgiakfohjqjp
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: setup
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: solve for challenge: qgiakfohjqjp
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: solve
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: executing challenge lifecycle script
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: Executing action: cleanup for challenge: qgiakfohjqjp
+2025-12-10T15:12:14Z 6wmyqdk4qzju INFO: All scripts completed for action: cleanup

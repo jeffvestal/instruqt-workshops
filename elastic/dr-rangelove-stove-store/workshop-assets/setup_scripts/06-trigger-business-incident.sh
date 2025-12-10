@@ -1,6 +1,7 @@
 #!/bin/bash
 # Trigger Business Impact Incident
 # Creates a flag file that the data sprayer monitors to inject business-critical degradation
+# NOTE: This script must be run on kubernetes-vm (where the data sprayer runs)
 
 set -euo pipefail
 
