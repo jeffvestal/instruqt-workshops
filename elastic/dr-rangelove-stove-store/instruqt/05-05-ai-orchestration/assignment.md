@@ -124,13 +124,13 @@ Finally, let's check the "spun" draft and print a final report.
         {% assign orig = steps.first_check.output.response.message | json_parse %}
         {% assign fin = steps.final_check.output.response.message | json_parse %}
 
-        ---
+        ***
         Original Draft: {{ steps.draft_content.output.response.message }}
         Original Sentiment: {{ orig.sentiment }}
-        ---
+        ***
         Revised Draft: {{ steps.remediation_spin.output.response.message }}
         Final Sentiment: {{ fin.sentiment }}
-        ---
+        ***
         {% if fin.sentiment == "POSITIVE" %}
         ✅ PASSED: Content sentiment is positive after remediation.
         {% else %}
@@ -195,13 +195,13 @@ steps:
         {% assign orig = steps.first_check.output.response.message | json_parse %}
         {% assign fin = steps.final_check.output.response.message | json_parse %}
 
-        ---
+        ***
         Original Draft: {{ steps.draft_content.output.response.message }}
         Original Sentiment: {{ orig.sentiment }}
-        ---
+        ***
         Revised Draft: {{ steps.remediation_spin.output.response.message }}
         Final Sentiment: {{ fin.sentiment }}
-        ---
+        ***
         {% if fin.sentiment == "POSITIVE" %}
         ✅ PASSED: Content sentiment is positive after remediation.
         {% else %}

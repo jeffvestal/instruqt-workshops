@@ -134,12 +134,13 @@ steps:
           message: "⚠️ No action taken."
 
   # Step 4: Index the results back into Elastic for auditing
+  # Note: Using elasticsearch.request instead of elasticsearch.index due to a bug in 9.x
   - name: log_to_elasticsearch
-    type: elasticsearch.index
+    type: elasticsearch.request
     with:
-      index: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
-      id: "{{ execution.id }}"
-      document:
+      method: POST
+      path: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
+      body:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "self_healing_aiops"
         alert_id: "{{ event.alerts[0].id }}"
