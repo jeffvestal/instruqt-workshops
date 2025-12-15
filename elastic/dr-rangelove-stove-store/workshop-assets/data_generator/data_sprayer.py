@@ -8,7 +8,7 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2025-12-15-v4-debug-logging"  # Added detailed debugging for bulk ingestion
+VERSION = "2025-12-15-v5-smaller-batches"  # Reduced batch size from 100k to 10k
 
 import argparse
 import asyncio
@@ -603,11 +603,11 @@ class DataSprayer:
         
         print(f"Total documents: {total_lines:,}")
         
-        # Bulk ingest settings - optimized for performance vs reliability
-        batch_size = 100000  # Large batch size for good throughput
+        # Bulk ingest settings - optimized for single-node sandbox ES
+        batch_size = 10000  # Smaller batch size to avoid overwhelming single-node ES
         # Use a conservative concurrency to reduce the chance of ES getting overwhelmed
         # and all batches stalling (which can cause sandbox timeouts).
-        max_concurrent_batches = 2  # Process 2 batches in parallel instead of 4
+        max_concurrent_batches = 2  # Process 2 batches in parallel
         batch = []
         batch_line = 0
         indexed_total = 0
