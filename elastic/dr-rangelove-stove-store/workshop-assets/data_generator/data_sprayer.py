@@ -8,7 +8,7 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2025-12-15-v5-smaller-batches"  # Reduced batch size from 100k to 10k
+VERSION = "2025-12-15-v6-fix-rate-check"  # Fixed rate check threshold
 
 import argparse
 import asyncio
@@ -783,15 +783,17 @@ class DataSprayer:
             progress_dict["indexed_total"] = indexed_total
             progress_dict["completed_batches"] = completed_batches
             
-            # Stage 3 - Check first batch rate
+            # Stage 3 - Check first batch rate (lowered threshold to account for prep time in elapsed)
             if completed_batches == 1:
                 elapsed = (datetime.now() - start_time).total_seconds()
                 first_batch_rate = success / elapsed if elapsed > 0 else 0
-                if first_batch_rate < 500:  # Less than 500 docs/sec is too slow
+                # Note: elapsed includes batch prep time (~27s), so effective rate looks lower than actual
+                # Actual batch rate is shown in the DEBUG log above - use 100 docs/sec as threshold
+                if first_batch_rate < 100:  # Less than 100 docs/sec indicates serious problem
                     print("\n" + "=" * 70, flush=True)
                     print("❌ FATAL ERROR: Ingestion rate too slow", flush=True)
                     print("=" * 70, flush=True)
-                    print(f"First batch rate: {first_batch_rate:.0f} docs/sec (need >500 docs/sec)", flush=True)
+                    print(f"First batch rate: {first_batch_rate:.0f} docs/sec (need >100 docs/sec)", flush=True)
                     print(f"At this rate, ingestion would take {(total_lines / first_batch_rate / 60):.0f} minutes", flush=True)
                     print("", flush=True)
                     print("ACTION REQUIRED: Please STOP and RESTART this sandbox.", flush=True)
