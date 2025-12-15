@@ -8,7 +8,7 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2025-11-19-v3-exit-on-fatal"  # Force immediate exit on fatal errors
+VERSION = "2025-12-15-v4-debug-logging"  # Added detailed debugging for bulk ingestion
 
 import argparse
 import asyncio
@@ -540,6 +540,52 @@ class DataSprayer:
         file_size_mb = file_size / (1024 * 1024)
         print(f"File size: {file_size_mb:.2f} MB")
         
+        # Check ES cluster health before starting bulk ingestion
+        print("\n[DEBUG] Checking Elasticsearch cluster health...")
+        try:
+            health = await self.es_client.cluster.health(timeout="30s")
+            print(f"[DEBUG] ES Cluster Status: {health['status']}")
+            print(f"[DEBUG] ES Nodes: {health['number_of_nodes']} | Data Nodes: {health['number_of_data_nodes']}")
+            print(f"[DEBUG] Active Shards: {health['active_shards']} | Relocating: {health['relocating_shards']} | Initializing: {health['initializing_shards']}")
+            print(f"[DEBUG] Unassigned Shards: {health['unassigned_shards']} | Pending Tasks: {health['number_of_pending_tasks']}")
+            if health['status'] == 'red':
+                print("⚠️  WARNING: Cluster is RED - bulk ingestion may fail or be very slow!")
+            elif health['status'] == 'yellow':
+                print("⚠️  WARNING: Cluster is YELLOW - some replicas are not assigned")
+        except Exception as e:
+            print(f"[DEBUG] Failed to get cluster health: {type(e).__name__}: {e}")
+        
+        # Check index health
+        try:
+            index_exists = await self.es_client.indices.exists(index=INDEX_NAME)
+            print(f"[DEBUG] Index '{INDEX_NAME}' exists: {index_exists}")
+            if index_exists:
+                index_stats = await self.es_client.indices.stats(index=INDEX_NAME)
+                total_docs = index_stats['_all']['primaries']['docs']['count']
+                store_size = index_stats['_all']['primaries']['store']['size_in_bytes'] / (1024 * 1024)
+                print(f"[DEBUG] Index stats: {total_docs:,} docs, {store_size:.1f} MB")
+        except Exception as e:
+            print(f"[DEBUG] Failed to get index stats: {type(e).__name__}: {e}")
+        
+        # Test ES responsiveness with a simple bulk of 10 docs
+        print("[DEBUG] Testing ES bulk responsiveness with 10 test docs...")
+        test_start = time.time()
+        try:
+            test_docs = [
+                {"_index": INDEX_NAME, "_source": {"@timestamp": datetime.now(timezone.utc).isoformat(), "service.name": "test", "test": True}}
+                for _ in range(10)
+            ]
+            test_success, test_failed = await async_bulk(self.es_client, test_docs, raise_on_error=False)
+            test_elapsed = time.time() - test_start
+            print(f"[DEBUG] Test bulk completed in {test_elapsed:.2f}s - success={test_success}, failed={len(test_failed) if test_failed else 0}")
+            if test_elapsed > 10:
+                print(f"⚠️  WARNING: Test bulk took {test_elapsed:.1f}s - ES may be slow!")
+        except Exception as e:
+            test_elapsed = time.time() - test_start
+            print(f"[DEBUG] Test bulk FAILED after {test_elapsed:.2f}s: {type(e).__name__}: {e}")
+            print("⚠️  WARNING: ES may not be accepting bulk requests!")
+        print()
+        
         # Load ingestion progress
         ingest_progress_file = progress_file.replace("_progress", "_ingest_progress")
         ingest_progress = self._load_progress(ingest_progress_file)
@@ -573,18 +619,31 @@ class DataSprayer:
         # Helper function to ingest a single batch
         async def ingest_batch(batch_data: List[Dict], batch_num: int, start_line_num: int) -> tuple:
             """Ingest a single batch and return (success_count, failed_count, end_line_num)"""
+            batch_start_time = time.time()
             try:
+                print(f"[DEBUG] Batch {batch_num}: Calling async_bulk with {len(batch_data):,} docs, chunk_size={batch_size}...", flush=True)
                 success, failed = await async_bulk(
                     self.es_client,
                     batch_data,
                     raise_on_error=False,
                     chunk_size=batch_size
                 )
+                batch_elapsed = time.time() - batch_start_time
                 failed_count = len(failed) if failed else 0
+                batch_rate = len(batch_data) / batch_elapsed if batch_elapsed > 0 else 0
+                print(f"[DEBUG] Batch {batch_num}: async_bulk COMPLETED in {batch_elapsed:.1f}s - success={success:,}, failed={failed_count}, rate={batch_rate:.0f} docs/sec", flush=True)
+                
+                # Log first few errors for debugging
+                if failed and len(failed) > 0:
+                    print(f"[DEBUG] Batch {batch_num} first error sample: {str(failed[0])[:500]}", flush=True)
+                
                 end_line_num = start_line_num + len(batch_data)
                 return (success, failed_count, end_line_num)
             except Exception as e:
-                print(f"\n⚠️  Error ingesting batch {batch_num}: {e}")
+                batch_elapsed = time.time() - batch_start_time
+                print(f"\n⚠️  [DEBUG] Batch {batch_num} EXCEPTION after {batch_elapsed:.1f}s: {type(e).__name__}: {e}", flush=True)
+                import traceback
+                traceback.print_exc()
                 return (0, len(batch_data), start_line_num + len(batch_data))
         
         # Prepare all batches first
@@ -696,9 +755,11 @@ class DataSprayer:
         hb_thread.start()
         
         async def ingest_with_semaphore(batch_data, batch_num, start_line_num):
-            # Log batch start immediately
-            print(f"[Batch {batch_num}/{total_batches}] Starting batch (lines {start_line_num}-{start_line_num + len(batch_data)})...", flush=True)
+            # Log when batch is queued (waiting for semaphore)
+            print(f"[Batch {batch_num}/{total_batches}] Queued, waiting for semaphore (lines {start_line_num}-{start_line_num + len(batch_data)})...", flush=True)
             async with semaphore:
+                # Log when semaphore acquired and batch actually starts processing
+                print(f"[Batch {batch_num}/{total_batches}] ACQUIRED semaphore, sending {len(batch_data):,} docs to ES...", flush=True)
                 result = await ingest_batch(batch_data, batch_num, start_line_num)
                 return result
         
