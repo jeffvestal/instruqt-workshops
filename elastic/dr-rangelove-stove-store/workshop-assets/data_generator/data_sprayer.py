@@ -8,7 +8,7 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2025-12-15-v6-fix-rate-check"  # Fixed rate check threshold
+VERSION = "2026-01-05-v7-debug-batch-prep"  # Added instrumentation for batch prep stalls
 
 import argparse
 import asyncio
@@ -650,6 +650,12 @@ class DataSprayer:
         batches = []
         batch_num = 0
         
+        # [HYPOTHESIS A/B] Track batch prep timing and progress
+        prep_start_time = time.time()
+        lines_read = 0
+        last_progress_time = time.time()
+        print(f"[DEBUG-PREP] Starting batch preparation at {datetime.now().isoformat()}", flush=True)
+        
         with open(input_file, "r") as f:
             # Skip already processed lines
             for _ in range(start_line):
@@ -657,6 +663,15 @@ class DataSprayer:
                 batch_line += 1
             
             for line_num, line in enumerate(f, start=start_line):
+                lines_read += 1
+                
+                # [HYPOTHESIS B] Log progress every 100k lines to detect file I/O slowdowns
+                if lines_read % 100000 == 0:
+                    elapsed = time.time() - prep_start_time
+                    rate = lines_read / elapsed if elapsed > 0 else 0
+                    print(f"[DEBUG-PREP] Read {lines_read:,}/{total_lines:,} lines ({lines_read*100/total_lines:.1f}%) in {elapsed:.1f}s ({rate:.0f} lines/sec)", flush=True)
+                    last_progress_time = time.time()
+                
                 try:
                     doc = json.loads(line.strip())
                     batch.append({
@@ -670,6 +685,10 @@ class DataSprayer:
                         batch_num += 1
                         batches.append((batch.copy(), batch_num, batch_line - len(batch)))
                         batch = []
+                        # [HYPOTHESIS A] Log each batch creation with timing
+                        if batch_num % 50 == 0:
+                            elapsed = time.time() - prep_start_time
+                            print(f"[DEBUG-PREP] Created batch {batch_num}, elapsed {elapsed:.1f}s", flush=True)
                     
                 except json.JSONDecodeError as e:
                     print(f"\n⚠️  Warning: Failed to parse line {line_num}: {e}")
@@ -682,6 +701,17 @@ class DataSprayer:
             batch = []
         
         total_batches = len(batches)
+        prep_elapsed = time.time() - prep_start_time
+        print(f"[DEBUG-PREP] Batch preparation COMPLETED: {total_batches:,} batches in {prep_elapsed:.1f}s ({lines_read/prep_elapsed:.0f} lines/sec)", flush=True)
+        
+        # [HYPOTHESIS A] Check memory usage after batch prep
+        try:
+            import resource
+            mem_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024  # MB on Linux
+            print(f"[DEBUG-PREP] Memory usage after batch prep: {mem_usage:.0f} MB", flush=True)
+        except:
+            pass
+        
         print(f"Prepared {total_batches:,} batches for parallel ingestion\n")
         
         # Process batches in parallel with semaphore to limit concurrency
@@ -718,12 +748,20 @@ class DataSprayer:
                         flush=True,
                     )
                 else:
-                    # No batches have completed yet
+                    # No batches have completed yet - log in-flight batch info
+                    with in_flight_lock:
+                        in_flight_info = []
+                        for bn, start_t in in_flight_batches.items():
+                            age = time.time() - start_t
+                            in_flight_info.append(f"batch_{bn}:{age:.0f}s")
+                        in_flight_str = ", ".join(in_flight_info) if in_flight_info else "none"
+                    
                     if elapsed > 300:  # Stage 2 - Hard bailout at 5 minutes
                         print("\n" + "=" * 70, flush=True)
                         print("❌ FATAL ERROR: Data ingestion stalled", flush=True)
                         print("=" * 70, flush=True)
                         print(f"No batches completed after {int(elapsed)}s (expected ~60s)", flush=True)
+                        print(f"[DEBUG] In-flight batches: {in_flight_str}", flush=True)
                         print("This indicates an unhealthy Elasticsearch instance.", flush=True)
                         print("", flush=True)
                         print("ACTION REQUIRED: Please STOP and RESTART this sandbox.", flush=True)
@@ -734,19 +772,19 @@ class DataSprayer:
                     elif elapsed > 180:  # Stage 1 - Warning at 3 minutes
                         print(
                             f"⚠️  WARNING: No batches completed after {int(elapsed)}s "
-                            f"(expected ~60s). Elasticsearch may be severely slow...",
+                            f"(expected ~60s). In-flight: [{in_flight_str}]",
                             flush=True,
                         )
                     elif elapsed > 120:
                         # After 2 minutes with no completed batches, emit a more explicit warning
                         print(
                             f"[Ingest] Heartbeat: no batches completed after {int(elapsed)}s "
-                            f"({completed}/{total_b} batches done). Elasticsearch may be slow; still waiting...",
+                            f"({completed}/{total_b} batches done). In-flight: [{in_flight_str}]",
                             flush=True,
                         )
                     else:
                         print(
-                            f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, starting batches...",
+                            f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, starting batches... In-flight: [{in_flight_str}]",
                             flush=True,
                         )
                 time.sleep(10)
@@ -754,14 +792,43 @@ class DataSprayer:
         hb_thread = threading.Thread(target=_ingest_heartbeat, daemon=True)
         hb_thread.start()
         
+        # [HYPOTHESIS D/E] Track in-flight batches for debugging
+        in_flight_batches = {}  # batch_num -> start_time
+        in_flight_lock = threading.Lock()
+        
         async def ingest_with_semaphore(batch_data, batch_num, start_line_num):
             # Log when batch is queued (waiting for semaphore)
             print(f"[Batch {batch_num}/{total_batches}] Queued, waiting for semaphore (lines {start_line_num}-{start_line_num + len(batch_data)})...", flush=True)
             async with semaphore:
+                # Track in-flight batch
+                with in_flight_lock:
+                    in_flight_batches[batch_num] = time.time()
+                    in_flight_count = len(in_flight_batches)
+                
                 # Log when semaphore acquired and batch actually starts processing
-                print(f"[Batch {batch_num}/{total_batches}] ACQUIRED semaphore, sending {len(batch_data):,} docs to ES...", flush=True)
-                result = await ingest_batch(batch_data, batch_num, start_line_num)
+                print(f"[Batch {batch_num}/{total_batches}] ACQUIRED semaphore, sending {len(batch_data):,} docs to ES... (in-flight: {in_flight_count})", flush=True)
+                
+                try:
+                    result = await ingest_batch(batch_data, batch_num, start_line_num)
+                finally:
+                    # Remove from in-flight tracking
+                    with in_flight_lock:
+                        in_flight_batches.pop(batch_num, None)
+                
                 return result
+        
+        # [HYPOTHESIS D/E] Diagnostic function to check ES health during stalls
+        async def check_es_health_diagnostic():
+            try:
+                health = await asyncio.wait_for(
+                    self.es_client.cluster.health(timeout="5s"),
+                    timeout=10.0
+                )
+                return f"status={health['status']}, pending_tasks={health['number_of_pending_tasks']}"
+            except asyncio.TimeoutError:
+                return "TIMEOUT - ES not responding to health check"
+            except Exception as e:
+                return f"ERROR: {type(e).__name__}: {e}"
         
         # Process all batches
         tasks = [ingest_with_semaphore(batch_data, batch_num, start_line_num) 
