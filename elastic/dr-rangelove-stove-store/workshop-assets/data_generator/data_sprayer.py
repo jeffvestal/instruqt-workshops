@@ -8,7 +8,61 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2026-01-05-v7-debug-batch-prep"  # Added instrumentation for batch prep stalls
+VERSION = "2026-01-05-v8-memory-monitoring"  # Added system memory monitoring
+
+
+def get_system_memory():
+    """Get system memory stats from /proc/meminfo (Linux only, no dependencies)"""
+    try:
+        with open('/proc/meminfo', 'r') as f:
+            meminfo = {}
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 2:
+                    key = parts[0].rstrip(':')
+                    value = int(parts[1])  # Value in kB
+                    meminfo[key] = value
+        
+        total_mb = meminfo.get('MemTotal', 0) / 1024
+        available_mb = meminfo.get('MemAvailable', 0) / 1024
+        free_mb = meminfo.get('MemFree', 0) / 1024
+        buffers_mb = meminfo.get('Buffers', 0) / 1024
+        cached_mb = meminfo.get('Cached', 0) / 1024
+        used_mb = total_mb - available_mb
+        pct_used = (used_mb / total_mb * 100) if total_mb > 0 else 0
+        
+        return {
+            'total_mb': total_mb,
+            'available_mb': available_mb,
+            'free_mb': free_mb,
+            'used_mb': used_mb,
+            'buffers_mb': buffers_mb,
+            'cached_mb': cached_mb,
+            'pct_used': pct_used
+        }
+    except Exception as e:
+        return {'error': str(e)}
+
+
+def log_memory(prefix=""):
+    """Log current system and process memory usage"""
+    mem = get_system_memory()
+    if 'error' in mem:
+        print(f"{prefix}[MEM] Error reading memory: {mem['error']}", flush=True)
+        return
+    
+    # Get process memory
+    try:
+        import resource
+        proc_mem_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # KB to MB on Linux
+    except:
+        proc_mem_mb = 0
+    
+    print(
+        f"{prefix}[MEM] System: {mem['used_mb']:.0f}/{mem['total_mb']:.0f}MB used ({mem['pct_used']:.1f}%), "
+        f"Available: {mem['available_mb']:.0f}MB | Process: {proc_mem_mb:.0f}MB",
+        flush=True
+    )
 
 import argparse
 import asyncio
@@ -531,6 +585,9 @@ class DataSprayer:
         print("PHASE 2: Bulk ingesting documents to Elasticsearch")
         print("=" * 70)
         
+        # [HYPOTHESIS A] Log initial memory state
+        log_memory("[DEBUG] Initial ")
+        
         if not os.path.exists(input_file):
             print(f"❌ Error: Input file {input_file} not found")
             return
@@ -584,6 +641,7 @@ class DataSprayer:
             test_elapsed = time.time() - test_start
             print(f"[DEBUG] Test bulk FAILED after {test_elapsed:.2f}s: {type(e).__name__}: {e}")
             print("⚠️  WARNING: ES may not be accepting bulk requests!")
+        log_memory("[DEBUG] After test bulk ")
         print()
         
         # Load ingestion progress
@@ -670,6 +728,9 @@ class DataSprayer:
                     elapsed = time.time() - prep_start_time
                     rate = lines_read / elapsed if elapsed > 0 else 0
                     print(f"[DEBUG-PREP] Read {lines_read:,}/{total_lines:,} lines ({lines_read*100/total_lines:.1f}%) in {elapsed:.1f}s ({rate:.0f} lines/sec)", flush=True)
+                    # Log memory every 500k lines to track memory growth
+                    if lines_read % 500000 == 0:
+                        log_memory("[DEBUG-PREP] ")
                     last_progress_time = time.time()
                 
                 try:
@@ -705,12 +766,7 @@ class DataSprayer:
         print(f"[DEBUG-PREP] Batch preparation COMPLETED: {total_batches:,} batches in {prep_elapsed:.1f}s ({lines_read/prep_elapsed:.0f} lines/sec)", flush=True)
         
         # [HYPOTHESIS A] Check memory usage after batch prep
-        try:
-            import resource
-            mem_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024  # MB on Linux
-            print(f"[DEBUG-PREP] Memory usage after batch prep: {mem_usage:.0f} MB", flush=True)
-        except:
-            pass
+        log_memory("[DEBUG-PREP] After batch prep ")
         
         print(f"Prepared {total_batches:,} batches for parallel ingestion\n")
         
@@ -762,6 +818,7 @@ class DataSprayer:
                         print("=" * 70, flush=True)
                         print(f"No batches completed after {int(elapsed)}s (expected ~60s)", flush=True)
                         print(f"[DEBUG] In-flight batches: {in_flight_str}", flush=True)
+                        log_memory("[DEBUG] Final ")
                         print("This indicates an unhealthy Elasticsearch instance.", flush=True)
                         print("", flush=True)
                         print("ACTION REQUIRED: Please STOP and RESTART this sandbox.", flush=True)
@@ -775,6 +832,7 @@ class DataSprayer:
                             f"(expected ~60s). In-flight: [{in_flight_str}]",
                             flush=True,
                         )
+                        log_memory("[DEBUG] Stall ")
                     elif elapsed > 120:
                         # After 2 minutes with no completed batches, emit a more explicit warning
                         print(
@@ -782,6 +840,7 @@ class DataSprayer:
                             f"({completed}/{total_b} batches done). In-flight: [{in_flight_str}]",
                             flush=True,
                         )
+                        log_memory("[DEBUG] Stall ")
                     else:
                         print(
                             f"[Ingest] Heartbeat: ingesting... elapsed {int(elapsed)}s, starting batches... In-flight: [{in_flight_str}]",
