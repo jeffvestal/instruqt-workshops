@@ -8,7 +8,7 @@ Supports two modes:
 - --live: Continuous generation with periodic anomaly injection
 """
 
-VERSION = "2026-01-05-v8-memory-monitoring"  # Added system memory monitoring
+VERSION = "2026-01-05-v9-streaming-batches"  # Fixed memory issue: stream batches instead of loading all into RAM
 
 
 def get_system_memory():
@@ -704,75 +704,18 @@ class DataSprayer:
                 traceback.print_exc()
                 return (0, len(batch_data), start_line_num + len(batch_data))
         
-        # Prepare all batches first
-        batches = []
-        batch_num = 0
-        
-        # [HYPOTHESIS A/B] Track batch prep timing and progress
-        prep_start_time = time.time()
-        lines_read = 0
-        last_progress_time = time.time()
-        print(f"[DEBUG-PREP] Starting batch preparation at {datetime.now().isoformat()}", flush=True)
-        
-        with open(input_file, "r") as f:
-            # Skip already processed lines
-            for _ in range(start_line):
-                next(f, None)
-                batch_line += 1
-            
-            for line_num, line in enumerate(f, start=start_line):
-                lines_read += 1
-                
-                # [HYPOTHESIS B] Log progress every 100k lines to detect file I/O slowdowns
-                if lines_read % 100000 == 0:
-                    elapsed = time.time() - prep_start_time
-                    rate = lines_read / elapsed if elapsed > 0 else 0
-                    print(f"[DEBUG-PREP] Read {lines_read:,}/{total_lines:,} lines ({lines_read*100/total_lines:.1f}%) in {elapsed:.1f}s ({rate:.0f} lines/sec)", flush=True)
-                    # Log memory every 500k lines to track memory growth
-                    if lines_read % 500000 == 0:
-                        log_memory("[DEBUG-PREP] ")
-                    last_progress_time = time.time()
-                
-                try:
-                    doc = json.loads(line.strip())
-                    batch.append({
-                        "_index": INDEX_NAME,
-                        "_source": doc
-                    })
-                    batch_line += 1
-                    
-                    # When batch is full, add it to batches list
-                    if len(batch) >= batch_size:
-                        batch_num += 1
-                        batches.append((batch.copy(), batch_num, batch_line - len(batch)))
-                        batch = []
-                        # [HYPOTHESIS A] Log each batch creation with timing
-                        if batch_num % 50 == 0:
-                            elapsed = time.time() - prep_start_time
-                            print(f"[DEBUG-PREP] Created batch {batch_num}, elapsed {elapsed:.1f}s", flush=True)
-                    
-                except json.JSONDecodeError as e:
-                    print(f"\n⚠️  Warning: Failed to parse line {line_num}: {e}")
-                    continue
-        
-        # Add remaining documents as final batch
-        if batch:
-            batch_num += 1
-            batches.append((batch.copy(), batch_num, batch_line - len(batch)))
-            batch = []
-        
-        total_batches = len(batches)
-        prep_elapsed = time.time() - prep_start_time
-        print(f"[DEBUG-PREP] Batch preparation COMPLETED: {total_batches:,} batches in {prep_elapsed:.1f}s ({lines_read/prep_elapsed:.0f} lines/sec)", flush=True)
-        
-        # [HYPOTHESIS A] Check memory usage after batch prep
-        log_memory("[DEBUG-PREP] After batch prep ")
-        
-        print(f"Prepared {total_batches:,} batches for parallel ingestion\n")
+        # Calculate total batches (without loading data into memory)
+        total_batches = (total_lines + batch_size - 1) // batch_size
+        print(f"Will process {total_batches:,} batches (streaming - memory efficient)\n")
+        log_memory("[DEBUG] Before streaming ingest ")
         
         # Process batches in parallel with semaphore to limit concurrency
         semaphore = asyncio.Semaphore(max_concurrent_batches)
         completed_batches = 0
+        
+        # [FIX] Define in-flight tracking BEFORE heartbeat that uses them
+        in_flight_batches = {}  # batch_num -> start_time
+        in_flight_lock = threading.Lock()
         
         # Heartbeat: prints every 10s during ingestion
         # Use a shared dict for thread-safe progress tracking
@@ -851,10 +794,6 @@ class DataSprayer:
         hb_thread = threading.Thread(target=_ingest_heartbeat, daemon=True)
         hb_thread.start()
         
-        # [HYPOTHESIS D/E] Track in-flight batches for debugging
-        in_flight_batches = {}  # batch_num -> start_time
-        in_flight_lock = threading.Lock()
-        
         async def ingest_with_semaphore(batch_data, batch_num, start_line_num):
             # Log when batch is queued (waiting for semaphore)
             print(f"[Batch {batch_num}/{total_batches}] Queued, waiting for semaphore (lines {start_line_num}-{start_line_num + len(batch_data)})...", flush=True)
@@ -876,88 +815,127 @@ class DataSprayer:
                 
                 return result
         
-        # [HYPOTHESIS D/E] Diagnostic function to check ES health during stalls
-        async def check_es_health_diagnostic():
-            try:
-                health = await asyncio.wait_for(
-                    self.es_client.cluster.health(timeout="5s"),
-                    timeout=10.0
-                )
-                return f"status={health['status']}, pending_tasks={health['number_of_pending_tasks']}"
-            except asyncio.TimeoutError:
-                return "TIMEOUT - ES not responding to health check"
-            except Exception as e:
-                return f"ERROR: {type(e).__name__}: {e}"
+        # STREAMING BATCH PROCESSING - Only keep max_concurrent_batches in memory at a time
+        # This prevents the 3.8GB memory spike that was causing OOM
+        batch_queue = asyncio.Queue(maxsize=max_concurrent_batches + 2)  # Small buffer
+        producer_done = asyncio.Event()
         
-        # Process all batches
-        tasks = [ingest_with_semaphore(batch_data, batch_num, start_line_num) 
-                 for batch_data, batch_num, start_line_num in batches]
-        
-        # Process batches and track progress
-        for task in asyncio.as_completed(tasks):
-            # Check if heartbeat signaled bailout
-            if progress_dict.get("bailout", False):
-                ingest_heartbeat_running = False
-                hb_thread.join(timeout=1)
-                print("\n❌ Ingestion aborted due to poor performance", flush=True)
-                os._exit(1)
+        async def batch_producer():
+            """Read file and produce batches to the queue (streaming)"""
+            current_batch = []
+            current_batch_num = 0
+            current_line = 0
+            lines_read = 0
             
-            success, failed_count, end_line_num = await task
-            completed_batches += 1
-            indexed_total += success
-            # Update for heartbeat
-            progress_dict["indexed_total"] = indexed_total
-            progress_dict["completed_batches"] = completed_batches
+            print(f"[STREAM] Starting streaming batch producer...", flush=True)
             
-            # Stage 3 - Check first batch rate (lowered threshold to account for prep time in elapsed)
-            if completed_batches == 1:
-                elapsed = (datetime.now() - start_time).total_seconds()
-                first_batch_rate = success / elapsed if elapsed > 0 else 0
-                # Note: elapsed includes batch prep time (~27s), so effective rate looks lower than actual
-                # Actual batch rate is shown in the DEBUG log above - use 100 docs/sec as threshold
-                if first_batch_rate < 100:  # Less than 100 docs/sec indicates serious problem
-                    print("\n" + "=" * 70, flush=True)
-                    print("❌ FATAL ERROR: Ingestion rate too slow", flush=True)
-                    print("=" * 70, flush=True)
-                    print(f"First batch rate: {first_batch_rate:.0f} docs/sec (need >100 docs/sec)", flush=True)
-                    print(f"At this rate, ingestion would take {(total_lines / first_batch_rate / 60):.0f} minutes", flush=True)
-                    print("", flush=True)
-                    print("ACTION REQUIRED: Please STOP and RESTART this sandbox.", flush=True)
-                    print("=" * 70 + "\n", flush=True)
-                    print("", flush=True)
-                    # Force immediate process termination - don't wait for cleanup
-                    os._exit(1)
-            
-            if failed_count > 0:
-                print(f"\n⚠️  Warning: Batch {completed_batches}/{total_batches}: {failed_count} documents failed to index")
+            with open(input_file, "r") as f:
+                # Skip already processed lines
+                for _ in range(start_line):
+                    next(f, None)
+                    current_line += 1
                 
-                # Update progress
-                ingest_progress = {
-                    "last_line": end_line_num,
-                    "total_lines": total_lines,
-                    "indexed_total": indexed_total,
-                    "last_updated": datetime.now(timezone.utc).isoformat()
-                }
-                self._save_progress(ingest_progress_file, ingest_progress)
+                for line in f:
+                    lines_read += 1
+                    current_line += 1
+                    
+                    # Progress logging every 500k lines
+                    if lines_read % 500000 == 0:
+                        log_memory(f"[STREAM] At {lines_read:,} lines ")
+                    
+                    try:
+                        doc = json.loads(line.strip())
+                        current_batch.append({
+                            "_index": INDEX_NAME,
+                            "_source": doc
+                        })
+                        
+                        # When batch is full, queue it for processing
+                        if len(current_batch) >= batch_size:
+                            current_batch_num += 1
+                            batch_start_line = current_line - len(current_batch)
+                            # This will block if queue is full (backpressure)
+                            await batch_queue.put((current_batch, current_batch_num, batch_start_line))
+                            current_batch = []  # Start fresh batch (old one is now in queue)
+                            
+                    except json.JSONDecodeError as e:
+                        print(f"\n⚠️  Warning: Failed to parse line {current_line}: {e}")
+                        continue
+                
+                # Final partial batch
+                if current_batch:
+                    current_batch_num += 1
+                    batch_start_line = current_line - len(current_batch)
+                    await batch_queue.put((current_batch, current_batch_num, batch_start_line))
             
-            # Progress reporting with batch number
-            progress_pct = (indexed_total / total_lines) * 100
-            elapsed = (datetime.now() - start_time).total_seconds()
-            rate = indexed_total / elapsed if elapsed > 0 else 0
-            remaining = total_lines - indexed_total
-            eta_seconds = remaining / rate if rate > 0 else 0
-            eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 0 else "calculating..."
+            producer_done.set()
+            print(f"[STREAM] Producer finished: {current_batch_num} batches queued", flush=True)
+        
+        async def batch_consumer():
+            """Consume batches from queue and ingest them"""
+            nonlocal completed_batches, indexed_total
+            active_tasks = set()
             
-            # Print batch completion message (new line for logs)
-            print(f"[Batch {completed_batches}/{total_batches}] Indexed {indexed_total:,}/{total_lines:,} docs ({progress_pct:.2f}%) | "
-                  f"Rate: {rate:.0f} docs/sec | ETA: {eta_str}")
+            while True:
+                # Check for bailout
+                if progress_dict.get("bailout", False):
+                    return
+                
+                # Try to get a batch (with timeout to check producer status)
+                try:
+                    batch_data, batch_num, start_line_num = await asyncio.wait_for(
+                        batch_queue.get(), timeout=1.0
+                    )
+                except asyncio.TimeoutError:
+                    # Check if producer is done and queue is empty
+                    if producer_done.is_set() and batch_queue.empty():
+                        break
+                    continue
+                
+                # Create ingestion task
+                task = asyncio.create_task(
+                    ingest_with_semaphore(batch_data, batch_num, start_line_num)
+                )
+                active_tasks.add(task)
+                
+                # If we have enough active tasks, wait for one to complete
+                if len(active_tasks) >= max_concurrent_batches:
+                    done, active_tasks = await asyncio.wait(
+                        active_tasks, return_when=asyncio.FIRST_COMPLETED
+                    )
+                    for completed_task in done:
+                        success, failed_count, end_line_num = completed_task.result()
+                        completed_batches += 1
+                        indexed_total += success
+                        progress_dict["indexed_total"] = indexed_total
+                        progress_dict["completed_batches"] = completed_batches
             
-            # Also update the inline progress
-            print(f"\rIngestion: {progress_pct:.2f}% | "
-                  f"{indexed_total:,}/{total_lines:,} docs | "
-                  f"Rate: {rate:.0f} docs/sec | "
-                  f"ETA: {eta_str}",
-                  end="", flush=True)
+            # Wait for remaining tasks
+            if active_tasks:
+                done, _ = await asyncio.wait(active_tasks)
+                for completed_task in done:
+                    success, failed_count, end_line_num = completed_task.result()
+                    completed_batches += 1
+                    indexed_total += success
+                    progress_dict["indexed_total"] = indexed_total
+                    progress_dict["completed_batches"] = completed_batches
+        
+        # Run producer and consumer concurrently
+        await asyncio.gather(batch_producer(), batch_consumer())
+        
+        # Check if we should have bailed out
+        if progress_dict.get("bailout", False):
+            ingest_heartbeat_running = False
+            hb_thread.join(timeout=1)
+            print("\n❌ Ingestion aborted due to poor performance", flush=True)
+            os._exit(1)
+        
+        # Final progress report
+        progress_pct = (indexed_total / total_lines) * 100 if total_lines > 0 else 0
+        elapsed = (datetime.now() - start_time).total_seconds()
+        rate = indexed_total / elapsed if elapsed > 0 else 0
+        print(f"\n[STREAM] Completed: {indexed_total:,}/{total_lines:,} docs ({progress_pct:.1f}%) in {elapsed:.1f}s ({rate:.0f} docs/sec)")
+        log_memory("[STREAM] Final ")
                         
         # Stop heartbeat
         ingest_heartbeat_running = False
