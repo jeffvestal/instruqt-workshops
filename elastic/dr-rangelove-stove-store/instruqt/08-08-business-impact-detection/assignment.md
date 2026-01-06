@@ -327,21 +327,19 @@ Create an `if` step that checks if the current payment count is below 70% of the
 
 Index a complete audit record of the workflow execution to Elasticsearch for compliance and analysis.
 
-Create an `elasticsearch.request` step that writes all the key metrics, AI explanation, and action taken to an index named `business_actions-<date>`.
+Create an `elasticsearch.index` step that writes all the key metrics, AI explanation, and action taken to an index named `business_actions-<date>`.
 
-> **Note:** We use `elasticsearch.request` instead of `elasticsearch.index` due to a known issue in 9.x where the document body isn't passed correctly.
+**Index name pattern:** Use `business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}`
 
-**Path pattern:** Use `business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}`
-
-**Body should include:**
+**Document should include:**
 - Timestamp, workflow name, alert info
 - Error count, payment counts (current and baseline)
 - AI explanation
 - Action taken and scaling result
 
 **Hints:**
-- Use `method: POST` and `path:` with the index and document ID
-- Use `body:` instead of `document:` for the document fields
+- From Challenge 6: You know how to index audit logs to Elasticsearch
+- Use `{{ execution.id }}` as the document ID
 - Use `default: 'no_action'` or `default: 'N/A'` for fields that might not exist if scaling didn't happen
 - Reference metrics from `steps.get_all_metrics.output.values[0][X]`:
   - `[0][0]` = error_count
@@ -353,11 +351,11 @@ Create an `elasticsearch.request` step that writes all the key metrics, AI expla
 
 ```yaml
 - name: log_to_elasticsearch
-  type: elasticsearch.request
+  type: elasticsearch.index
   with:
-    method: POST
-    path: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-    body:
+    index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+    id: "{{ execution.id }}"
+    document:
       timestamp: "{{ execution.startedAt }}"
       workflow_name: "business_impact_detector"
       alert_id: "{{ event.alerts[0].id }}"
@@ -366,7 +364,7 @@ Create an `elasticsearch.request` step that writes all the key metrics, AI expla
       error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
       current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
       baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-      ai_explanation: "{{ steps.ai_business_summary.output.response.message | default: 'No summary' }}"
+      ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
       action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
       scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```
@@ -574,13 +572,12 @@ steps:
             - Threshold (70% of baseline/min): {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{{ baseline | divided_by: 60 | times: 0.7 | round }}
 
   # Step 5: Audit log to Elasticsearch
-  # Note: Using elasticsearch.request instead of elasticsearch.index due to a bug in 9.x
   - name: log_to_elasticsearch
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: POST
-      path: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-      body:
+      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
         alert_id: "{{ event.alerts[0].id }}"
@@ -589,7 +586,7 @@ steps:
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
         baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-        ai_explanation: "{{ steps.ai_business_summary.output.response.message | default: 'No summary' }}"
+        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
         action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
         scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```

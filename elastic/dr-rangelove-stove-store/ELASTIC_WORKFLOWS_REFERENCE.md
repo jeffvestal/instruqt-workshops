@@ -210,13 +210,12 @@ Query using ES|QL (Elasticsearch Query Language):
 Index documents back into Elasticsearch:
 
 ```yaml
-  # Note: Using elasticsearch.request instead of elasticsearch.index due to a bug in 9.x
   - name: log_to_elasticsearch
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: POST
-      path: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-      body:
+      index: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "{{ execution.workflow.name }}"
         alert_id: "{{ event.alerts[0].id }}"
@@ -649,13 +648,12 @@ steps:
             action: "restart"
             service: "payment-service"
 
-  # Note: Using elasticsearch.request instead of elasticsearch.index due to a bug in 9.x
   - name: audit_log
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: POST
-      path: "remediation_logs-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-      body:
+      index: "remediation_logs-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
         timestamp: "{{ execution.startedAt }}"
         alert_id: "{{ event.alerts[0].id }}"
         action: "{{ steps.call_api.output.data.action }}"
@@ -785,7 +783,7 @@ steps:
 
 2. **Always Include Retry Logic**: External APIs (HTTP, Agent Builder) should have retry logic for resilience.
 
-3. **Audit Important Actions**: Use `elasticsearch.request` (with `method: POST` and `path: "index/_doc/id"`) to log all remediation actions for compliance and debugging. Note: `elasticsearch.index` has a bug in 9.x that prevents the document body from being sent.
+3. **Audit Important Actions**: Use `elasticsearch.index` to log all remediation actions for compliance and debugging.
 
 4. **Parse JSON Responses**: When agents return structured data, use `json_parse` filter to access nested properties.
 

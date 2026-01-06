@@ -75,7 +75,7 @@ echo "  ✓ Alert trigger configured"
 
 # Step 3: Check required steps
 echo "Step 3: Checking for required workflow steps..."
-REQUIRED_STEPS=("elasticsearch.esql.query" "kibana.post_agent_builder_converse" "if" "http" "elasticsearch.request")
+REQUIRED_STEPS=("elasticsearch.search" "kibana.post_agent_builder_converse" "if" "http" "elasticsearch.index")
 MISSING_STEPS=()
 
 for step_type in "${REQUIRED_STEPS[@]}"; do
