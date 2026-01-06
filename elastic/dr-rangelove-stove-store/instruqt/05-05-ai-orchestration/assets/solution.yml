@@ -14,22 +14,22 @@ triggers:
 
 steps:
   - name: draft_content
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_content_creator
-      input: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
+      message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
 
   - name: first_check
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output.response.message }}"
 
   - name: remediation_spin
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_pr_spin_specialist
-      input: |
+      message: |
         The following draft was written:
         "{{ steps.draft_content.output.response.message }}"
         
@@ -39,10 +39,10 @@ steps:
         Please revise this draft to have a strongly positive spin.
 
   - name: final_check
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output.response.message }}"
 
   - name: final_report
     type: console

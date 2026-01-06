@@ -21,10 +21,10 @@ steps:
 
   # Step 2: Call AI agent for remediation decision
   - name: ai_analysis
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_content_creator
-      input: |
+      message: |
         {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
         A critical latency anomaly was detected for service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
         Respond ONLY with the following JSON:
@@ -70,13 +70,12 @@ steps:
           message: "⚠️ No action taken."
 
   # Step 4: Index the results back into Elastic for auditing
-  # Note: Using elasticsearch.request instead of elasticsearch.index due to a bug in 9.x
   - name: log_to_elasticsearch
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: POST
-      path: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-      body:
+      index: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "self_healing_aiops"
         alert_id: "{{ event.alerts[0].id }}"

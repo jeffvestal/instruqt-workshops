@@ -34,10 +34,10 @@ steps:
 
   # Step 2: Call AI agent for business impact explanation
   - name: ai_business_summary
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_business_slo
-      input: |
+      message: |
         Here are the current metrics for payment-service:
         - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
         - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
@@ -108,13 +108,12 @@ steps:
             - Threshold (70% of baseline/min): {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{{ baseline | divided_by: 60 | times: 0.7 | round }}
 
   # Step 5: Audit log to Elasticsearch
-  # Note: Using elasticsearch.request instead of elasticsearch.index due to a bug in 9.x
   - name: log_to_elasticsearch
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: POST
-      path: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-      body:
+      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
         alert_id: "{{ event.alerts[0].id }}"
@@ -123,6 +122,6 @@ steps:
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
         baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-        ai_explanation: "{{ steps.ai_business_summary.output.response.message | default: 'No summary' }}"
+        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
         action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
         scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
