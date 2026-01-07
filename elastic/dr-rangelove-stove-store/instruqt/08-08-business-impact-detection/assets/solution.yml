@@ -122,6 +122,6 @@ steps:
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
         baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
+        ai_explanation: "{{ steps.ai_business_summary.output }}"
         action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
         scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"

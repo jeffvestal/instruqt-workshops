@@ -64,7 +64,7 @@ Replace your *entire* `print_location` step with this:
       {% assign cc = steps.get_geolocation.output.data.countryCode %}
       {% assign city = steps.get_geolocation.output.data.city %}
       {% assign country = steps.get_geolocation.output.data.country %}
-      {% assign europe = "AL,AD,AT,BA,BE,BG,BY,CH,HR,CY,CZ,DE,DK,EE,ES,FI,FO,FR,GG,GI,GR,HU,IE,IM,IS,IT,JE,LI,LT,LU,LV,MC,MD,ME,MK,MT,NL,NO,PL,PT,RO,RS,SE,SI,SK,SM,UA,UK,VA" %}
+      {% assign europe = "AL,AD,AT,BA,BE,BG,BY,CH,HR,CY,CZ,DE,DK,EE,ES,FI,FO,FR,GB,GG,GI,GR,HU,IE,IM,IS,IT,JE,LI,LT,LU,LV,MC,MD,ME,MK,MT,NL,NO,PL,PT,RO,RS,SE,SI,SK,SM,UA,VA" %}
       {% assign asia = "AE,AM,AZ,BH,BD,BN,BT,KH,CN,GE,HK,ID,IL,IN,IQ,IR,JO,JP,KG,KR,KW,KZ,LA,LB,LK,MM,MN,MO,MY,NP,OM,PH,PK,QA,SA,SG,SY,TH,TJ,TL,TM,TW,UZ,VN,YE" %}
 
       {% if status == "success" %}

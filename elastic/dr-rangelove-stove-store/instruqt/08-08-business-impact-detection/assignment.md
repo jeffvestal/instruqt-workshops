@@ -205,7 +205,7 @@ Add a `console` step that simulates sending an email with the AI's explanation.
 
 **Accessing the AI response:**
 - For passing to other steps: `steps.<your_step_name>.output`
-- For displaying/logging: `steps.<your_step_name>.output.response.message`
+- For displaying/logging: `steps.<your_step_name>.output` (or `steps.<your_step_name>.output.response.message` if you need the message string specifically)
 
 **Important**: The AI agent is used for **explanation only**. Your workflow makes the scaling decision deterministically.
 
@@ -365,7 +365,7 @@ Create an `elasticsearch.index` step that writes all the key metrics, AI explana
       error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
       current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
       baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-      ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
+      ai_explanation: "{{ steps.ai_business_summary.output }}"
       action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
       scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```
@@ -587,7 +587,7 @@ steps:
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
         baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
+        ai_explanation: "{{ steps.ai_business_summary.output }}"
         action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
         scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```

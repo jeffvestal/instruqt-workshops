@@ -181,7 +181,7 @@ steps:
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.draft_content.output }}"
-  
+
   - name: first_check_parsed
     type: console
     with:
