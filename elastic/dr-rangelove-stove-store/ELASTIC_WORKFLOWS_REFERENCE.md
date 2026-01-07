@@ -207,24 +207,62 @@ Query using ES|QL (Elasticsearch Query Language):
 
 ### Elasticsearch Index Step
 
-Index documents back into Elasticsearch:
+**⚠️ Note:** The `elasticsearch.index` step type has a bug. Use `elasticsearch.request` with `method: PUT` instead (see below).
+
+### Elasticsearch Request Step
+
+Generic action for advanced Elasticsearch API access. Use this for indexing documents (replacing `elasticsearch.index`), cluster health checks, and other Elasticsearch operations.
+
+**Indexing Documents (PUT):**
 
 ```yaml
   - name: log_to_elasticsearch
-    type: elasticsearch.index
+    type: elasticsearch.request
     with:
-      index: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
-      id: "{{ execution.id }}"
-      document:
+      method: PUT
+      path: "/workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
+      body:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "{{ execution.workflow.name }}"
         alert_id: "{{ event.alerts[0].id }}"
         action_taken: "{{ steps.remediate.output.status }}"
 ```
 
+**Parameters:**
+- `method`: HTTP method (GET, POST, PUT, DELETE) - defaults to GET if not specified
+- `path`: API endpoint path (e.g., `/_search`, `/_cluster/health`, `/index-name/_doc/id`)
+- `body`: JSON request body (required for PUT/POST)
+- `query`: URL query string parameters (optional object)
+
 **Dynamic Index Names:**
-- Use date filters to create daily indices: `"index-{{ execution.startedAt | date: '%Y-%m-%d' }}"`
+- Use date filters to create daily indices: `"/index-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"`
 - Use execution ID as document ID for deduplication
+- Path format: `/index-name/_doc/document-id`
+
+**Other Examples:**
+
+**Cluster Health (GET):**
+```yaml
+  - name: get_cluster_health
+    type: elasticsearch.request
+    with:
+      method: GET
+      path: /_cluster/health
+```
+
+**Delete by Query (POST):**
+```yaml
+  - name: delete_old_documents
+    type: elasticsearch.request
+    with:
+      method: POST
+      path: /my-index/_delete_by_query
+      body:
+        query:
+          range:
+            "@timestamp":
+              lt: "now-30d"
+```
 
 ### HTTP Step
 
@@ -649,11 +687,11 @@ steps:
             service: "payment-service"
 
   - name: audit_log
-    type: elasticsearch.index
+    type: elasticsearch.request
     with:
-      index: "remediation_logs-{{ execution.startedAt | date: '%Y-%m-%d' }}"
-      id: "{{ execution.id }}"
-      document:
+      method: PUT
+      path: "/remediation_logs-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
+      body:
         timestamp: "{{ execution.startedAt }}"
         alert_id: "{{ event.alerts[0].id }}"
         action: "{{ steps.call_api.output.data.action }}"
@@ -783,7 +821,7 @@ steps:
 
 2. **Always Include Retry Logic**: External APIs (HTTP, Agent Builder) should have retry logic for resilience.
 
-3. **Audit Important Actions**: Use `elasticsearch.index` to log all remediation actions for compliance and debugging.
+3. **Audit Important Actions**: Use `elasticsearch.request` with `method: PUT` to log all remediation actions for compliance and debugging.
 
 4. **Parse JSON Responses**: When agents return structured data, use `json_parse` filter to access nested properties.
 

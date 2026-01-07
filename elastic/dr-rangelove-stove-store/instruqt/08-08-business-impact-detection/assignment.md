@@ -328,7 +328,7 @@ Create an `if` step that checks if the current payment count is below 70% of the
 
 Index a complete audit record of the workflow execution to Elasticsearch for compliance and analysis.
 
-Create an `elasticsearch.index` step that writes all the key metrics, AI explanation, and action taken to an index named `business_actions-<date>`.
+Create an `elasticsearch.request` step that writes all the key metrics, AI explanation, and action taken to an index named `business_actions-<date>`.
 
 **Index name pattern:** Use `business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}`
 
@@ -346,17 +346,18 @@ Create an `elasticsearch.index` step that writes all the key metrics, AI explana
   - `[0][0]` = error_count
   - `[0][1]` = current_payment_count
   - `[0][3]` = baseline_payment_count
+- **Note:** Use `elasticsearch.request` with `method: PUT` and `path: "/index-name/_doc/id"` instead of `elasticsearch.index` (which has a bug)
 
 <details>
 <summary>Click here for the solution to this step</summary>
 
 ```yaml
 - name: log_to_elasticsearch
-  type: elasticsearch.index
+  type: elasticsearch.request
   with:
-    index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
-    id: "{{ execution.id }}"
-    document:
+    method: PUT
+    path: "/business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
+    body:
       timestamp: "{{ execution.startedAt }}"
       workflow_name: "business_impact_detector"
       alert_id: "{{ event.alerts[0].id }}"
@@ -574,11 +575,11 @@ steps:
 
   # Step 5: Audit log to Elasticsearch
   - name: log_to_elasticsearch
-    type: elasticsearch.index
+    type: elasticsearch.request
     with:
-      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
-      id: "{{ execution.id }}"
-      document:
+      method: PUT
+      path: "/business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
+      body:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
         alert_id: "{{ event.alerts[0].id }}"

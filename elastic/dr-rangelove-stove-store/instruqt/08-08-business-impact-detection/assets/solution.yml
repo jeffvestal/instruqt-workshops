@@ -109,11 +109,11 @@ steps:
 
   # Step 5: Audit log to Elasticsearch
   - name: log_to_elasticsearch
-    type: elasticsearch.index
+    type: elasticsearch.request
     with:
-      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
-      id: "{{ execution.id }}"
-      document:
+      method: PUT
+      path: "/business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
+      body:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
         alert_id: "{{ event.alerts[0].id }}"
