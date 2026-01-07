@@ -213,10 +213,10 @@ Add a `console` step that simulates sending an email with the AI's explanation.
 
 ```yaml
 - name: ai_business_summary
-  type: kibana.post_agent_builder_converse
+  type: onechat.runAgent
   with:
     agent_id: agent_business_slo
-    input: |
+    message: |
       Here are the current metrics for payment-service:
       - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
       - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
