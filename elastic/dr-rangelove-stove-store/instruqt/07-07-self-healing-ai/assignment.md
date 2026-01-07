@@ -104,7 +104,7 @@ steps:
     type: console
     with:
       message: |-
-        {% assign parsed = steps.ai_analysis.output.response.message | json_parse %}{{ parsed.remediation }}
+        {% assign parsed = steps.ai_analysis.output | json_parse %}{{ parsed.remediation }}
 
   - name: check_remediation
     type: if

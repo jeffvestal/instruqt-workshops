@@ -204,7 +204,8 @@ Call the `agent_business_slo` agent to explain the impact. The AI doesn't make t
 Add a `console` step that simulates sending an email with the AI's explanation.
 
 **Accessing the AI response:**
-`steps.<your_step_name>.output.response.message`
+- For passing to other steps: `steps.<your_step_name>.output`
+- For displaying/logging: `steps.<your_step_name>.output.response.message`
 
 **Important**: The AI agent is used for **explanation only**. Your workflow makes the scaling decision deterministically.
 
@@ -243,7 +244,7 @@ Add a `console` step that simulates sending an email with the AI's explanation.
       [EMAIL] To: sre-team@example.com
       Subject: Payment service impact detected
 
-      {{ steps.ai_business_summary.output.response.message }}
+      {{ steps.ai_business_summary.output }}
 ```
 
 </details>
@@ -529,7 +530,7 @@ steps:
         [EMAIL] To: sre-team@example.com
         Subject: Payment service impact detected
 
-        {{ steps.ai_business_summary.output.response.message }}
+        {{ steps.ai_business_summary.output }}
 
   # Step 4: Conditional logic - check if scaling needed (deterministic decision)
   # Uses KQL field comparison with computed threshold (70% of normalized baseline)

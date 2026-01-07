@@ -23,7 +23,12 @@ steps:
     type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      message: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output }}"
+  
+  - name: first_check_parsed
+    type: console
+    with:
+      message: ${{steps.first_check.output|json_parse}}
 
   - name: remediation_spin
     type: onechat.runAgent
@@ -31,33 +36,33 @@ steps:
       agent_id: agent_pr_spin_specialist
       message: |
         The following draft was written:
-        "{{ steps.draft_content.output.response.message }}"
-        
+        "{{ steps.draft_content.output }}"
+
         It was analyzed with this sentiment:
-        "{{ steps.first_check.output.response.message.sentiment }}"
-        
+        "{{ steps.first_check_parsed.output.sentiment}}"
+
         Please revise this draft to have a strongly positive spin.
 
   - name: final_check
     type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      message: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output }}"
 
   - name: final_report
     type: console
     with:
       message: >-
-        {% assign orig = steps.first_check.output.response.message | json_parse %}
-        {% assign fin = steps.final_check.output.response.message | json_parse %}
+        {% assign orig = steps.first_check.output | json_parse %}
+        {% assign fin = steps.final_check.output | json_parse %}
 
-        ---
+        ***
         Original Draft: {{ steps.draft_content.output.response.message }}
         Original Sentiment: {{ orig.sentiment }}
-        ---
+        ***
         Revised Draft: {{ steps.remediation_spin.output.response.message }}
         Final Sentiment: {{ fin.sentiment }}
-        ---
+        ***
         {% if fin.sentiment == "POSITIVE" %}
         ✅ PASSED: Content sentiment is positive after remediation.
         {% else %}

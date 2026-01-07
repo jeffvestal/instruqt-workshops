@@ -84,8 +84,21 @@ Now, let's *check* the work of the first agent. Add this step, which feeds the *
     type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      message: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output }}"
 ```
+
+## 3.5. Step 2.5: Parse the JSON Response
+
+The `agent_sentiment_analyzer` returns a JSON string. We need to parse it to access the `sentiment` property. Add this step:
+
+```yaml
+  - name: first_check_parsed
+    type: console
+    with:
+      message: ${{steps.first_check.output|json_parse}}
+```
+
+**Note:** This step demonstrates explicit JSON parsing. You could also use `{% assign %}` in the next step, but this shows both approaches.
 
 ## 4. Step 3: The "Remediator" (The "Spin Doctor")
 
@@ -98,10 +111,10 @@ Now for the magic. We'll call the `agent_pr_spin_specialist`, but we'll give it 
       agent_id: agent_pr_spin_specialist
       message: |
         The following draft was written:
-        "{{ steps.draft_content.output.response.message }}"
+        "{{ steps.draft_content.output }}"
 
         It was analyzed with this sentiment:
-        "{{ steps.first_check.output.response.message.sentiment }}"
+        "{{ steps.first_check_parsed.output.sentiment }}"
 
         Please revise this draft to have a strongly positive spin.
 ```
@@ -115,14 +128,14 @@ Finally, let's check the "spun" draft and print a final report.
     type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      message: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output }}"
 
   - name: final_report
     type: console
     with:
       message: >-
-        {% assign orig = steps.first_check.output.response.message | json_parse %}
-        {% assign fin = steps.final_check.output.response.message | json_parse %}
+        {% assign orig = steps.first_check.output | json_parse %}
+        {% assign fin = steps.final_check.output | json_parse %}
 
         ***
         Original Draft: {{ steps.draft_content.output.response.message }}
@@ -167,7 +180,12 @@ steps:
     type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      message: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output }}"
+  
+  - name: first_check_parsed
+    type: console
+    with:
+      message: ${{steps.first_check.output|json_parse}}
 
   - name: remediation_spin
     type: onechat.runAgent
@@ -175,10 +193,10 @@ steps:
       agent_id: agent_pr_spin_specialist
       message: |
         The following draft was written:
-        "{{ steps.draft_content.output.response.message }}"
+        "{{ steps.draft_content.output }}"
 
         It was analyzed with this sentiment:
-        "{{ steps.first_check.output.response.message.sentiment }}"
+        "{{ steps.first_check_parsed.output.sentiment}}"
 
         Please revise this draft to have a strongly positive spin.
 
@@ -186,14 +204,14 @@ steps:
     type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      message: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output }}"
 
   - name: final_report
     type: console
     with:
       message: >-
-        {% assign orig = steps.first_check.output.response.message | json_parse %}
-        {% assign fin = steps.final_check.output.response.message | json_parse %}
+        {% assign orig = steps.first_check.output | json_parse %}
+        {% assign fin = steps.final_check.output | json_parse %}
 
         ***
         Original Draft: {{ steps.draft_content.output.response.message }}

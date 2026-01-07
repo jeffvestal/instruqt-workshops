@@ -65,7 +65,7 @@ steps:
         [EMAIL] To: sre-team@example.com
         Subject: Payment service impact detected
 
-        {{ steps.ai_business_summary.output.response.message }}
+        {{ steps.ai_business_summary.output }}
 
   # Step 4: Conditional logic - check if scaling needed (deterministic decision)
   # Uses KQL field comparison with computed threshold (70% of normalized baseline)
