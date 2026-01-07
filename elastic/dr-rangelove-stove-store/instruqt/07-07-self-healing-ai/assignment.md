@@ -90,10 +90,10 @@ steps:
 
   # Step 2: Call AI agent for remediation decision
   - name: ai_analysis
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_content_creator
-      input: |
+      message: |
         {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
         A critical latency anomaly was detected for service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
         Respond ONLY with the following JSON:

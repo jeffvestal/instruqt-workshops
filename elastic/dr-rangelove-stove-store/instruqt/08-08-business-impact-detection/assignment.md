@@ -194,9 +194,9 @@ Call an AI agent to explain the business impact in human language, then simulate
 
 Call the `agent_business_slo` agent to explain the impact. The AI doesn't make the scaling decision—it just summarizes the impact for stakeholders.
 
-- Step type: `kibana.post_agent_builder_converse`
+- Step type: `onechat.runAgent`
 - Agent ID: `agent_business_slo`
-- Input: Pass the metrics from `get_all_metrics` (error count, current payment count, baseline payment count) and ask the agent to explain the impact in 2–3 sentences.
+- Message: Pass the metrics from `get_all_metrics` (error count, current payment count, baseline payment count) and ask the agent to explain the impact in 2–3 sentences.
 - Add retry logic: `on-failure: retry:` with `max-attempts: 2` and `delay: 1s`
 
 **Part 2: Notification**
@@ -498,10 +498,10 @@ steps:
 
   # Step 2: Call AI agent for business impact explanation
   - name: ai_business_summary
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_business_slo
-      input: |
+      message: |
         Here are the current metrics for payment-service:
         - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
         - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}

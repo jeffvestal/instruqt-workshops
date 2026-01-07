@@ -69,10 +69,10 @@ Add your first step. This calls the `agent_content_creator`.
 
 ```yaml
   - name: draft_content
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_content_creator
-      input: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
+      message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
 ```
 
 ## 3. Step 2: The "Critic"
@@ -81,10 +81,10 @@ Now, let's *check* the work of the first agent. Add this step, which feeds the *
 
 ```yaml
   - name: first_check
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output.response.message }}"
 ```
 
 ## 4. Step 3: The "Remediator" (The "Spin Doctor")
@@ -93,10 +93,10 @@ Now for the magic. We'll call the `agent_pr_spin_specialist`, but we'll give it 
 
 ```yaml
   - name: remediation_spin
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_pr_spin_specialist
-      input: |
+      message: |
         The following draft was written:
         "{{ steps.draft_content.output.response.message }}"
 
@@ -112,10 +112,10 @@ Finally, let's check the "spun" draft and print a final report.
 
 ```yaml
   - name: final_check
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output.response.message }}"
 
   - name: final_report
     type: console
@@ -158,22 +158,22 @@ triggers:
 
 steps:
   - name: draft_content
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_content_creator
-      input: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
+      message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
 
   - name: first_check
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output.response.message }}"
 
   - name: remediation_spin
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_pr_spin_specialist
-      input: |
+      message: |
         The following draft was written:
         "{{ steps.draft_content.output.response.message }}"
 
@@ -183,10 +183,10 @@ steps:
         Please revise this draft to have a strongly positive spin.
 
   - name: final_check
-    type: kibana.post_agent_builder_converse
+    type: onechat.runAgent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output.response.message }}"
 
   - name: final_report
     type: console
