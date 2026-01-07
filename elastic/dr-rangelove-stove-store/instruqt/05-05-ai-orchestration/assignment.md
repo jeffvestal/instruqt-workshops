@@ -114,7 +114,7 @@ Now for the magic. We'll call the `agent_pr_spin_specialist`, but we'll give it 
         "{{ steps.draft_content.output }}"
 
         It was analyzed with this sentiment:
-        "{{ steps.first_check_parsed.output.sentiment }}"
+        "{{ steps.first_check_parsed.output.sentiment}}"
 
         Please revise this draft to have a strongly positive spin.
 ```

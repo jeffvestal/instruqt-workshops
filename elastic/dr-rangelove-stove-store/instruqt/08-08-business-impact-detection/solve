@@ -115,7 +115,7 @@ fi
 # Step 5: Test workflow execution (optional - just verify structure)
 echo "Step 5: Verifying workflow structure..."
 # Check for key step names
-KEY_STEPS=("get_error_rate" "get_payment_metrics" "ai_business_analysis" "scale_service")
+KEY_STEPS=("get_all_metrics" "ai_business_summary" "check_scaling_needed" "scale_service")
 MISSING_KEY_STEPS=()
 
 for step_name in "${KEY_STEPS[@]}"; do
