@@ -81,7 +81,7 @@ steps:
       query:
         term:
           service.name: "{{ inputs.service_name }}"
-      aggs:
+      aggregations:
         p95_latency:
           percentiles:
             field: "latency_ms"
