@@ -21,7 +21,7 @@ steps:
 
   # Step 2: Call AI agent for remediation decision
   - name: ai_analysis
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_content_creator
       message: |

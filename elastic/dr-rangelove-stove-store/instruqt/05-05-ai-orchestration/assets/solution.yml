@@ -14,13 +14,13 @@ triggers:
 
 steps:
   - name: draft_content
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_content_creator
       message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
 
   - name: first_check
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.draft_content.output }}"
@@ -31,7 +31,7 @@ steps:
       message: ${{steps.first_check.output|json_parse}}
 
   - name: remediation_spin
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_pr_spin_specialist
       message: |
@@ -44,7 +44,7 @@ steps:
         Please revise this draft to have a strongly positive spin.
 
   - name: final_check
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.remediation_spin.output }}"

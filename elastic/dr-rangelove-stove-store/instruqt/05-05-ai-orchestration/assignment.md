@@ -69,7 +69,7 @@ Add your first step. This calls the `agent_content_creator`.
 
 ```yaml
   - name: draft_content
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_content_creator
       message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
@@ -81,7 +81,7 @@ Now, let's *check* the work of the first agent. Add this step, which feeds the *
 
 ```yaml
   - name: first_check
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.draft_content.output }}"
@@ -106,7 +106,7 @@ Now for the magic. We'll call the `agent_pr_spin_specialist`, but we'll give it 
 
 ```yaml
   - name: remediation_spin
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_pr_spin_specialist
       message: |
@@ -125,7 +125,7 @@ Finally, let's check the "spun" draft and print a final report.
 
 ```yaml
   - name: final_check
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.remediation_spin.output }}"
@@ -171,13 +171,13 @@ triggers:
 
 steps:
   - name: draft_content
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_content_creator
       message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
 
   - name: first_check
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.draft_content.output }}"
@@ -188,7 +188,7 @@ steps:
       message: ${{steps.first_check.output|json_parse}}
 
   - name: remediation_spin
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_pr_spin_specialist
       message: |
@@ -201,7 +201,7 @@ steps:
         Please revise this draft to have a strongly positive spin.
 
   - name: final_check
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
       message: "{{ steps.remediation_spin.output }}"

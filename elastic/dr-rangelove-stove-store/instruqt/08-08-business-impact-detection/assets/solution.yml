@@ -34,7 +34,7 @@ steps:
 
   # Step 2: Call AI agent for business impact explanation
   - name: ai_business_summary
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_business_slo
       message: |

@@ -296,30 +296,31 @@ Make external API calls:
 - `steps.step_name.output.status` - HTTP status code
 - `steps.step_name.output.headers` - Response headers
 
-### Agent Builder Converse Step
+### AI Agent Step
 
-Call an Agent Builder agent:
+Call an AI agent:
 
 ```yaml
   - name: ai_analysis
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_content_creator
-      input: |
+      message: |
         Analyze this service incident:
         Service: {{ inputs.service_name }}
         Error count: {{ steps.get_errors.output.count }}
         Please provide remediation recommendations.
 ```
 
-**Agent Input:**
+**Agent Message:**
 - Can be a simple string or multi-line message
 - Use Liquid templating to inject workflow data
-- Agents receive the input and return structured or unstructured responses
+- Agents receive the message and return structured or unstructured responses
 
 **Accessing Agent Response:**
-- `steps.step_name.output.response.message` - Agent's text response
-- For JSON responses, parse with `json_parse` filter: `{{ steps.step_name.output.response.message | json_parse }}`
+- `steps.step_name.output` - Agent's response (for passing to other steps)
+- `steps.step_name.output.response.message` - Agent's text response (for display)
+- For JSON responses, parse with `json_parse` filter: `{{ steps.step_name.output | json_parse }}`
 
 ### Conditional (If) Step
 
@@ -550,10 +551,10 @@ Agents are identified by their `agent_id`:
 
 ```yaml
   - name: call_agent
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_content_creator
-      input: "Generate content about {{ inputs.topic }}"
+      message: "Generate content about {{ inputs.topic }}"
 ```
 
 **Common Agent Patterns:**
@@ -562,16 +563,16 @@ Agents are identified by their `agent_id`:
 - `agent_pr_spin_specialist` - PR/content optimization
 - `agent_business_slo` - Business impact analysis
 
-### Input/Output Patterns
+### Message/Output Patterns
 
-**Simple Input:**
+**Simple Message:**
 ```yaml
-input: "Write a press release about {{ inputs.topic }}"
+message: "Write a press release about {{ inputs.topic }}"
 ```
 
-**Multi-line Input with Context:**
+**Multi-line Message with Context:**
 ```yaml
-input: |
+message: |
   Here are the current metrics for payment-service:
   - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
   - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
@@ -586,7 +587,7 @@ input: |
     type: console
     with:
       message: |-
-        {% assign parsed = steps.ai_analysis.output.response.message | json_parse %}
+        {% assign parsed = steps.ai_analysis.output | json_parse %}
         Remediation: {{ parsed.remediation }}
 ```
 
@@ -597,33 +598,33 @@ A common pattern is to chain multiple agents:
 **Step 1: Generator**
 ```yaml
   - name: draft_content
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_content_creator
-      input: "Write a short press release about: {{ inputs.topic }}"
+      message: "Write a short press release about: {{ inputs.topic }}"
 ```
 
 **Step 2: Critic**
 ```yaml
   - name: first_check
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.draft_content.output.response.message }}"
+      message: "{{ steps.draft_content.output }}"
 ```
 
 **Step 3: Remediator**
 ```yaml
   - name: remediation_spin
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_pr_spin_specialist
-      input: |
+      message: |
         The following draft was written:
-        "{{ steps.draft_content.output.response.message }}"
+        "{{ steps.draft_content.output }}"
         
         It was analyzed with this sentiment:
-        "{{ steps.first_check.output.response.message }}"
+        "{{ steps.first_check.output }}"
         
         Please revise this draft to have a strongly positive spin.
 ```
@@ -631,10 +632,10 @@ A common pattern is to chain multiple agents:
 **Step 4: Final Validation**
 ```yaml
   - name: final_check
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_sentiment_analyzer
-      input: "{{ steps.remediation_spin.output.response.message }}"
+      message: "{{ steps.remediation_spin.output }}"
 ```
 
 ---
@@ -662,10 +663,10 @@ steps:
         Alert ID: {{ event.alerts[0].id }}
 
   - name: ai_decision
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_remediation_advisor
-      input: |
+      message: |
         Alert: {{ event.alerts[0].rule.name }}
         Please recommend remediation action as JSON: {"action": "..."}
     on-failure:
@@ -675,7 +676,7 @@ steps:
 
   - name: execute_remediation
     type: if
-    condition: "${{ steps.ai_decision.output.response.message | json_parse | json: 'action' }} == 'restart'"
+    condition: "${{ steps.ai_decision.output | json_parse | json: 'action' }} == 'restart'"
     steps:
       - name: call_api
         type: http
@@ -804,10 +805,10 @@ steps:
 
   # Step 4: AI analysis
   - name: ai_analysis
-    type: kibana.post_agent_builder_converse
+    type: ai.agent
     with:
       agent_id: agent_triage_specialist
-      input: |
+      message: |
         {{ steps.format_report.output }}
         
         Please analyze this incident and provide recommendations.

@@ -194,7 +194,7 @@ Call an AI agent to explain the business impact in human language, then simulate
 
 Call the `agent_business_slo` agent to explain the impact. The AI doesn't make the scaling decision—it just summarizes the impact for stakeholders.
 
-- Step type: `onechat.runAgent`
+- Step type: `ai.agent`
 - Agent ID: `agent_business_slo`
 - Message: Pass the metrics from `get_all_metrics` (error count, current payment count, baseline payment count) and ask the agent to explain the impact in 2–3 sentences.
 - Add retry logic: `on-failure: retry:` with `max-attempts: 2` and `delay: 1s`
@@ -214,7 +214,7 @@ Add a `console` step that simulates sending an email with the AI's explanation.
 
 ```yaml
 - name: ai_business_summary
-  type: onechat.runAgent
+  type: ai.agent
   with:
     agent_id: agent_business_slo
     message: |
@@ -500,7 +500,7 @@ steps:
 
   # Step 2: Call AI agent for business impact explanation
   - name: ai_business_summary
-    type: onechat.runAgent
+    type: ai.agent
     with:
       agent_id: agent_business_slo
       message: |

@@ -75,7 +75,7 @@ echo "  ✓ Alert trigger configured"
 
 # Step 3: Check required steps
 echo "Step 3: Checking for required workflow steps..."
-REQUIRED_STEPS=("elasticsearch.esql.query" "onechat.runAgent" "if" "http" "elasticsearch.request")
+REQUIRED_STEPS=("elasticsearch.esql.query" "ai.agent" "if" "http" "elasticsearch.request")
 MISSING_STEPS=()
 
 for step_type in "${REQUIRED_STEPS[@]}"; do
