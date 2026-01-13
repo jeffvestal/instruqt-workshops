@@ -126,11 +126,11 @@ Create an ES|QL step named `get_all_metrics` that returns:
 ```esql
 FROM o11y-heartbeat
 | WHERE service.name == "payment-service"
-| WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-  AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+| WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+  AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
 | EVAL
-    is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-    is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
     is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
     is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
     is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
@@ -166,11 +166,11 @@ FROM o11y-heartbeat
     query: >
       FROM o11y-heartbeat
       | WHERE service.name == "payment-service"
-      | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-        AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+      | WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+        AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
       | EVAL
-          is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-          is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
           is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
           is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
           is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
@@ -483,11 +483,11 @@ steps:
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
-        | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-          AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+        | WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
         | EVAL
-            is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-            is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
             is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
             is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
             is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
