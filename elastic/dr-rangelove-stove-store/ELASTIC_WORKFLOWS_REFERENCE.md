@@ -101,7 +101,7 @@ When triggered by an alert, the workflow receives alert data in `event.alerts[0]
 - `event.alerts[0].id` - Alert ID
 - `event.alerts[0].rule.name` - Alert rule name
 - `event.alerts[0].rule.parameters.esQuery` - Alert query (JSON string)
-- `event.alerts[0].kibana.alert.rule.execution.timestamp` - Execution timestamp
+- `event.alerts[0]['@timestamp']` - Execution timestamp
 
 ---
 
@@ -185,8 +185,8 @@ Query using ES|QL (Elasticsearch Query Language):
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
-        | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-          AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+        | WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
         | EVAL 
             is_error = CASE(http.status_code >= 500, 1, 0),
             is_success = CASE(transaction.status == "success", 1, 0)
@@ -402,12 +402,12 @@ message: "Workflow name: {{ execution.workflow.name }}"
 ```yaml
 {{ execution.startedAt | date: '%Y-%m-%d' }}
 {{ execution.startedAt | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}
-{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' }}
+{{ event.alerts[0]['@timestamp'] | date: '%s' }}
 ```
 
 **Date Math:**
 ```yaml
-{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}
+{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}
 ```
 
 **JSON Parsing:**
@@ -707,11 +707,11 @@ steps:
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
-        | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-          AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+        | WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
         | EVAL 
-            is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-            is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
             is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
             is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
             is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0)
