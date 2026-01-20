@@ -1,0 +1,62 @@
+#!/bin/bash
+
+####################################################################### WAIT
+
+echo "Wait for the Instruqt host bootstrap to finish"
+# Wait for the Instruqt host bootstrap to finish
+while [ ! -f /opt/instruqt/bootstrap/host-bootstrap-completed ]
+do
+    echo "Waiting for Instruqt to finish booting the virtual machine"
+    sleep 1
+done
+
+# explicitly source env vars
+source /etc/profile.d/instruqt-env.sh
+
+####################################################################### ENV CHECK
+
+export GCSKEY_CE_INFRA_CONTAINERS=$GCSKEY_CE_INFRA_CONTAINERS
+
+if [[ -z "$GCSKEY_CE_INFRA_CONTAINERS" ]]; then
+    echo "GCSKEY_CE_INFRA_CONTAINERS is null"
+    exit 1
+fi
+
+####################################################################### DOWNLOAD WORKSHOP ASSETS
+
+echo "[Workshop] Downloading workshop assets..."
+cd /opt
+rm -rf workshop-assets
+
+git clone --depth 1 --filter=blob:none --no-checkout \
+  https://github.com/jeffvestal/instruqt-workshops.git temp-repo
+cd temp-repo
+git sparse-checkout set elastic/dr-rangelove-stove-store/workshop-assets
+git checkout
+mv elastic/dr-rangelove-stove-store/workshop-assets /opt/
+cd /opt
+rm -rf temp-repo
+
+chmod +x /opt/workshop-assets/setup_scripts/*.sh
+
+####################################################################### INSTALL NODE.JS AND PM2
+
+echo "[Workshop] Installing Node.js and pm2..."
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+apt-get install -y nodejs
+npm install -g pm2
+
+####################################################################### SETUP MOCK API
+
+echo "[Workshop] Setting up mock remediation API..."
+bash /opt/workshop-assets/setup_scripts/03-mock-api-service.sh
+
+# Configure pm2 to start on boot
+pm2 startup systemd -u root --hp /root
+pm2 save --force
+
+echo "[Workshop] Mock API ready on port 3000"
+
+####################################################################### STARTUP
+
+source /opt/workshops/worker-start.sh

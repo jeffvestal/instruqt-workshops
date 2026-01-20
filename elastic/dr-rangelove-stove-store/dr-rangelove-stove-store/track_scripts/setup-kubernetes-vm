@@ -1,0 +1,581 @@
+#!/bin/bash
+
+####################################################################### WAIT
+
+echo "Wait for the Instruqt host bootstrap to finish"
+# Wait for the Instruqt host bootstrap to finish
+while [ ! -f /opt/instruqt/bootstrap/host-bootstrap-completed ]
+do
+    echo "Waiting for Instruqt to finish booting the virtual machine"
+    sleep 1
+done
+
+# explicitly source env vars
+source /etc/profile.d/instruqt-env.sh
+
+####################################################################### ENV CHECK
+
+export _SANDBOX_ID=$_SANDBOX_ID
+
+export INSTRUQT=$INSTRUQT
+export LLM_KEY_DURATION=$LLM_KEY_DURATION
+export LLM_KEY_MAX_BUDGET=$LLM_KEY_MAX_BUDGET
+export LLM_MODELS=$LLM_MODELS
+export LLM_PROXY_URL=$LLM_PROXY_URL
+
+export SA_LLM_PROXY_BEARER_TOKEN=$SA_LLM_PROXY_BEARER_TOKEN
+export GCSKEY_ELASTIC_SA=$GCSKEY_ELASTIC_SA
+export GCSKEY_EDEN_WORKSHOP=$GCSKEY_EDEN_WORKSHOP
+export GCS_KEY_EDUCATION=$GCS_KEY_EDUCATION
+export GCSKEY=$GCSKEY
+
+if [[ -z "$_SANDBOX_ID" ]]; then
+    echo "_SANDBOX_ID is null"
+    exit 1
+else
+    echo "_SANDBOX_ID=$_SANDBOX_ID"
+fi
+
+if [[ -z "$INSTRUQT" ]]; then
+    echo "INSTRUQT is null"
+    exit 1
+else
+    echo "INSTRUQT=$INSTRUQT"
+fi
+
+if [[ -z "$LLM_KEY_DURATION" ]]; then
+    echo "LLM_KEY_DURATION is null"
+    exit 1
+else
+    echo "LLM_KEY_DURATION=$LLM_KEY_DURATION"
+fi
+
+if [[ -z "$LLM_KEY_MAX_BUDGET" ]]; then
+    echo "LLM_KEY_MAX_BUDGET is null"
+    exit 1
+else
+    echo "LLM_KEY_MAX_BUDGET=$LLM_KEY_MAX_BUDGET"
+fi
+
+if [[ -z "$LLM_MODELS" ]]; then
+    echo "LLM_MODELS is null"
+    exit 1
+else
+    echo "LLM_MODELS=$LLM_MODELS"
+fi
+
+if [[ -z "$LLM_PROXY_URL" ]]; then
+    echo "LLM_PROXY_URL is null"
+    exit 1
+else
+    echo "LLM_PROXY_URL=$LLM_PROXY_URL"
+fi
+
+if [[ -z "$SA_LLM_PROXY_BEARER_TOKEN" ]]; then
+    echo "SA_LLM_PROXY_BEARER_TOKEN is null"
+    exit 1
+fi
+if [[ -z "$GCSKEY_ELASTIC_SA" ]]; then
+    echo "GCSKEY_ELASTIC_SA is null"
+    exit 1
+fi
+if [[ -z "$GCSKEY_EDEN_WORKSHOP" ]]; then
+    echo "GCSKEY_EDEN_WORKSHOP is null"
+    exit 1
+fi
+if [[ -z "$GCSKEY" ]]; then
+    echo "GCSKEY is null"
+    exit 1
+fi
+
+####################################################################### STARTUP
+
+# finish elastic install
+source /opt/workshops/elastic-start.sh
+
+# setup openai
+source /opt/workshops/llm-key.sh
+
+####################################################################### WAIT FOR K3S API
+
+# Ensure k3s API is up before any kubectl commands
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+wait_for_api() {
+  local timeout="$1"
+  echo "[k3s] Waiting for API server readiness (timeout ${timeout}s)..."
+  for i in $(seq 1 "$timeout"); do
+    if kubectl get --raw='/readyz' >/dev/null 2>&1; then
+      echo "[k3s] API server is responding"
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+if ! wait_for_api 300; then
+  echo "[k3s] API not ready after first wait; restarting k3s once..."
+  sudo systemctl restart k3s || true
+  sleep 5
+  if ! wait_for_api 180; then
+    echo "[k3s] ERROR: API server not ready after restart"
+    sudo systemctl status k3s --no-pager || true
+    sudo journalctl -u k3s --no-pager -n 200 || true
+    exit 1
+  fi
+fi
+
+echo "[k3s] Waiting for nodes to become Ready..."
+kubectl wait --for=condition=Ready node --all --timeout=300s
+kubectl get nodes -o wide
+
+####################################################################### CONFIGURE KIBANA
+
+echo "[Workshop] Configuring Kibana publicBaseUrl..."
+# Set publicBaseUrl for proper Agent Builder and workflow callbacks
+kubectl patch kibana kibana -n default --type=merge -p '{
+  "spec": {
+    "config": {
+      "server.publicBaseUrl": "http://kubernetes-vm:30001"
+    }
+  }
+}' 2>/dev/null || echo "[Workshop] ⚠️  Could not patch Kibana config (may not be needed)"
+
+####################################################################### WAIT FOR KIBANA AND ENABLE WORKFLOWS FEATURE FLAG
+
+echo "[Workshop] Waiting for Kibana to be ready..."
+MAX_RETRIES=60
+RETRY_COUNT=0
+
+# Get Kibana URL and API key (may be set by elastic-start.sh or from env)
+KIBANA_URL_UI="${KIBANA_URL_UI:-${KIBANA_URL:-http://localhost:30001}}"
+ELASTICSEARCH_APIKEY="${ELASTICSEARCH_APIKEY:-${ELASTIC_API_KEY}}"
+
+until curl -fsS -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" "${KIBANA_URL_UI}/api/status" >/dev/null 2>&1; do
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+    echo "[Workshop] ERROR: Kibana did not become ready in time"
+    exit 1
+  fi
+  echo "  ... waiting for Kibana (attempt ${RETRY_COUNT}/${MAX_RETRIES})"
+  sleep 5
+done
+
+echo "[Workshop] ✓ Kibana is ready"
+
+# Enable workflows feature flag
+echo "[Workshop] Enabling workflows feature flag..."
+FEATURE_FLAG_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}/api/kibana/settings" \
+  -H "Content-Type: application/json" \
+  -H "kbn-xsrf: true" \
+  -H "x-elastic-internal-origin: featureflag" \
+  -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+  -d '{
+    "changes": {
+      "workflows:ui:enabled": true
+    }
+  }')
+
+HTTP_CODE=$(echo "$FEATURE_FLAG_RESPONSE" | tail -n1)
+if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
+  echo "[Workshop] ✓ Workflows feature flag enabled (HTTP $HTTP_CODE)"
+else
+  echo "[Workshop] ⚠️  Warning: Feature flag API returned HTTP $HTTP_CODE (may already be enabled or not available)"
+fi
+
+# Export for use in other scripts
+export KIBANA_URL="${KIBANA_URL_UI}"
+export ELASTICSEARCH_URL="${ELASTICSEARCH_URL:-http://localhost:30920}"
+export ELASTICSEARCH_APIKEY="${ELASTICSEARCH_APIKEY}"
+
+####################################################################### DOWNLOAD WORKSHOP ASSETS FROM GITHUB
+
+echo "[Workshop] Downloading workshop assets from GitHub..."
+
+WORKSHOP_ASSETS_DIR="/opt/workshop-assets"
+REPO_URL="https://github.com/jeffvestal/instruqt-workshops.git"
+REPO_PATH="elastic/dr-rangelove-stove-store/workshop-assets"
+
+# Create temporary directory for cloning
+TMP_CLONE_DIR="/tmp/instruqt-workshops-clone"
+rm -rf "$TMP_CLONE_DIR"
+
+echo "[Workshop] Cloning repository with sparse checkout..."
+git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$TMP_CLONE_DIR"
+cd "$TMP_CLONE_DIR"
+git sparse-checkout set "$REPO_PATH"
+
+# Log git commit info to verify we got the latest code
+echo "[Workshop] === GitHub Repository Info ==="
+COMMIT_HASH=$(git rev-parse HEAD)
+COMMIT_DATE=$(git log -1 --format=%ci)
+COMMIT_MSG=$(git log -1 --format=%s)
+echo "[Workshop] Commit hash: ${COMMIT_HASH}"
+echo "[Workshop] Commit date: ${COMMIT_DATE}"
+echo "[Workshop] Commit message: ${COMMIT_MSG}"
+echo "[Workshop] === END GitHub Info ==="
+
+# Debug: Show what we cloned
+echo "[Workshop] === DEBUG: Directory structure after clone ==="
+echo "[Workshop] Current directory: $(pwd)"
+echo "[Workshop] Contents of $(pwd):"
+ls -la
+echo "[Workshop] Looking for workshop-assets..."
+find . -name "workshop-assets" -type d
+echo "[Workshop] Contents of elastic/dr-rangelove-stove-store if it exists:"
+ls -la elastic/dr-rangelove-stove-store/ 2>/dev/null || echo "  (directory not found)"
+echo "[Workshop] === END DEBUG ==="
+
+# Find the actual workshop-assets directory
+if [ -d "$TMP_CLONE_DIR/$REPO_PATH" ]; then
+    echo "[Workshop] Found workshop-assets at: $TMP_CLONE_DIR/$REPO_PATH"
+    echo "[Workshop] Contents:"
+    ls -la "$TMP_CLONE_DIR/$REPO_PATH"
+    # Copy to final location
+    mkdir -p "$WORKSHOP_ASSETS_DIR"
+    cp -r "$TMP_CLONE_DIR/$REPO_PATH"/* "$WORKSHOP_ASSETS_DIR/"
+elif [ -d "$TMP_CLONE_DIR/workshop-assets" ]; then
+    echo "[Workshop] Found workshop-assets at: $TMP_CLONE_DIR/workshop-assets"
+    echo "[Workshop] Contents:"
+    ls -la "$TMP_CLONE_DIR/workshop-assets"
+    # Copy to final location
+    mkdir -p "$WORKSHOP_ASSETS_DIR"
+    cp -r "$TMP_CLONE_DIR/workshop-assets"/* "$WORKSHOP_ASSETS_DIR/"
+else
+    echo "[Workshop] ERROR: Could not find workshop-assets directory"
+    echo "[Workshop] Attempting to find it..."
+    find "$TMP_CLONE_DIR" -type d -name "workshop-assets" 2>/dev/null
+    exit 1
+fi
+
+# Clean up (change to safe directory first)
+cd /tmp
+rm -rf "$TMP_CLONE_DIR"
+
+# Debug: Show final location
+echo "[Workshop] === DEBUG: Final workshop-assets directory ==="
+echo "[Workshop] Location: $WORKSHOP_ASSETS_DIR"
+echo "[Workshop] Contents:"
+ls -la "$WORKSHOP_ASSETS_DIR"
+echo "[Workshop] Data generator contents:"
+ls -la "$WORKSHOP_ASSETS_DIR/data_generator/" 2>/dev/null || echo "  (data_generator not found)"
+echo "[Workshop] Setup scripts contents:"
+ls -la "$WORKSHOP_ASSETS_DIR/setup_scripts/" 2>/dev/null || echo "  (setup_scripts not found)"
+echo "[Workshop] === END DEBUG ==="
+
+# Make scripts executable
+chmod +x "$WORKSHOP_ASSETS_DIR/data_generator/"*.py 2>/dev/null
+chmod +x "$WORKSHOP_ASSETS_DIR/setup_scripts/"*.sh 2>/dev/null
+
+echo "[Workshop] ✓ Workshop assets downloaded to $WORKSHOP_ASSETS_DIR"
+
+####################################################################### DATA GENERATOR SETUP
+
+echo "[Workshop] Setting up data generator..."
+
+# Install jq for JSON processing in scripts
+if ! command -v jq &> /dev/null; then
+  echo "[Workshop] Installing jq..."
+  apt-get install -y jq
+fi
+
+# Install Python dependencies (use python3 -m pip to avoid cwd issues)
+echo "[Workshop] Installing Python dependencies..."
+cd /tmp  # Ensure we're in a safe directory
+python3 -m pip install -q elasticsearch httpx aiohttp
+if [ $? -ne 0 ]; then
+  echo "[Workshop] ERROR: Failed to install Python dependencies"
+  exit 1
+fi
+
+# Configuration
+USE_ML_AD="${USE_ML_AD:-false}"
+DATA_GEN_DIR="$WORKSHOP_ASSETS_DIR/data_generator"
+BACKFILL_DAYS="${BACKFILL_DAYS:-7}"
+
+# Export env vars for data generator (map to its expected names)
+export ELASTIC_CLOUD_ID="${ELASTICSEARCH_URL}"
+export ELASTIC_API_KEY="${ELASTICSEARCH_APIKEY}"
+
+# Debug: Show ES connection variables before running data sprayer
+echo "[Workshop] === DEBUG: Elasticsearch Connection Variables ==="
+echo "[Workshop] ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}"
+echo "[Workshop] ELASTIC_CLOUD_ID (exported): ${ELASTIC_CLOUD_ID}"
+if [ -n "${ELASTICSEARCH_APIKEY}" ]; then
+  API_KEY_MASKED=$(echo "${ELASTICSEARCH_APIKEY}" | sed 's/\(.*\)\(.\{4\}\)$/\1****\2/')
+  echo "[Workshop] ELASTICSEARCH_APIKEY: ${API_KEY_MASKED}"
+else
+  echo "[Workshop] ELASTICSEARCH_APIKEY: (not set)"
+fi
+if [ -n "${ELASTIC_API_KEY}" ]; then
+  API_KEY_MASKED=$(echo "${ELASTIC_API_KEY}" | sed 's/\(.*\)\(.\{4\}\)$/\1****\2/')
+  echo "[Workshop] ELASTIC_API_KEY (exported): ${API_KEY_MASKED}"
+else
+  echo "[Workshop] ELASTIC_API_KEY: (not set)"
+fi
+echo "[Workshop] === END DEBUG ==="
+
+# 1. Create index mappings
+echo "[Workshop] Creating o11y-heartbeat index..."
+cd "$DATA_GEN_DIR" || { echo "[Workshop] ERROR: Cannot cd to $DATA_GEN_DIR"; exit 1; }
+python3 setup.py
+if [ $? -ne 0 ]; then
+  echo "[Workshop] ERROR: Failed to create index mappings"
+  exit 1
+fi
+
+# 2. Backfill historical data (using parallel generation)
+echo "[Workshop] Optimizing index settings for bulk..."
+curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+     -H "Content-Type: application/json" \
+     -X PUT "${ELASTICSEARCH_URL}/o11y-heartbeat/_settings" -d '{
+  "index": {
+    "refresh_interval": "-1",
+    "number_of_replicas": "0"
+  }
+}' >/dev/null || true
+
+echo "[Workshop] Backfilling ${BACKFILL_DAYS} days of data..."
+echo "[Workshop] (This should take ~15-20 seconds with parallel generation)"
+PYTHONUNBUFFERED=1 python3 -u data_sprayer.py --backfill
+if [ $? -ne 0 ]; then
+  echo "[Workshop] ERROR: Failed to backfill data"
+  exit 1
+fi
+
+# 3. Verify data loaded
+echo "[Workshop] Verifying data load..."
+COUNT_RESPONSE=$(curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+  "${ELASTICSEARCH_URL}/o11y-heartbeat/_count" 2>/dev/null)
+if [ $? -eq 0 ] && [ -n "$COUNT_RESPONSE" ]; then
+  DOC_COUNT=$(echo "$COUNT_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('count', 0))" 2>/dev/null || echo "0")
+  if [ "$DOC_COUNT" != "0" ]; then
+    echo "[Workshop] ✓ Loaded ${DOC_COUNT} documents into o11y-heartbeat"
+  else
+    echo "[Workshop] ⚠️  Warning: Could not verify document count (index may be empty or not exist yet)"
+  fi
+else
+  echo "[Workshop] ⚠️  Warning: Could not verify data load (curl failed)"
+fi
+
+echo "[Workshop] Restoring index settings after bulk..."
+curl -s -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+     -H "Content-Type: application/json" \
+     -X PUT "${ELASTICSEARCH_URL}/o11y-heartbeat/_settings" -d '{
+  "index": {
+    "refresh_interval": "1s"
+  }
+}' >/dev/null || true
+
+####################################################################### CREATE LLM CONNECTOR
+
+echo "[Workshop] Creating LLM connector..."
+
+# Check for required LLM environment variables
+if [[ -z "$LLM_PROXY_URL" ]]; then
+  echo "[Workshop] ERROR: LLM_PROXY_URL is not set"
+  echo "[Workshop] Environment variables:"
+  env | sort
+  exit 1
+fi
+
+if [[ -z "$LLM_APIKEY" ]]; then
+  echo "[Workshop] ERROR: LLM_APIKEY is not set"
+  echo "[Workshop] Environment variables:"
+  env | sort
+  exit 1
+fi
+
+# Helper function for Kibana API calls
+kibana_post() {
+  local endpoint="$1"
+  local body="$2"
+  curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}${endpoint}" \
+    -H "Content-Type: application/json" \
+    -H "kbn-xsrf: true" \
+    -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+    -d "$body"
+}
+
+kibana_post_internal() {
+  local endpoint="$1"
+  local body="$2"
+  curl -s -w "\n%{http_code}" -X POST "${KIBANA_URL_UI}${endpoint}" \
+    -H "Content-Type: application/json" \
+    -H "kbn-xsrf: true" \
+    -H "x-elastic-internal-origin: featureflag" \
+    -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}" \
+    -d "$body"
+}
+
+# Create connector with retry logic
+CONNECTOR_ID=""
+MAX_RETRIES=5
+RETRY_COUNT=0
+LAST_BODY_FILE="/tmp/llm_connector_response.json"
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  echo "[Workshop] Attempting to create LLM connector (attempt ${RETRY_COUNT}/${MAX_RETRIES})..."
+  
+  RESPONSE=$(kibana_post "/api/actions/connector" '{
+    "name": "Elastic Proxy LLM",
+    "config": {
+      "apiProvider": "OpenAI",
+      "apiUrl": "https://'"${LLM_PROXY_URL}"'/v1/chat/completions",
+      "defaultModel": "gpt-4.1"
+    },
+    "secrets": {
+      "apiKey": "'"${LLM_APIKEY}"'"
+    },
+    "connector_type_id": ".gen-ai"
+  }')
+  
+  HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+  BODY=$(echo "$RESPONSE" | sed '$d')
+  echo "$BODY" > "$LAST_BODY_FILE"
+  
+  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+    # Success - extract connector ID
+    CONNECTOR_ID=$(cat "$LAST_BODY_FILE" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+    if [ -n "$CONNECTOR_ID" ]; then
+      echo "[Workshop] ✓ LLM connector created successfully (ID: ${CONNECTOR_ID})"
+      break
+    else
+      echo "[Workshop] ⚠️  Warning: Created connector but could not extract ID from response"
+      echo "[Workshop] Response body:"
+      cat "$LAST_BODY_FILE"
+    fi
+  elif [ "$HTTP_CODE" = "409" ]; then
+    # Connector already exists - try to discover it
+    echo "[Workshop] Connector already exists (409), attempting to discover existing connector..."
+    # List connectors to find the one we need
+    LIST_RESPONSE=$(curl -s -X GET "${KIBANA_URL_UI}/api/actions/connectors" \
+      -H "kbn-xsrf: true" \
+      -H "Authorization: ApiKey ${ELASTICSEARCH_APIKEY}")
+    
+    CONNECTOR_ID=$(echo "$LIST_RESPONSE" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for conn in data.get('data', []):
+        if conn.get('name') == 'Elastic Proxy LLM':
+            print(conn.get('id', ''))
+            break
+except:
+    pass
+" 2>/dev/null)
+    
+    if [ -n "$CONNECTOR_ID" ]; then
+      echo "[Workshop] ✓ Found existing LLM connector (ID: ${CONNECTOR_ID})"
+      break
+    else
+      echo "[Workshop] ⚠️  Warning: Could not discover existing connector ID"
+    fi
+  else
+    echo "[Workshop] ⚠️  Warning: Failed to create connector (HTTP ${HTTP_CODE})"
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+      echo "[Workshop] Retrying in 2 seconds..."
+      sleep 2
+    else
+      echo "[Workshop] ERROR: Failed to create LLM connector after ${MAX_RETRIES} attempts"
+      echo "[Workshop] Last response (HTTP ${HTTP_CODE}):"
+      cat "$LAST_BODY_FILE"
+      echo ""
+      echo "[Workshop] Environment variables:"
+      env | sort
+      exit 1
+    fi
+  fi
+done
+
+# Set connector as default GenAI connector
+if [ -n "$CONNECTOR_ID" ]; then
+  echo "[Workshop] Setting LLM connector as default GenAI connector..."
+  
+  # Try internal endpoint first
+  SETTING_RESPONSE=$(kibana_post_internal "/internal/kibana/settings" '{
+    "changes": {
+      "genAiSettings:defaultAIConnector": "'"${CONNECTOR_ID}"'"
+    }
+  }')
+  
+  SETTING_HTTP_CODE=$(echo "$SETTING_RESPONSE" | tail -n1)
+  
+  if [ "$SETTING_HTTP_CODE" != "200" ] && [ "$SETTING_HTTP_CODE" != "204" ]; then
+    # Fallback to public API endpoint
+    echo "[Workshop] Internal endpoint failed (HTTP ${SETTING_HTTP_CODE}), trying public API..."
+    SETTING_RESPONSE=$(kibana_post "/api/kibana/settings" '{
+      "changes": {
+        "genAiSettings:defaultAIConnector": "'"${CONNECTOR_ID}"'"
+      }
+    }')
+    SETTING_HTTP_CODE=$(echo "$SETTING_RESPONSE" | tail -n1)
+  fi
+  
+  if [ "$SETTING_HTTP_CODE" = "200" ] || [ "$SETTING_HTTP_CODE" = "204" ]; then
+    echo "[Workshop] ✓ LLM connector set as default GenAI connector"
+  else
+    echo "[Workshop] ERROR: Failed to set connector as default (HTTP ${SETTING_HTTP_CODE})"
+    echo "[Workshop] Response:"
+    echo "$SETTING_RESPONSE"
+    echo "[Workshop] Environment variables:"
+    env | sort
+    exit 1
+  fi
+else
+  echo "[Workshop] ERROR: No connector ID available to set as default"
+  echo "[Workshop] Environment variables:"
+  env | sort
+  exit 1
+fi
+
+# Clean up temp file
+rm -f "$LAST_BODY_FILE"
+
+# 4. Start live data sprayer in background
+echo "[Workshop] Starting live data sprayer..."
+PYTHONUNBUFFERED=1 nohup python3 -u data_sprayer.py --live > /var/log/data-sprayer.log 2>&1 &
+DATA_SPRAYER_PID=$!
+sleep 1  # Give it a moment to start
+if ps -p $DATA_SPRAYER_PID > /dev/null 2>&1; then
+echo "[Workshop] ✓ Live data sprayer started (PID: ${DATA_SPRAYER_PID})"
+else
+  echo "[Workshop] ⚠️  Warning: Live data sprayer failed to start"
+  echo "[Workshop] Last 20 lines of /var/log/data-sprayer.log:"
+  tail -20 /var/log/data-sprayer.log 2>/dev/null || echo "  (log file not found)"
+fi
+
+####################################################################### CREATE AGENTS
+
+echo "[Workshop] Creating AI agents..."
+bash "$WORKSHOP_ASSETS_DIR/setup_scripts/01-create-agents.sh"
+
+####################################################################### CREATE ALERT
+
+echo "[Workshop] Creating alert rule..."
+bash "$WORKSHOP_ASSETS_DIR/setup_scripts/02-create-alert.sh"
+
+####################################################################### FORCE INCIDENT (OPTIONAL)
+
+FORCE_INCIDENT="${FORCE_INCIDENT:-false}"
+if [[ "$FORCE_INCIDENT" == "true" ]]; then
+  echo "[Workshop] Forcing incident for immediate testing..."
+  sleep 5  # Give alert time to activate
+  bash "$WORKSHOP_ASSETS_DIR/setup_scripts/04-force-incident.sh"
+fi
+
+####################################################################### COMPLETE
+
+echo "========================================="
+echo "[Workshop] kubernetes-vm setup complete"
+echo "========================================="
+echo "Services:"
+echo "  - Elasticsearch: ${ELASTICSEARCH_URL}"
+echo "  - Kibana: ${KIBANA_URL}"
+echo ""
+echo "Configuration:"
+echo "  - USE_ML_AD: ${USE_ML_AD}"
+echo "  - FORCE_INCIDENT: ${FORCE_INCIDENT}"
+echo "========================================="

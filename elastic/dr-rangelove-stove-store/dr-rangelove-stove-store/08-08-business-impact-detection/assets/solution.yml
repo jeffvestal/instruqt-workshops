@@ -1,0 +1,127 @@
+version: "1"
+name: business_impact_detector
+description: "Detect and respond to business-critical payment service degradation"
+enabled: true
+
+inputs: []
+
+triggers:
+  - type: alert
+
+steps:
+  # Step 1: Get all metrics in one efficient ES|QL query
+  # Uses deterministic time windows based on alert execution timestamp
+  - name: get_all_metrics
+    type: elasticsearch.esql.query
+    with:
+      query: >
+        FROM o11y-heartbeat
+        | WHERE service.name == "payment-service"
+        | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
+        | EVAL 
+            is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
+            is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
+            is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
+            current_amount = CASE(is_current_success == 1, transaction.amount, 0)
+        | STATS 
+            error_count = SUM(is_error),
+            current_payment_count = SUM(is_current_success),
+            current_total_amount = SUM(current_amount),
+            baseline_payment_count = SUM(is_baseline_success)
+
+  # Step 2: Call AI agent for business impact explanation
+  - name: ai_business_summary
+    type: onechat.runAgent
+    with:
+      agent_id: agent_business_slo
+      message: |
+        Here are the current metrics for payment-service:
+        - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
+        - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
+        - Baseline successful payments (previous 60m total): {{ steps.get_all_metrics.output.values[0][3] }}
+        
+        For context: The baseline covers 60 minutes, so to compare to the 1-minute current window,
+        the normalized baseline rate would be approximately {{ steps.get_all_metrics.output.values[0][3] | divided_by: 60 | round }} payments per minute.
+        
+        Calculate the percentage drop: if current is significantly below the normalized baseline (drop >= 30%),
+        this indicates a business-critical issue affecting revenue.
+        
+        Your job is to explain the business impact in 2–3 sentences for an SRE and business audience.
+        Focus on: Is revenue at risk? What might be the cause? What should teams investigate?
+        Do not decide whether to scale; only explain impact and suggest follow-up checks.
+    on-failure:
+      retry:
+        max-attempts: 2
+        delay: 1s
+
+  # Step 3: Simulate notification
+  - name: notify_stakeholder
+    type: console
+    with:
+      message: |
+        [EMAIL] To: sre-team@example.com
+        Subject: Payment service impact detected
+
+        {{ steps.ai_business_summary.output.response.message }}
+
+  # Step 4: Conditional logic - check if scaling needed (deterministic decision)
+  # Uses KQL field comparison with computed threshold (70% of normalized baseline)
+  - name: check_scaling_needed
+    type: if
+    condition: "steps.get_all_metrics.output.values.0.1 < {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{% assign threshold = baseline | divided_by: 60 | times: 0.7 | round %}{{ threshold }}"
+    steps:
+      - name: scale_service
+        type: http
+        with:
+          url: "http://host-1:3000/scale_service"
+          method: POST
+          headers:
+            Content-Type: application/json
+          body:
+            service_name: "payment-service"
+        on-failure:
+          retry:
+            max-attempts: 2
+            delay: 1s
+
+      - name: log_scaling_action
+        type: console
+        with:
+          message: |
+            ✅ Auto-scaling triggered!
+            {{ steps.scale_service.output.data.message }}
+            Previous instances: {{ steps.scale_service.output.data.previous_instances }}
+            New instances: {{ steps.scale_service.output.data.new_instances }}
+    else:
+      - name: log_no_scaling
+        type: console
+        with:
+          message: |
+            ⚠️ No scaling action needed. Manual investigation may be required.
+            
+            📊 Debug Info:
+            - Current payments (1m): {{ steps.get_all_metrics.output.values[0][1] }}
+            - Baseline payments (60m): {{ steps.get_all_metrics.output.values[0][3] }}
+            - Threshold (70% of baseline/min): {% assign baseline = steps.get_all_metrics.output.values[0][3] | plus: 0 %}{{ baseline | divided_by: 60 | times: 0.7 | round }}
+
+  # Step 5: Audit log to Elasticsearch
+  - name: log_to_elasticsearch
+    type: elasticsearch.index
+    with:
+      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
+        timestamp: "{{ execution.startedAt }}"
+        workflow_name: "business_impact_detector"
+        alert_id: "{{ event.alerts[0].id }}"
+        alert_name: "{{ event.alerts[0].rule.name }}"
+        service_name: "payment-service"
+        error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
+        current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
+        baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
+        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
+        action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
+        scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"

@@ -1,6 +1,6 @@
 ---
 slug: 01-intro
-id: tom9sadinbfe
+id: i1fovritgajp
 type: challenge
 title: 'The ''Why'': From Findings to Outcomes'
 teaser: Understand the 'Two-Vendor Problem' and how Workflows solve it
@@ -13,13 +13,13 @@ notes:
 
     We'll start with simple workflows and progress to building a complete business impact detection system that combines ES|QL queries, AI agents, and deterministic logic.
 tabs:
-- id: 5wlncph7b7pt
+- id: fhkhr42ypvhn
   title: Kibana
   type: service
   hostname: kubernetes-vm
   path: /
   port: 30001
-- id: 6d8wv6pm17ce
+- id: jalyoedhq887
   title: Terminal
   type: terminal
   hostname: host-1

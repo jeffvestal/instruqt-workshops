@@ -1,33 +1,33 @@
 ---
 slug: 08-business-impact-detection
-id: eupnushaagfr
+id: 5um2wg5uwoqe
 type: challenge
 title: 'Capstone: Detect Business Impact with Automation'
 teaser: Build a complete workflow from scratch that detects business-critical issues
 tabs:
-- id: yomtiegrqsmi
+- id: opzqkwxt38jj
   title: Kibana - Workflows
   type: service
   hostname: kubernetes-vm
   path: /app/workflows
   port: 30001
-- id: 7wmw8dvh87fw
+- id: deveggwumtkz
   title: Kibana - Alerts
   type: service
   hostname: kubernetes-vm
   path: /app/observability/alerts
   port: 30001
-- id: jdbzzjvuswqv
+- id: bvcsjjl8ni1d
   title: Kibana - Discover
   type: service
   hostname: kubernetes-vm
   path: /app/discover
   port: 30001
-- id: qh7f07uf14qd
+- id: 98pfrxbn46xe
   title: Terminal
   type: terminal
   hostname: kubernetes-vm
-- id: esjvv2gabwdg
+- id: lmzpyhr4e6kr
   title: Documentation
   type: website
   url: https://www.elastic.co/guide/en/kibana/current/workflows.html
@@ -125,11 +125,11 @@ Create an ES|QL step named `get_all_metrics` that returns:
 ```esql
 FROM o11y-heartbeat
 | WHERE service.name == "payment-service"
-| WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-  AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
+| WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+  AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
 | EVAL
-    is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-    is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+    is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
     is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
     is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
     is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
@@ -165,11 +165,11 @@ FROM o11y-heartbeat
     query: >
       FROM o11y-heartbeat
       | WHERE service.name == "payment-service"
-      | WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-        AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
+      | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+        AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
       | EVAL
-          is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-          is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+          is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
           is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
           is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
           is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
@@ -193,9 +193,9 @@ Call an AI agent to explain the business impact in human language, then simulate
 
 Call the `agent_business_slo` agent to explain the impact. The AI doesn't make the scaling decision—it just summarizes the impact for stakeholders.
 
-- Step type: `ai.agent`
+- Step type: `kibana.post_agent_builder_converse`
 - Agent ID: `agent_business_slo`
-- Message: Pass the metrics from `get_all_metrics` (error count, current payment count, baseline payment count) and ask the agent to explain the impact in 2–3 sentences.
+- Input: Pass the metrics from `get_all_metrics` (error count, current payment count, baseline payment count) and ask the agent to explain the impact in 2–3 sentences.
 - Add retry logic: `on-failure: retry:` with `max-attempts: 2` and `delay: 1s`
 
 **Part 2: Notification**
@@ -203,8 +203,7 @@ Call the `agent_business_slo` agent to explain the impact. The AI doesn't make t
 Add a `console` step that simulates sending an email with the AI's explanation.
 
 **Accessing the AI response:**
-- For passing to other steps: `steps.<your_step_name>.output`
-- For displaying/logging: `steps.<your_step_name>.output` (or `steps.<your_step_name>.output.response.message` if you need the message string specifically)
+`steps.<your_step_name>.output.response.message`
 
 **Important**: The AI agent is used for **explanation only**. Your workflow makes the scaling decision deterministically.
 
@@ -213,10 +212,10 @@ Add a `console` step that simulates sending an email with the AI's explanation.
 
 ```yaml
 - name: ai_business_summary
-  type: ai.agent
+  type: kibana.post_agent_builder_converse
   with:
     agent_id: agent_business_slo
-    message: |
+    input: |
       Here are the current metrics for payment-service:
       - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
       - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
@@ -243,7 +242,7 @@ Add a `console` step that simulates sending an email with the AI's explanation.
       [EMAIL] To: sre-team@example.com
       Subject: Payment service impact detected
 
-      {{ steps.ai_business_summary.output }}
+      {{ steps.ai_business_summary.output.response.message }}
 ```
 
 </details>
@@ -327,7 +326,7 @@ Create an `if` step that checks if the current payment count is below 70% of the
 
 Index a complete audit record of the workflow execution to Elasticsearch for compliance and analysis.
 
-Create an `elasticsearch.request` step that writes all the key metrics, AI explanation, and action taken to an index named `business_actions-<date>`.
+Create an `elasticsearch.index` step that writes all the key metrics, AI explanation, and action taken to an index named `business_actions-<date>`.
 
 **Index name pattern:** Use `business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}`
 
@@ -345,18 +344,17 @@ Create an `elasticsearch.request` step that writes all the key metrics, AI expla
   - `[0][0]` = error_count
   - `[0][1]` = current_payment_count
   - `[0][3]` = baseline_payment_count
-- **Note:** Use `elasticsearch.request` with `method: PUT` and `path: "/index-name/_doc/id"` instead of `elasticsearch.index` (which has a bug)
 
 <details>
 <summary>Click here for the solution to this step</summary>
 
 ```yaml
 - name: log_to_elasticsearch
-  type: elasticsearch.request
+  type: elasticsearch.index
   with:
-    method: PUT
-    path: "/business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-    body:
+    index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+    id: "{{ execution.id }}"
+    document:
       timestamp: "{{ execution.startedAt }}"
       workflow_name: "business_impact_detector"
       alert_id: "{{ event.alerts[0].id }}"
@@ -365,7 +363,7 @@ Create an `elasticsearch.request` step that writes all the key metrics, AI expla
       error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
       current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
       baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-      ai_explanation: "{{ steps.ai_business_summary.output }}"
+      ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
       action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
       scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```
@@ -482,11 +480,11 @@ steps:
       query: >
         FROM o11y-heartbeat
         | WHERE service.name == "payment-service"
-        | WHERE @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
-          AND @timestamp <= "{{ event.alerts[0]['@timestamp'] }}"
+        | WHERE @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 3660 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}"
+          AND @timestamp <= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp }}"
         | EVAL
-            is_in_current_window = @timestamp >= "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
-            is_in_baseline_window = @timestamp < "{{ event.alerts[0]['@timestamp'] | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_current_window = @timestamp >= "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
+            is_in_baseline_window = @timestamp < "{{ event.alerts[0].kibana.alert.rule.execution.timestamp | date: '%s' | minus: 60 | date: '%Y-%m-%dT%H:%M:%S.%LZ' }}",
             is_error = CASE(http.status_code >= 500 AND is_in_current_window == true, 1, 0),
             is_current_success = CASE(transaction.status == "success" AND is_in_current_window == true, 1, 0),
             is_baseline_success = CASE(transaction.status == "success" AND is_in_baseline_window == true, 1, 0),
@@ -499,10 +497,10 @@ steps:
 
   # Step 2: Call AI agent for business impact explanation
   - name: ai_business_summary
-    type: ai.agent
+    type: kibana.post_agent_builder_converse
     with:
       agent_id: agent_business_slo
-      message: |
+      input: |
         Here are the current metrics for payment-service:
         - Error count (last 1m): {{ steps.get_all_metrics.output.values[0][0] }}
         - Current successful payments (last 1m): {{ steps.get_all_metrics.output.values[0][1] }}
@@ -530,7 +528,7 @@ steps:
         [EMAIL] To: sre-team@example.com
         Subject: Payment service impact detected
 
-        {{ steps.ai_business_summary.output }}
+        {{ steps.ai_business_summary.output.response.message }}
 
   # Step 4: Conditional logic - check if scaling needed (deterministic decision)
   # Uses KQL field comparison with computed threshold (70% of normalized baseline)
@@ -574,11 +572,11 @@ steps:
 
   # Step 5: Audit log to Elasticsearch
   - name: log_to_elasticsearch
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: PUT
-      path: "/business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
-      body:
+      index: "business_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
         alert_id: "{{ event.alerts[0].id }}"
@@ -587,7 +585,7 @@ steps:
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
         baseline_payment_count: "{{ steps.get_all_metrics.output.values[0][3] }}"
-        ai_explanation: "{{ steps.ai_business_summary.output }}"
+        ai_explanation: "{{ steps.ai_business_summary.output.response.message }}"
         action_taken: "{{ steps.scale_service.output.data.action | default: 'no_action' }}"
         scaling_result: "{{ steps.scale_service.output.data.new_instances | default: 'N/A' }}"
 ```
@@ -611,3 +609,4 @@ This is **real-world automation** that bridges the gap between observability and
 You've gone from "copy-paste learning" in earlier challenges to **designing and assembling** a complete production-ready workflow. Well done!
 
 **Click "Next" to see a summary of everything you've learned!**
+

@@ -1,0 +1,85 @@
+version: "1"
+name: self_healing_aiops
+description: "Self-healing workflow triggered by alerts"
+enabled: true
+
+inputs: []
+
+triggers:
+  - type: alert
+
+steps:
+  # Step 1: Parse service name from the alert query
+  - name: get_service_name
+    type: console
+    with:
+      message: |
+        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+        Alert '{{ event.alerts[0].rule.name }}' fired!
+        Service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
+        Alert ID: {{ event.alerts[0].id }}
+
+  # Step 2: Call AI agent for remediation decision
+  - name: ai_analysis
+    type: onechat.runAgent
+    with:
+      agent_id: agent_content_creator
+      message: |
+        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+        A critical latency anomaly was detected for service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
+        Respond ONLY with the following JSON:
+        {"remediation": "restart_service"}
+
+  # Step 3: Parse and check AI response
+  - name: parse_ai_response
+    type: console
+    with:
+      message: |-
+        {% assign parsed = steps.ai_analysis.output.response.message | json_parse %}{{ parsed.remediation }}
+
+  - name: check_remediation
+    type: if
+    condition: "${{ steps.parse_ai_response.output == 'restart_service' }}"
+    steps:
+      - name: call_remediation_api
+        type: http
+        with:
+          url: "http://host-1:3000/remediate_service"
+          method: POST
+          headers:
+            Content-Type: application/json
+          body:
+            service_name: "payment-service"
+        on-failure:
+          retry:
+            max-attempts: 2
+      
+      - name: log_action
+        type: console
+        with:
+          message: |
+            {{ steps.call_remediation_api.output.data.message }}
+            📋 Remediation ID: {{ steps.call_remediation_api.output.data.remediation_id }}
+            🔧 Service: {{ steps.call_remediation_api.output.data.service }}
+            ⚡ Action: {{ steps.call_remediation_api.output.data.action }}
+            ⏱️  Estimated Duration: {{ steps.call_remediation_api.output.data.details.estimated_duration }}
+    else:
+      - name: log_no_action
+        type: console
+        with:
+          message: "⚠️ No action taken."
+
+  # Step 4: Index the results back into Elastic for auditing
+  - name: log_to_elasticsearch
+    type: elasticsearch.index
+    with:
+      index: "workflow_actions-{{ execution.startedAt | date: '%Y-%m-%d' }}"
+      id: "{{ execution.id }}"
+      document:
+        timestamp: "{{ execution.startedAt }}"
+        workflow_name: "self_healing_aiops"
+        alert_id: "{{ event.alerts[0].id }}"
+        alert_name: "{{ event.alerts[0].rule.name }}"
+        action_taken: "{{ steps.call_remediation_api.output.data.status }}"
+        remediation_id: "{{ steps.call_remediation_api.output.data.remediation_id }}"
+

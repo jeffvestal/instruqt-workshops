@@ -1,0 +1,66 @@
+version: "1"
+name: ai_content_chain
+description: "Orchestrate AI agents to generate, analyze, and improve content"
+enabled: true
+
+inputs:
+  - name: topic
+    type: string
+    required: true
+    description: "The topic for the press release"
+
+triggers:
+  - type: manual
+
+steps:
+  - name: draft_content
+    type: onechat.runAgent
+    with:
+      agent_id: agent_content_creator
+      message: "Write a short, 1-2 sentence press release about this topic: {{ inputs.topic }}"
+
+  - name: first_check
+    type: onechat.runAgent
+    with:
+      agent_id: agent_sentiment_analyzer
+      message: "{{ steps.draft_content.output.response.message }}"
+
+  - name: remediation_spin
+    type: onechat.runAgent
+    with:
+      agent_id: agent_pr_spin_specialist
+      message: |
+        The following draft was written:
+        "{{ steps.draft_content.output.response.message }}"
+        
+        It was analyzed with this sentiment:
+        "{{ steps.first_check.output.response.message.sentiment }}"
+        
+        Please revise this draft to have a strongly positive spin.
+
+  - name: final_check
+    type: onechat.runAgent
+    with:
+      agent_id: agent_sentiment_analyzer
+      message: "{{ steps.remediation_spin.output.response.message }}"
+
+  - name: final_report
+    type: console
+    with:
+      message: >-
+        {% assign orig = steps.first_check.output.response.message | json_parse %}
+        {% assign fin = steps.final_check.output.response.message | json_parse %}
+
+        ---
+        Original Draft: {{ steps.draft_content.output.response.message }}
+        Original Sentiment: {{ orig.sentiment }}
+        ---
+        Revised Draft: {{ steps.remediation_spin.output.response.message }}
+        Final Sentiment: {{ fin.sentiment }}
+        ---
+        {% if fin.sentiment == "POSITIVE" %}
+        ✅ PASSED: Content sentiment is positive after remediation.
+        {% else %}
+        ❌ FAILED: Content still has negative sentiment after remediation.
+        {% endif %}
+
