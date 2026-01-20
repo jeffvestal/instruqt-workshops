@@ -96,6 +96,64 @@ Build a production-ready business-critical automation system from scratch. Combi
 #### 9. Workshop Summary (10 min)
 Recap of patterns learned, production considerations, and next steps for extending to real environments.
 
+## Running Standalone (Outside of Instruqt)
+
+If you want to run this workshop on your own Elastic Stack (version 8.16+), follow these steps:
+
+### 1. Prerequisites
+
+- **Elasticsearch & Kibana** (8.16 or later)
+- **Python 3.9+**
+- **Node.js 20+** (if running the mock remediation API)
+
+### 2. Set Environment Variables
+
+Configure your connection details:
+
+```bash
+export ELASTICSEARCH_URL="https://your-elasticsearch-endpoint:9200"
+export ELASTICSEARCH_APIKEY="your-api-key"
+export KIBANA_URL="https://your-kibana-endpoint"
+```
+
+### 3. Install Dependencies
+
+```bash
+# Python dependencies for the data generator
+pip install elasticsearch aiohttp
+
+# Global PM2 for managing the mock API (optional)
+npm install -g pm2
+```
+
+### 4. Populate Data and Configuration
+
+Run the scripts in order to set up the environment:
+
+```bash
+# 1. Backfill 7 days of historical observability data (~2.5M docs)
+python3 workshop-assets/data_generator/data_sprayer.py --backfill
+
+# 2. Create the 4 pre-configured AI Agents
+bash workshop-assets/setup_scripts/01-create-agents.sh
+
+# 3. Create the alert rules for Challenge 7 and 8
+bash workshop-assets/setup_scripts/02-create-alert.sh
+
+# 4. Start the mock remediation API (optional)
+bash workshop-assets/setup_scripts/03-mock-api-service.sh
+
+# 5. Start live data generation (background)
+nohup python3 workshop-assets/data_generator/data_sprayer.py --live > data-sprayer.log 2>&1 &
+```
+
+### 5. Verify Setup
+
+- **Indices:** Check for the `o11y-heartbeat` index.
+- **Agents:** Go to **Kibana -> Management -> Agent Builder** to see the created agents.
+- **Alerts:** Go to **Kibana -> Observability -> Alerts** to see the rules.
+- **Workflows:** You are now ready to begin Challenge 2!
+
 ## Architecture
 
 ### Infrastructure
