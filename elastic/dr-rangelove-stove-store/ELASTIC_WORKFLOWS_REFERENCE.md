@@ -98,9 +98,9 @@ triggers:
 ```
 
 When triggered by an alert, the workflow receives alert data in `event.alerts[0]`:
-- `event.alerts[0].id` - Alert ID
-- `event.alerts[0].rule.name` - Alert rule name
-- `event.alerts[0].rule.parameters.esQuery` - Alert query (JSON string)
+- `event.alerts[0]['_id']` - Alert ID
+- `event.alerts[0]['kibana.alert.rule.name']` - Alert rule name
+- `event.alerts[0]['kibana.alert.rule.parameters'].esQuery` - Alert query (JSON string)
 - `event.alerts[0]['@timestamp']` - Execution timestamp
 
 ---
@@ -224,7 +224,7 @@ Generic action for advanced Elasticsearch API access. Use this for indexing docu
       body:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "{{ execution.workflow.name }}"
-        alert_id: "{{ event.alerts[0].id }}"
+        alert_id: "{{ event.alerts[0]['_id'] }}"
         action_taken: "{{ steps.remediate.output.status }}"
 ```
 
@@ -385,8 +385,8 @@ message: "Agg value: {{ steps.agg.output.response.aggregations.p95.values['95.0'
 
 **Event Data (Alert Triggers):**
 ```yaml
-message: "Alert ID: {{ event.alerts[0].id }}"
-message: "Rule name: {{ event.alerts[0].rule.name }}"
+message: "Alert ID: {{ event.alerts[0]['_id'] }}"
+message: "Rule name: {{ event.alerts[0]['kibana.alert.rule.name'] }}"
 ```
 
 **Execution Context:**
@@ -457,7 +457,7 @@ message: >-
 
 ```yaml
 message: >-
-  {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+  {% assign esQuery = event.alerts[0]['kibana.alert.rule.parameters'].esQuery | json_parse %}
   Service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
 ```
 
@@ -659,15 +659,15 @@ steps:
     type: console
     with:
       message: |
-        Alert '{{ event.alerts[0].rule.name }}' fired!
-        Alert ID: {{ event.alerts[0].id }}
+        Alert '{{ event.alerts[0]['kibana.alert.rule.name'] }}' fired!
+        Alert ID: {{ event.alerts[0]['_id'] }}
 
   - name: ai_decision
     type: ai.agent
     with:
       agent_id: agent_remediation_advisor
       message: |
-        Alert: {{ event.alerts[0].rule.name }}
+        Alert: {{ event.alerts[0]['kibana.alert.rule.name'] }}
         Please recommend remediation action as JSON: {"action": "..."}
     on-failure:
       retry:
@@ -694,7 +694,7 @@ steps:
       path: "/remediation_logs-{{ execution.startedAt | date: '%Y-%m-%d' }}/_doc/{{ execution.id }}"
       body:
         timestamp: "{{ execution.startedAt }}"
-        alert_id: "{{ event.alerts[0].id }}"
+        alert_id: "{{ event.alerts[0]['_id'] }}"
         action: "{{ steps.call_api.output.data.action }}"
 ```
 

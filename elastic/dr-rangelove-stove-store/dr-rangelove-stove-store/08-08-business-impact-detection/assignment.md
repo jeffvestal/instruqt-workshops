@@ -357,8 +357,8 @@ Create an `elasticsearch.index` step that writes all the key metrics, AI explana
     document:
       timestamp: "{{ execution.startedAt }}"
       workflow_name: "business_impact_detector"
-      alert_id: "{{ event.alerts[0].id }}"
-      alert_name: "{{ event.alerts[0].rule.name }}"
+      alert_id: "{{ event.alerts[0]['_id'] }}"
+      alert_name: "{{ event.alerts[0]['kibana.alert.rule.name'] }}"
       service_name: "payment-service"
       error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
       current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
@@ -579,8 +579,8 @@ steps:
       document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
-        alert_id: "{{ event.alerts[0].id }}"
-        alert_name: "{{ event.alerts[0].rule.name }}"
+        alert_id: "{{ event.alerts[0]['_id'] }}"
+        alert_name: "{{ event.alerts[0]['kibana.alert.rule.name'] }}"
         service_name: "payment-service"
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"

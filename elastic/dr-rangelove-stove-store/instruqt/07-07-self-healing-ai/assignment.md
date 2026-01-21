@@ -83,10 +83,10 @@ steps:
     type: console
     with:
       message: |
-        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
-        Alert '{{ event.alerts[0].rule.name }}' fired!
+        {% assign esQuery = event.alerts[0]['kibana.alert.rule.parameters'].esQuery | json_parse %}
+        Alert '{{ event.alerts[0]['kibana.alert.rule.name'] }}' fired!
         Service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
-        Alert ID: {{ event.alerts[0].id }}
+        Alert ID: {{ event.alerts[0]['_id'] }}
 
   # Step 2: Call AI agent for remediation decision
   - name: ai_analysis
@@ -94,7 +94,7 @@ steps:
     with:
       agent_id: agent_content_creator
       message: |
-        {% assign esQuery = event.alerts[0].rule.parameters.esQuery | json_parse %}
+        {% assign esQuery = event.alerts[0]['kibana.alert.rule.parameters'].esQuery | json_parse %}
         A critical latency anomaly was detected for service: {{ esQuery.query.bool.filter[1].term['service.name'] }}
         Respond ONLY with the following JSON:
         {"remediation": "restart_service"}
@@ -142,8 +142,8 @@ steps:
       body:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "self_healing_aiops"
-        alert_id: "{{ event.alerts[0].id }}"
-        alert_name: "{{ event.alerts[0].rule.name }}"
+        alert_id: "{{ event.alerts[0]['_id'] }}"
+        alert_name: "{{ event.alerts[0]['kibana.alert.rule.name'] }}"
         action_taken: "{{ steps.call_remediation_api.output.data.status }}"
         remediation_id: "{{ steps.call_remediation_api.output.data.remediation_id }}"
 ```

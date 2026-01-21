@@ -386,8 +386,8 @@ Four pre-configured AI agents are created during setup:
 {{ steps.esql_query.output.values[0][0] }}  # First row, first column
 
 # Access alert trigger data
-{{ event.alerts[0].rule.name }}
-{{ event.alerts[0].id }}
+{{ event.alerts[0]['kibana.alert.rule.name'] }}
+{{ event.alerts[0]['_id'] }}
 
 # Built-in functions
 {{ now() }}
@@ -494,9 +494,9 @@ triggers:
 **Accessing alert data:**
 ```yaml
 # Alert metadata
-{{ event.alerts[0].id }}
-{{ event.alerts[0].rule.name }}
-{{ event.alerts[0].rule.id }}
+{{ event.alerts[0]['_id'] }}
+{{ event.alerts[0]['kibana.alert.rule.name'] }}
+{{ event.alerts[0]['kibana.alert.rule.uuid'] }}
 
 # Alert timestamp
 {{ event.alerts[0].timestamp }}

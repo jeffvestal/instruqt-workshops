@@ -619,7 +619,7 @@ triggers:
 
 **Accessing Alert Data:**
 - "The alert passes data to the workflow in the `event` object."
-- "You can access alert metadata: `{{ event.alerts[0].rule.name }}`, `{{ event.alerts[0].id }}`"
+- "You can access alert metadata: `{{ event.alerts[0]['kibana.alert.rule.name'] }}`, `{{ event.alerts[0]['_id'] }}`"
 - "Some alerts include context fields—depends on the alert type."
 
 **The Self-Healing Flow:**
@@ -678,7 +678,7 @@ steps:
     with:
       agent_id: sre_triage_bot
       input: |
-        Alert fired: {{ event.alerts[0].rule.name }}
+        Alert fired: {{ event.alerts[0]['kibana.alert.rule.name'] }}
         Recent errors: {{ steps.query_recent_errors.output.hits.hits | json }}
         What's the likely root cause and recommended action?
 
@@ -704,8 +704,8 @@ steps:
       document:
         timestamp: "{{ execution.startedAt }}"
         workflow: "self_healing_aiops"
-        alert_id: "{{ event.alerts[0].id }}"
-        alert_name: "{{ event.alerts[0].rule.name }}"
+        alert_id: "{{ event.alerts[0]['_id'] }}"
+        alert_name: "{{ event.alerts[0]['kibana.alert.rule.name'] }}"
         ai_analysis: "{{ steps.ai_root_cause_analysis.output.response.message }}"
         remediation_result: "{{ steps.remediate_service.output.data.message }}"
 ```
@@ -943,7 +943,7 @@ steps:
       document:
         timestamp: "{{ execution.startedAt }}"
         workflow_name: "business_impact_detector"
-        alert_id: "{{ event.alerts[0].id }}"
+        alert_id: "{{ event.alerts[0]['_id'] }}"
         service_name: "payment-service"
         error_count: "{{ steps.get_all_metrics.output.values[0][0] }}"
         current_payment_count: "{{ steps.get_all_metrics.output.values[0][1] }}"
