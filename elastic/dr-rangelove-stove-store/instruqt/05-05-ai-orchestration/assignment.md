@@ -37,15 +37,17 @@ Before we build the workflow, let's look at the specialized agents available in 
 1. Click on the [button label="Agent Builder"](tab-1) tab.
 2. Review the list of agents.
 
-You will see three custom agents created for this workshop:
+You will see five custom agents created for this workshop:
 
-* **agent_content_creator**: A creative agent designed to draft initial press release content based on a provided topic. It acts as the "Generator" in our pattern.
-* **agent_sentiment_analyzer**: An analytical agent that evaluates text and returns a structured JSON response indicating the sentiment. It acts as the "Critic".
-* **agent_pr_spin_specialist**: A "remediator" agent that takes negative content and rewrites it to be more positive.
+* **agent_content_creator** (Press Release Content Creator): A creative agent designed to draft initial press release content based on a provided topic. It acts as the "Generator" in our pattern.
+* **agent_sentiment_analyzer** (Sentiment Analyzer): An analytical agent that evaluates text and returns a structured JSON response indicating the sentiment. It acts as the "Critic".
+* **agent_pr_spin_specialist** (PR Spin Specialist): A "remediator" agent that takes negative content and rewrites it to be more positive.
+* **sre_triage_bot** (SRE Triage Bot): An agent designed to triage services using a workflow tool. *We will use this in a later challenge.*
+* **agent_business_slo** (Business SLO Analyst): An agent that analyzes business metrics and SLOs to recommend actions. *We will use this in a later challenge.*
 
 These agents demonstrate how specialized, single-purpose agents can be combined to solve complex tasks.
 
-Let's build a workflow that uses all three.
+Let's build a workflow that uses the first three.
 
 ## 1. Create a New Workflow
 
