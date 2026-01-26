@@ -222,7 +222,7 @@ The mock remediation API returns rich metadata but we are only capturing if it w
 *This step is optional*
 Since we already tested our workflow, we know it works. But follow these steps to see how to configure the alert to trigger the workflow
 
-1. Click the [button label="Alerts"](tab-0) tab
+1. Click the [button label="Alerts"](tab-1) tab
 2. Click `Status` and select `recovered` to see the previously recovered
    - *note*: they have recovered because the lookback time range is shorter than the frequency which which we are injecting anomalies
     ![CleanShot 2025-11-13 at 15.14.24@2x.png](../assets/CleanShot%202025-11-13%20at%2015.14.24%402x.png)
