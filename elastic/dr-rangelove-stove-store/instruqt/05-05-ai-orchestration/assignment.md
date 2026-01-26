@@ -15,7 +15,7 @@ tabs:
   title: Agent Builder
   type: service
   hostname: kubernetes-vm
-  path: /app/agent_builder
+  path: /app/agent_builder/agents
   port: 30001
 - id: xwppo2qxixmd
   title: Terminal
@@ -30,18 +30,28 @@ enhanced_loading: null
 
 A workflow's true power is orchestrating a *team* of specialized AI agents. You can build an "assembly line" to generate, validate, and remediate content. This is the "Generator-Critic-Remediator" pattern.
 
-Our setup script has pre-built 3 agents for you:
+## Review the Agents
 
-* `agent_content_creator` (The "Generator")
-* `agent_sentiment_analyzer` (The "Critic" - returns JSON)
-* `agent_pr_spin_specialist` (The "Remediator")
+Before we build the workflow, let's look at the specialized agents available in this environment.
+
+1. Click on the [button label="Agent Builder"](tab-1) tab.
+2. Review the list of agents.
+
+You will see three custom agents created for this workshop:
+
+* **agent_content_creator**: A creative agent designed to draft initial press release content based on a provided topic. It acts as the "Generator" in our pattern.
+* **agent_sentiment_analyzer**: An analytical agent that evaluates text and returns a structured JSON response indicating the sentiment. It acts as the "Critic".
+* **agent_pr_spin_specialist**: A "remediator" agent that takes negative content and rewrites it to be more positive.
+
+These agents demonstrate how specialized, single-purpose agents can be combined to solve complex tasks.
 
 Let's build a workflow that uses all three.
 
 ## 1. Create a New Workflow
 
-1. Click on **Create a new workflow**
-2. Paste this as your starting block (replace the placeholder text).
+1. Click on the [button label="Kibana - Workflows"](tab-0) tab.
+2. Click on **Create a new workflow**
+3. Paste this as your starting block (replace the placeholder text).
    - Our `input` is just a `topic`.
 
 ```yaml
