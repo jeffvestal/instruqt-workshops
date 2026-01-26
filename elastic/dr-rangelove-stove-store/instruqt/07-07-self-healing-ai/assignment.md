@@ -152,7 +152,8 @@ steps:
 ## 3. Test the Alert Trigger
 The normal process now is to configure the Alert to trigger this workflow when the alert fires. We will do that below (optionally), but first lets test.
 1. Click the ▶️ (run) button for this `self_healing_aiops` workflow
-2. Select one of the alerts that has fired while we have been working on our labs
+2. Select one of the `latency-threshold-alert-critical` alerts that has fired while we have been working on our labs.
+  - **Important:** Be sure to select a `latency-threshold-alert-critical` alert. Do not select a business impact alert if present.
   - If you don't see an alert, extend the timepicker to a wider range, 60 minutes for example.
     ![CleanShot 2025-11-13 at 15.07.40@2x.png](../assets/CleanShot%202025-11-13%20at%2015.07.40%402x.png)
 3. Click **Run**
