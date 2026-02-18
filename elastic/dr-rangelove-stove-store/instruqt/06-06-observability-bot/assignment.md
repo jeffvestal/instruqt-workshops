@@ -119,7 +119,8 @@ Before creating the tool, let's verify the workflow works:
 Now we need to create a **Tool** that wraps this workflow. Tools are what agents use to interact with workflows.
 
 1. Click on the [button label="Agent Builder"](tab-1) tab
-2. Click on **"Manage Tools"** (under the text chat box).
+2. Click on the 3 dots and `More` . Then click on **View all agents**
+![CleanShot 2026-02-18 at 15.15.04@2x.png](../assets/CleanShot%202026-02-18%20at%2015.15.04%402x.png)
 3. Click **"New tool"** (top right).
 4. Configure the tool:
    - **Type**: Select **"Workflow"**
@@ -136,8 +137,8 @@ You've now created a reusable tool that agents can use!
 
 Now we'll attach this tool to the `sre_triage_bot` agent that was created during setup.
 
-1. Still in **Agent Builder**, click on **"Agents"** (in top description).
-    ![CleanShot 2025-11-12 at 12.25.56@2x.png](../assets/CleanShot%202025-11-12%20at%2012.25.56%402x.png)
+1. Still in **Agent Builder**, click **Manage agents**
+![CleanShot 2026-02-18 at 15.22.48@2x.png](../assets/CleanShot%202026-02-18%20at%2015.22.48%402x.png)
 2. Find `SRE Triage Bot` and click ✏️ (edit).
     ![CleanShot 2025-11-12 at 12.28.09@2x.png](../assets/CleanShot%202025-11-12%20at%2012.28.09%402x.png)
 3. Click on the **"Tools"** section at the top.
