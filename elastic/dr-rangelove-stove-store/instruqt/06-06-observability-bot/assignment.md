@@ -96,7 +96,7 @@ steps:
         Triage Report for {{ inputs.service_name }}:
         - P95 Latency is {{ steps.get_latency.output.aggregations.p95_latency.values["95.0"] }} ms.
         - Found {{ steps.get_error_logs.output.hits.total.value }} error logs.
-        - Sample Error: {{ steps.get_error_logs.output.hits.hits[0]._source.log.message | default: "No error logs found" }}
+        - Sample Error: {{ steps.get_error_logs.output.hits.hits[0]._source["log.message"] | default: "No error logs found" }}
 ```
 
 3. **Save** this workflow. Do NOT run it yet.
