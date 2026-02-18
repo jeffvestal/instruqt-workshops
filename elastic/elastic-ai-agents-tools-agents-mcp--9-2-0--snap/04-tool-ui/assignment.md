@@ -36,13 +36,13 @@ Create Your First Custom Agents
 ```
 financial_manager
 ```
-4. under `Agent Name` put:
+4. under `Display name` put:
 ```
 Financial Manager
 ```
-5. Under `Description` put:
+5. Under `Display description` put:
 ```
-Assistant to help mange financial assets, news, and reports
+Assistant to help manage financial assets, news, and reports
 ```
 6. Under `Custom Instructions` put:
 ```
@@ -54,6 +54,7 @@ You are an AI assistant designed to help financial managers understand financial
 - Summarize key data points and trends based on user requests.
 
 **Key Directives and Constraints:**
+- **ALWAYS use your available tools to answer questions about financial data.** Do not rely on general knowledge — query the actual data in Elasticsearch using the tools provided.
 - **DO NOT provide financial advice, recommendations, or predictions.** Your role is strictly informational and analytical, based on the provided data.
 - **DO NOT perform any proactive actions.** Only respond directly to the user's explicit questions.
 - Stay strictly on track and on topic with the user's financial data queries. Do not engage in off-topic discussions.
@@ -88,7 +89,7 @@ Try out the New Agent
 Let's try out the new Chat agent
 
 1. Click on `Chat` -> `Conversations`
-2. In the bottom right of the chat box, click on `Onechat default agent` and select the new `Financial Manager`
+2. In the bottom right of the chat box, click on `Elastic Chat default agent` and select the new `Financial Manager`
 ![CleanShot 2025-08-20 at 13.00.25@2x.png](../assets/CleanShot%202025-08-20%20at%2013.00.25%402x.png)
 3. Ask the question :
 ```

@@ -47,6 +47,7 @@ On this challenge you will:
 
 Configure LLM Connector
 ==
+Elastic Chat needs a connection to a large language model (LLM) so the AI assistant can respond to your questions. We'll configure an OpenAI connector that will also be reused later when connecting an MCP client.
 
 1. Click on the [button label="Kibana - Chat"](tab-0) tab (`Chat` -> `Conversations` )
 ![CleanShot 2025-08-20 at 12.41.25@2x.png](../assets/CleanShot%202025-08-20%20at%2012.41.25%402x.png)
@@ -55,12 +56,12 @@ Configure LLM Connector
 ![CleanShot 2025-08-20 at 12.40.29@2x.png](../assets/CleanShot%202025-08-20%20at%2012.40.29%402x.png)
 4. Click the **OpenAI** button
 ![Upload failed: Something went wrong]()
-5. Fill out the form using the variable below, The API key is unique to you and vaild only for this workshop!
+5. Fill out the form using the variables below. The API key is unique to you and valid only for this workshop!
 - Connector Name =>
 ```
 OpenAI
 ```
-- **URL** =>
+- **URL** => This is the LLM endpoint that Elastic Chat will send requests to.
 ```
 [[ Instruqt-Var key="LLM_CHAT_URL" hostname="kubernetes-vm" ]]
 ```
@@ -68,25 +69,16 @@ OpenAI
 ```
 gpt-4o
 ```
-- Leave `OpenAI Organization` blank =>
-```nocopy
-
-
-```
-- Leave  `OpenAI Project`  blank =>
-```nocopy
-
-
-```
-   - **API Key** =>
+- Leave `OpenAI Organization`, `OpenAI Project`, and `Context window length` blank
+- **API Key** =>
 ```
 [[ Instruqt-Var key="LLM_KEY" hostname="kubernetes-vm" ]]
 ```
 
-7. Click Save
+6. Click Save
     - You will see a pop letting you know the connector was created
     ![CleanShot 2025-08-20 at 12.42.52@2x.png](../assets/CleanShot%202025-08-20%20at%2012.42.52%402x.png)
-8. Click on the `X` or click off of the flyout to close the AI Assistant panel
+7. Click on the `X` or click off of the flyout to close the AI Assistant panel
 ![CleanShot 2025-08-20 at 12.43.16@2x.png](../assets/CleanShot%202025-08-20%20at%2012.43.16%402x.png)
 
 Test Chat UI

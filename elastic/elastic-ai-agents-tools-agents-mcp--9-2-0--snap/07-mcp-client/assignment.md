@@ -31,9 +31,9 @@ enhanced_loading: null
 ---
 
 ![simple-mcp-chat_robots_half_sized.png](../assets/simple-mcp-chat_robots_half_sized.png)
-In this chapter, we'll connect to the 1Chat MCP server that's built right into Kibana.
+In this chapter, we'll connect to the Elastic Chat MCP server that's built right into Kibana.
 
-To do this, we'll use a command-line tool called the Simple MCP Client (SMC). This will let us talk to our 1Chat agents directly from our terminal.
+To do this, we'll use a command-line tool called the Simple MCP Client (SMC). This will let us talk to our Elastic Chat agents directly from our terminal.
 
 
 1. Starting the Simple MCP Client
@@ -66,7 +66,7 @@ source backend/venv/bin/activate
 Configure the LLM and MCP Server Connections
 ===
 # LLM Configuration
-We need to cofifure a Chat LLM for the MCP Client to talk to. We are going to use the Elastic Proxy to talk to a `gpt-4o` model in Elastic's Azure OpenAI tennant.
+We need to configure a Chat LLM for the MCP Client to talk to. We are going to use the Elastic Proxy to talk to a `gpt-4o` model in Elastic's Azure OpenAI tenant.
 > [!IMPORTANT]
 > While Elastic is not "training" on any of the chat conversations you have, anything you enter into the chat app may be logged.
 
@@ -108,9 +108,11 @@ You should now see the `Elastic Proxy` listed with a 🟢 indicating connection 
 ---
 # MCP Server Connection
 
-Next we need to connet our Elastic MCP Server.
+Next we need to connect our Elastic MCP Server.
 
-To do this we will connect to the `/api/chat/mcp` endpoint of our Kibana server.
+The `/api/chat/mcp` endpoint is the MCP-compatible interface exposed by Elastic Chat in Kibana. Any MCP client can connect to this URL to discover and invoke the tools and agents you've configured. You can also find this URL in the Agent Builder UI under the agent's MCP connection details.
+
+We will connect to this endpoint on our Kibana server.
 
 1. If you aren't still in the Settings page, click the gear icon in the upper right to open the settings page
 ![CleanShot 2025-08-20 at 13.50.52@2x.png](../assets/CleanShot%202025-08-20%20at%2013.50.52%402x.png)

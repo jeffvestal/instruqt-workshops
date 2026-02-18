@@ -114,7 +114,7 @@ Let's modify our query to pull data from *both* the `financial_news` and `financ
   * `FROM financial_news, financial_reports`: This is how ESQL implicitly uses `UNION`s data.
   * `METADATA _index`: This is a crucial directive that makes the `_index` field available, allowing us to see which source each document came from.
   * `coalesce(published_date, report_date)`: A function that returns the first non-null date. This is useful when combining indices with different date field names.
-  * `NOW() - TO_TIMEDURATION("7 hours")`: A date math expression that searches a time range between a year ago (8,760 hours) and now.
+  * `NOW() - TO_TIMEDURATION("8760 hours")`: A date math expression that searches a time range between a year ago (8,760 hours) and now.
 
 <!-- end list -->
 
@@ -137,7 +137,7 @@ This is the most powerful feature for our demo. `LOOKUP JOIN` allows us to enric
 
 ## Example 4: `LOOKUP JOIN` with a Single Source
 
-Let's use a simple query to find a specific asset (`TSLA`) and enrich it with its details from the `financial_asset_details` index. Note that `LOOKUP JOIN` requires the joining indices to have `index.mode: "lookup"`.
+Let's use a simple query to find a specific asset (`VXUS`) and enrich it with its details from the `financial_asset_details` index. Note that `LOOKUP JOIN` requires the joining indices to have `index.mode: "lookup"`.
 
   * `RENAME primary_symbol AS symbol`: This prepares our `primary_symbol` field to match the name of the join key (`symbol`) in the lookup index (`financial_asset_details`).
   * `LOOKUP JOIN financial_asset_details ON symbol`: This performs the join. After this command, fields from `financial_asset_details` (like `asset_name` and `sector`) become available in our query.
@@ -155,7 +155,7 @@ Let's use a simple query to find a specific asset (`TSLA`) and enrich it with it
 ```
 
 1.  Paste the query above into the editor.
-2.  If `TSLA` news exists, you will see the news details alongside the `asset_name` and `sector` from the `financial_asset_details` index.
+2.  You should see `VXUS` news details alongside the `asset_name` and `sector` from the `financial_asset_details` index.
 
 Part 4: Using ESQL Query Parameters
 ===
@@ -209,20 +209,20 @@ POST /_query?format=txt
 ![CleanShot 2025-08-20 at 13.20.43@2x.png](../assets/CleanShot%202025-08-20%20at%2013.20.43%402x.png)
 - _click to enlarge_
 
-The Difference: ESQL Query vs. OneChat Tool Parameters
+The Difference: ESQL Query vs. Elastic Chat Tool Parameters
 ===
 
-There is a slight difference between the ESQL query parameter syntax and the parameter syntax when defining a OneChat tool.
+Elastic Chat is the built-in AI chat interface in Kibana that connects agents, tools, and LLMs. There is a slight difference between the ESQL query parameter syntax and the parameter syntax when defining an Elastic Chat tool.
 
   * **ESQL Query Parameters (for the ES|QL engine):**
       * Uses the `?parameter` syntax and the `params` object in the `POST /_query` body.
-  * **OneChat Tool Parameters (for the LLM agent):**
+  * **Elastic Chat Tool Parameters (for the LLM agent):**
       * Uses the parameter definitions (`"type": "keyword"`, `"description": "..."`) in the `PUT kbn://api/chat/tools/...` request.
       * The LLM uses this metadata to decide if a tool is relevant and to infer the parameter values from a user's natural language question.
 
 Part 5: Creating an ES|QL tool with the API
 ===
-We'll explore the 1Chat APIs more in the next challenge, but lets finish up this ES|QL refresher section by creating a tool out of the query we've been learning about.
+We'll explore the Elastic Chat APIs more in the next challenge, but lets finish up this ES|QL refresher section by creating a tool out of the query we've been learning about.
 
 This is the full ES|QL query used in your demo's chat agent. It combines all the concepts we've covered, combining multiple sources, filtering a time duration, and chaining `LOOKUP JOIN`s to get a rich, correlated result set.
 

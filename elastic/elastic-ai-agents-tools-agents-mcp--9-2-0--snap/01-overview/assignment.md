@@ -50,5 +50,4 @@ enhanced_loading: false
 1. Click on the `View Notes` button in the upper right to view the presentation
 2. [Optional] Read about MCP in the notes section or in the what-is tab
 
----
-this is placeholder for now
+

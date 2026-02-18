@@ -31,7 +31,7 @@ On this challenge you will:
 
 Overview
 ===
-1Chat offers a suite of APIs to power a conversational AI experience, allowing users to interact with their data through natural language. These APIs are designed to be extensible, enabling developers to create custom tools and agents. The core of the platform is built around three main API paths:
+Elastic Chat offers a suite of APIs to power a conversational AI experience, allowing users to interact with their data through natural language. These APIs are designed to be extensible, enabling developers to create custom tools and agents. The core of the platform is built around three main API paths:
 - The Tools API path is
   - `/api/chat/tools`
 - The Agents API path:
@@ -64,7 +64,7 @@ Here are the main keys you'll find in each tool object:
 * **`id`**: This is the unique identifier for the tool. When an agent decides to use a tool, it will refer to it by this name (e.g., `.get_document_by_id`, `esql_symbol_news_and_reports`).
 
 * **`type`**: This field specifies the kind of tool it is. In your example, you have two types:
-    * **`builtin`**: These are standard, pre-defined tools that come with 1Chat. They provide core functionalities like searching, listing indices, or retrieving documents.
+    * **`builtin`**: These are standard, pre-defined tools that come with Elastic Chat. They provide core functionalities like searching, listing indices, or retrieving documents.
     * **`esql`**: This indicates a custom tool that you define yourself using an **ES|QL (Elasticsearch Query Language)** query. This allows you to create highly specific tools tailored to your own data.
 
 * **`description`**: This is a crucial field. It's a natural language description of what the tool does. The AI model uses this description to understand when it should use this particular tool to answer a user's question.
@@ -187,7 +187,7 @@ The Agents API path `/api/chat/agents` is used to manage "agents," which are con
 
 * **`type`**: This defines the agent's type. In this case, it's a **`chat`** agent, meaning it's designed for conversational interactions.
 
-* **`name`**: This is a **human-readable name** for the agent that might be displayed in a user interface, such as "Onechat default agent" or "Financial Manager".
+* **`name`**: This is a **human-readable name** for the agent that might be displayed in a user interface, such as "Elastic Chat default agent" or "Financial Manager".
 
 * **`description`**: This provides a **brief summary** of the agent's purpose, helping users understand what it's designed to do at a glance.
 
