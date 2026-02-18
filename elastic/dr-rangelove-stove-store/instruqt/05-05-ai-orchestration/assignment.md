@@ -150,10 +150,10 @@ Finally, let's check the "spun" draft and print a final report.
         {% assign fin = steps.final_check.output | json_parse %}
 
         ***
-        Original Draft: {{ steps.draft_content.output.response.message }}
+        Original Draft: {{ steps.draft_content.output }}
         Original Sentiment: {{ orig.sentiment }}
         ***
-        Revised Draft: {{ steps.remediation_spin.output.response.message }}
+        Revised Draft: {{ steps.remediation_spin.output }}
         Final Sentiment: {{ fin.sentiment }}
         ***
         {% if fin.sentiment == "POSITIVE" %}
@@ -226,10 +226,10 @@ steps:
         {% assign fin = steps.final_check.output | json_parse %}
 
         ***
-        Original Draft: {{ steps.draft_content.output.response.message }}
+        Original Draft: {{ steps.draft_content.output }}
         Original Sentiment: {{ orig.sentiment }}
         ***
-        Revised Draft: {{ steps.remediation_spin.output.response.message }}
+        Revised Draft: {{ steps.remediation_spin.output }}
         Final Sentiment: {{ fin.sentiment }}
         ***
         {% if fin.sentiment == "POSITIVE" %}

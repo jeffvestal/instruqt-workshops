@@ -231,17 +231,12 @@ Since we already tested our workflow, we know it works. But follow these steps t
 5. Click **Actions** in the top right
 6. Click **Edit**
     ![CleanShot 2025-11-13 at 15.16.33@2x.png](../assets/CleanShot%202025-11-13%20at%2015.16.33%402x.png)
-7. **Save** your workflow.
-8. Now... we wait. The data sprayer running in the background injects an anomaly every 60-90 seconds.
-9. In a **new Kibana tab**, go to **Observability > Alerts**.
-10. Set your time-picker to **"Last 15 minutes"**.
-11. Within a few minutes, you should see the `latency-threshold-alert-critical` fire for a service (e.g., `payment-service`).
-12. Scroll down to the **Actions** section and click on `Add action`
+7. Scroll down to the **Actions** section and click on `Add action`
     ![CleanShot 2025-11-13 at 15.17.38@2x.png](../assets/CleanShot%202025-11-13%20at%2015.17.38%402x.png)
-13. Click on **Workflows**
-14. In the **Select Worflows** drop down, select `self_healing_aiops`
+8. Click on **Workflows**
+9. In the **Select Worflows** drop down, select `self_healing_aiops`
     ![CleanShot 2025-11-13 at 15.18.08@2x.png](../assets/CleanShot%202025-11-13%20at%2015.18.08%402x.png)
-15. Scroll down and click on **Save rule**
+10. Scroll down and click on **Save rule**
     ![CleanShot 2025-11-13 at 15.19.21@2x.png](../assets/CleanShot%202025-11-13%20at%2015.19.21%402x.png)
 
 The next time the alert fires, it will run your new workflow!
