@@ -9,7 +9,7 @@ tabs:
   title: Kibana - Tools
   type: service
   hostname: kubernetes-vm
-  path: /app/chat/tools
+  path: /app/agent_builder/tools
   port: 30001
   custom_request_headers:
   - key: Content-Security-Policy

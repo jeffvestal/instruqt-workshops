@@ -9,7 +9,7 @@ tabs:
   title: Kibana - Agents
   type: service
   hostname: kubernetes-vm
-  path: /app/chat/agents
+  path: /app/agent_builder/agents
   port: 30001
   custom_request_headers:
   - key: Content-Security-Policy

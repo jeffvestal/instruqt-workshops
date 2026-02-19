@@ -9,7 +9,7 @@ tabs:
   title: Kibana - Chat
   type: service
   hostname: kubernetes-vm
-  path: /app/chat/conversations
+  path: /app/agent_builder/conversations
   port: 30001
   custom_request_headers:
   - key: Content-Security-Policy
