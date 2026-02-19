@@ -23,28 +23,33 @@ difficulty: ""
 timelimit: 0
 enhanced_loading: null
 ---
-On this challenge you will:
-- Create new custom Financial Manager agent.
+## On this challenge you will:
+
+Create new custom Financial Manager agent.
+
+---
+# Why Build a Custom Agent? 🧠
+While general-purpose agents are a good start, building a custom agent is essential for creating a reliable AI for specialized tasks.
+
+It allows you to move from a generic assistant to an expert with a specific job, giving you:
+
+A Tailored Persona: Instead of being just conversational, you can make the agent analytical, cautious, and professional—perfect for a financial advisor.
+
+Specialized Tool Use: It can be trained to understand the nuances of your financial data tools, ensuring it calls them correctly and efficiently.
+
+Critical Safety Guardrails: You can build in strict rules to prevent it from giving financial advice, ensuring it operates safely within its designated role.
 
 Create Your First Custom Agents
 ==
 
-1. Click on [button label="Kibana - Agents"](tab-0) Tab (Chat -> Agents)
+1. Click on [button label="Kibana - Agents"](tab-0) Tab (Agents -> Agents)
 2. Click on `New Agent`
 ![CleanShot 2025-08-20 at 12.58.29@2x.png](../assets/CleanShot%202025-08-20%20at%2012.58.29%402x.png)
 3. under `Agent ID` put:
 ```
 financial_manager
 ```
-4. under `Display name` put:
-```
-Financial Manager
-```
-5. Under `Display description` put:
-```
-Assistant to help manage financial assets, news, and reports
-```
-6. Under `Custom Instructions` put:
+6. Under `Instructions` put:
 ```
 You are an AI assistant designed to help financial managers understand financial data available within Elasticsearch and Kibana.
 
@@ -76,27 +81,62 @@ You have real-time access to the following Elasticsearch indices, which form you
 
 **Start by greeting the financial manager and offering assistance.**
 ```
-6. Toggle `Select all esql tools` to enable all the custom tools we created
-![CleanShot 2025-08-20 at 12.59.23@2x.png](../assets/CleanShot%202025-08-20%20at%2012.59.23%402x.png)
-7. Click `Create Agent`
+5. Give our agent a Finance label
+```
+Finance
+```
+4. under `Display Name` put:
+```
+Financial Manager
+```
+5. Under `Display Description` put:
+```
+Assistant to help manage financial assets, news, and reports
+```
+
+6. Back up at the top of the page, click on the `Tools` tab
+![CleanShot 2025-09-21 at 16.01.58@2x.png](../assets/CleanShot%202025-09-21%20at%2016.01.58%402x.png)
+7. You will see a list of all the available tools. Click on the check box next to our new tool to give our agent access to it
+![CleanShot 2025-09-21 at 16.02.50@2x.png](../assets/CleanShot%202025-09-21%20at%2016.02.50%402x.png)
+7. Click `Save`
+![CleanShot 2025-09-21 at 16.03.38@2x.png](../assets/CleanShot%202025-09-21%20at%2016.03.38%402x.png)
 
 - You'll see a toast message letting you know the agent has been created
 ![CleanShot 2025-08-20 at 12.59.36@2x.png](../assets/CleanShot%202025-08-20%20at%2012.59.36%402x.png)
 - You'll also see our new agent in the Agents list
+![CleanShot 2025-09-21 at 15.20.01@2x.png](../assets/CleanShot%202025-09-21%20at%2015.20.01%402x.png)
 
 Try out the New Agent
 ==
-Let's try out the new Chat agent
+Let's try out the new Financial Chat agent
 
-1. Click on `Chat` -> `Conversations`
-2. In the bottom right of the chat box, click on `Elastic Chat default agent` and select the new `Financial Manager`
-![CleanShot 2025-08-20 at 13.00.25@2x.png](../assets/CleanShot%202025-08-20%20at%2013.00.25%402x.png)
-3. Ask the question :
+> [!NOTE]
+> You can collapse the previous conversation panel and the left navigation panel to give your chat area most space.
+> ![CleanShot 2025-09-21 at 15.25.05@2x.png](../assets/CleanShot%202025-09-21%20at%2015.25.05%402x.png)
+
+1. In the list of agents, hover your mouse on the row of our `Financial Manager` agent and click on the Chat icon
+![CleanShot 2025-09-21 at 15.21.05@2x.png](../assets/CleanShot%202025-09-21%20at%2015.21.05%402x.png)
+2. In the bottom right of the chat box you'll see our new `Financial Manager` agent is selected. This is where you could select alternate agents if you needed at the start of a conversation
+![CleanShot 2025-09-21 at 15.22.50@2x.png](../assets/CleanShot%202025-09-21%20at%2015.22.50%402x.png)
+3. Let's see what our new agent can do :
 ```
 What can you help with?
 ```
-Similar to the first time we asked with the default agent, you'll get a list of Elasticsearch related functionality, but now with a financial tilt!
+You'll see our new agent can also help with the data in Elasticsearch, but now with a financial mindset.
 
-You should see something similar to the screenshot below:
-![CleanShot 2025-08-20 at 13.00.56@2x.png](../assets/CleanShot%202025-08-20%20at%2013.00.56%402x.png)
-- _Click image to enlarge_
+---
+Since we gave our agent a special tool to look up news and reports about a financial symbol, lets ensure that works correctly.
+1. Ask the agent about news and reports related to QQQ, a popular exchange-traded fund (ETF) that tracks the Nasdaq-100 index.
+```
+Summarize the latest news about QQQ
+```
+You should get a nice summary of the latest news and reports about QQQ.
+![CleanShot 2025-09-21 at 16.06.48@2x.png](../assets/CleanShot%202025-09-21%20at%2016.06.48%402x.png)
+> [!IMPORTANT]
+> This is 🚨fake🚨 news generated by an LLM for the purpose of this workshop
+> DO NOT make any financial decisions based on the fake 🤖📰
+
+You may have noticed some of the scrolling "thinking" that happens when the Chat agent is working on an answer. You can click on the > arrow on that line to see what tools and decisions it is making.
+
+For ours it should have called the `esql_symbol_news_and_reports` tool we gave it access to
+![CleanShot 2025-09-21 at 16.08.43@2x.png](../assets/CleanShot%202025-09-21%20at%2016.08.43%402x.png)

@@ -17,23 +17,37 @@ curl -s -X GET "$KIBANA_URL_UI/api/spaces/space/default" \
 -H "kbn-xsrf: true"
 
 
+# # Enable OneChat Feature Flags until public release
+# echo "--- Enabling OneChat Feature Flags and Mark Mode 🤖 🌙---"
+# curl -X POST "$KIBANA_URL_UI/api/kibana/settings" \
+# -H "Content-Type: application/json" \
+# -H "kbn-xsrf: true" \
+# -H "x-elastic-internal-origin: featureflag" \
+# -d '{
+#    "changes": {
+#       "onechat:mcp:enabled": true,
+#       "onechat:api:enabled": true,
+#       "onechat:ui:enabled": true,
+#       "theme:darkMode": true
+#    }
+# }'|jq
+
 # Enable OneChat Feature Flags until public release
-echo "--- Enabling OneChat Feature Flags and Mark Mode 🤖 🌙---"
+echo "--- Enabling OneChat Feature Flags (single) and Mark Mode 🤖 🌙---"
 curl -X POST "$KIBANA_URL_UI/api/kibana/settings" \
 -H "Content-Type: application/json" \
 -H "kbn-xsrf: true" \
 -H "x-elastic-internal-origin: featureflag" \
 -d '{
    "changes": {
-      "onechat:mcp:enabled": true,
-      "onechat:api:enabled": true,
-      "onechat:ui:enabled": true,
+      "agentBuilder:enabled": true,
       "theme:darkMode": true
    }
 }'|jq
+
+
 
 echo "--- Fetching Kibana Settings ---"
 curl -s -X GET "$KIBANA_URL_UI/internal/kibana/settings" \
 -H "x-elastic-internal-origin: featureflag" \
 -H "kbn-xsrf: true"
-

@@ -49,13 +49,13 @@ Configure LLM Connector
 ==
 Elastic Chat needs a connection to a large language model (LLM) so the AI assistant can respond to your questions. We'll configure an OpenAI connector that will also be reused later when connecting an MCP client.
 
-1. Click on the [button label="Kibana - Chat"](tab-0) tab (`Chat` -> `Conversations` )
-![CleanShot 2025-08-20 at 12.41.25@2x.png](../assets/CleanShot%202025-08-20%20at%2012.41.25%402x.png)
+1. Click on the [button label="Kibana - Chat"](tab-0) tab (`Agents` -> `Agent Chat` )
+![CleanShot 2025-09-21 at 14.55.59@2x.png](../assets/CleanShot%202025-09-21%20at%2014.55.59%402x.png)
 2. Click on **AI Assistant** in the top right of the tab
 3. Click on **Set up GenAI connector**
 ![CleanShot 2025-08-20 at 12.40.29@2x.png](../assets/CleanShot%202025-08-20%20at%2012.40.29%402x.png)
 4. Click the **OpenAI** button
-![Upload failed: Something went wrong]()
+![CleanShot 2025-09-21 at 14.58.02@2x.png](../assets/CleanShot%202025-09-21%20at%2014.58.02%402x.png)
 5. Fill out the form using the variables below. The API key is unique to you and valid only for this workshop!
 - Connector Name =>
 ```
@@ -67,7 +67,7 @@ OpenAI
 ```
 - **Default model** =>
 ```
-gpt-4o
+gpt-4.1
 ```
 - Leave `OpenAI Organization`, `OpenAI Project`, and `Context window length` blank
 - **API Key** =>
@@ -83,17 +83,19 @@ gpt-4o
 
 Test Chat UI
 ==
-You should still be in `Chat` -> `Conversations`
+You should still be in `Agents` -> `Agent Chat`
 
-Ask a question like
-```
-Are you online?
-```
-or
-
+Lets see what our new Chat agent can do
 ```
 What can you help with?
 ```
 You should get a response similar to the screenshot below.
-![CleanShot 2025-08-20 at 12.53.40@2x.png](../assets/CleanShot%202025-08-20%20at%2012.53.40%402x.png)
+![CleanShot 2025-09-21 at 15.01.32@2x.png](../assets/CleanShot%202025-09-21%20at%2015.01.32%402x.png)
 _click the image to enlarge_
+
+We can check what data is loade in our cluster
+```
+What indices are available?
+```
+
+You can ask other questions but we'll move on to create specialised agents for out data.

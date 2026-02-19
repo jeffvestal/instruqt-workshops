@@ -41,6 +41,9 @@ enhanced_loading: null
 
 Welcome to the ESQL refresher! In this chapter, you'll learn the core syntax and commands of Elastic's powerful pipeline-oriented query language. We will use the financial data from this workshop to build a query, step-by-step, that finds specific news and reports and enriches them with asset details.
 
+> [!NOTE]
+> If you are an ES|QL expert feel free to skip this challenge, it will not affect the rest of the workshop
+
 Part 0: Discover Setup
 ===
 By default, Kibana's Discover still uses KQL (Kibana Query Language) for searching. However, we can change that!
@@ -198,13 +201,13 @@ POST /_query?format=txt
   """,
   "params": [
     {"symbol": "QQQ"},
-    {"time_duration": "1000 hours"}
+    {"time_duration": "10000 hours"}
   ]
 }
 ```
 1.  In the Kibana Dev Tools Console, copy and past the above ES|QL query with paramaters into the console
 2. Hit the play button and you should see one result
-    - The `params` object directly supplies values for the placeholders in the query string. In this example, the ESQL engine knows to replace `?symbol` with `"QQQ"` and `?time_duration` with `"1000 hours"`.
+    - The `params` object directly supplies values for the placeholders in the query string. In this example, the ESQL engine knows to replace `?symbol` with `"QQQ"` and `?time_duration` with `"10000 hours"`.
 
 ![CleanShot 2025-08-20 at 13.20.43@2x.png](../assets/CleanShot%202025-08-20%20at%2013.20.43%402x.png)
 - _click to enlarge_
@@ -217,7 +220,7 @@ Elastic Chat is the built-in AI chat interface in Kibana that connects agents, t
   * **ESQL Query Parameters (for the ES|QL engine):**
       * Uses the `?parameter` syntax and the `params` object in the `POST /_query` body.
   * **Elastic Chat Tool Parameters (for the LLM agent):**
-      * Uses the parameter definitions (`"type": "keyword"`, `"description": "..."`) in the `PUT kbn://api/chat/tools/...` request.
+      * Uses the parameter definitions (`"type": "keyword"`, `"description": "..."`) in the `PUT kbn://api/agent_builder/tools/...` request.
       * The LLM uses this metadata to decide if a tool is relevant and to infer the parameter values from a user's natural language question.
 
 Part 5: Creating an ES|QL tool with the API
@@ -275,7 +278,7 @@ WIth a single command it will find accounts that have a position in a negative s
 2. Now lets actually create a tool with our new ES|QL query. Paste and run the following `PUT` request. This will register the full query with the MCP server.
 
     ```json
-    POST kbn://api/chat/tools
+    POST kbn://api/agent_builder/tools
     {
       "id": "neg_news_reports_with_pos",
       "type": "esql",

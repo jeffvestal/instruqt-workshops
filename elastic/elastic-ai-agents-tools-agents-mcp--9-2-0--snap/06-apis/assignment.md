@@ -31,13 +31,15 @@ On this challenge you will:
 
 Overview
 ===
-Elastic Chat offers a suite of APIs to power a conversational AI experience, allowing users to interact with their data through natural language. These APIs are designed to be extensible, enabling developers to create custom tools and agents. The core of the platform is built around three main API paths:
+Agent Builder offers a suite of APIs to power a conversational AI experience, allowing users to interact with their data through natural language.
+
+These APIs are designed to be extensible, enabling developers to create custom tools and agents. The core of the platform is built around three main API paths:
 - The Tools API path is
-  - `/api/chat/tools`
+  - `/api/agent_builder/tools`
 - The Agents API path:
-  - `/api/chat/agents`
+  - `/api/agent_builder/agents`
 - The Chat, or Converse, path:
-  - `/api/chat/converse`
+  - `/api/agent_builder/converse`
 
 Let's explore each API in more detail.
 
@@ -48,13 +50,13 @@ We will run all the below commands in the Console.
 
 Tools API
 ===
-The Tools API path `/api/chat/tools` allows for the management of "tools," which are essentially functions that an AI agent can use to perform specific actions or retrieve information. These tools can range from simple data retrieval to more complex operations. A key feature is the ability to create custom tools using ES|QL, allowing for tailored interactions with your data.
+The Tools API path `/api/agent_builder/tools` allows for the management of "tools," which are essentially functions that an AI agent can use to perform specific actions or retrieve information. These tools can range from simple data retrieval to more complex operations. A key feature is the ability to create custom tools using ES|QL, allowing for tailored interactions with your data.
 
 # List available tools
 First, lets look at how we can list the tools that are already created:
 1. Enter the `GET` below and run it
 ```
-GET kbn://api/chat/tools
+GET kbn://api/agent_builder/tools
 ```
 
 ### Tool Object Fields
@@ -86,7 +88,7 @@ We've seen how to create a custom tool through the UI, and we created a tool usi
 1. Paste and run the following code to create the first tool through the API:
     Create ES|QL find News and Reports for a Symbol within a time range
 ```json
-POST kbn://api/chat/tools
+POST kbn://api/agent_builder/tools
 {
   "id": "news_and_report_lookup_with_symbol_detail",
   "type": "esql",
@@ -131,7 +133,7 @@ POST kbn://api/chat/tools
     "params": {
       "time_duration": {
         "type": "keyword",
-        "description": """The timeframe to search back. Format is "X hours|minutes|days" eg. "7 hours" """
+        "description": """The timeframe to search back. Format is "X hours|minutes" eg. "7 hours" """
       },
       "symbol": {
         "type": "keyword",
@@ -158,12 +160,12 @@ While agents typically choose which tool to use, you can also execute a specific
 You do this by making a `POST` request to the tool's `_execute` endpoint, providing the necessary parameters in the body.
 
 ```json
-POST kbn://api/chat/tools/_execute
+POST kbn://api/agent_builder/tools/_execute
 {
   "tool_id": "news_and_report_lookup_with_symbol_detail",
   "tool_params": {
    "symbol": "DIA",
-	 "time_duration": "1000 hours"
+	 "time_duration": "10000 hours"
   }
 }
 ```
@@ -174,11 +176,11 @@ You should see the output of the tool call:
 
 Agents API
 ===
-The Agents API path `/api/chat/agents` is used to manage "agents," which are configurable personas that handle conversations. You can define an agent's instructions, personality, and the specific set of tools it's allowed to use to answer user queries. This allows for the creation of specialized agents for different tasks or domains.
+The Agents API path `/api/agent_builder/agents` is used to manage "agents," which are configurable personas that handle conversations. You can define an agent's instructions, personality, and the specific set of tools it's allowed to use to answer user queries. This allows for the creation of specialized agents for different tasks or domains.
 # List Available Agents
 1. Run the GET request to list all current Agents
     ```
-    GET kbn://api/chat/agents
+    GET kbn://api/agent_builder/agents
     ````
 
 ### Agent Object Fields
@@ -204,7 +206,7 @@ Let's create a new agent with a narrow scope.
 
 1. Run the POST command below
     ```json
-    POST kbn://api/chat/agents
+    POST kbn://api/agent_builder/agents
      {
       "id": "financial_news_agent",
       "name": "Financial News Agent",
@@ -231,12 +233,12 @@ It is specifically instructed to
 # GET Info About our new Agent
 We already learned how to get info about all agents, but you can get info about one specific agent by specifying the agent in the path
 ```json
-GET kbn://api/chat/agents/financial_news_agent
+GET kbn://api/agent_builder/agents/financial_news_agent
 ```
 
 Converse API
 ===
-The Chat, or Converse, path `/api/chat/converse` is the primary endpoint for interacting with the agents. This API powers the chat interface, managing the conversation flow and leveraging the configured agents and tools to provide answers to user questions.
+The Chat, or Converse, path `/api/agent_builder/converse` is the primary endpoint for interacting with the agents. This API powers the chat interface, managing the conversation flow and leveraging the configured agents and tools to provide answers to user questions.
 
 Follow along by running each of the code samples below to learn how the Converse API works.
 
@@ -245,7 +247,7 @@ Follow along by running each of the code samples below to learn how the Converse
 To begin a new chat, you send your initial question to the `converse` endpoint. This will start a new conversation thread with the **default** agent.
 
 ```json
-POST kbn://api/chat/converse
+POST kbn://api/agent_builder/converse
 {
   "input": "what is our top portfolio account?"
 }
@@ -273,7 +275,7 @@ Elastic's Agentic platform has built-in "memory". By providing the `conversation
 
 Copy the `conversation_id` from the first response, and add it to the below command before running it:
 ```json
-POST kbn://api/chat/converse
+POST kbn://api/agent_builder/converse
 {
   "input": "what about the second top?",
   "conversation_id": "<REPLACE WITH ACTUAL ID FROM PREVIOUS STEP>"
@@ -289,7 +291,7 @@ Your code will use the same `conversation_id` throughout the conversation to con
 If you want to talk to a specialized agent instead of the default one, you can specify its ID using the `agent_id` field.
 
 ```json
-POST kbn://api/chat/converse
+POST kbn://api/agent_builder/converse
 {
   "input": "What news about DIA?",
   "agent_id": "financial_news_agent"
@@ -301,7 +303,7 @@ POST kbn://api/chat/converse
 To see a list of all the conversation threads you've had, you can make a `GET` request to the `conversations` endpoint.
 
 ```http
-GET kbn://api/chat/conversations
+GET kbn://api/agent_builder/conversations
 ```
 
 -----
@@ -311,7 +313,7 @@ To get all the messages, tool outputs, and other details from a single chat, you
 
 Just like earlier, copy the `conversation_id` from the first response, and add it to the below command before running it:
 ```http
-GET kbn://api/chat/conversations/<REPLACE WITH ONE ACTUAL ID FROM PREVIOUS STEP>
+GET kbn://api/agent_builder/conversations/<REPLACE WITH ONE ACTUAL ID FROM PREVIOUS STEP>
 ```
 e.g.:
 - ![CleanShot 2025-08-20 at 13.43.14@2x.png](../assets/CleanShot%202025-08-20%20at%2013.43.14%402x.png)

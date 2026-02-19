@@ -127,7 +127,7 @@ We will connect to this endpoint on our Kibana server.
         ```
      - `URL`:
         ```
-        [[ Instruqt-Var key="KIBANA_URL_UI" hostname="host-1" ]]/api/chat/mcp
+        [[ Instruqt-Var key="KIBANA_URL_UI" hostname="host-1" ]]/api/agent_builder/mcp
         ```
      - `API Key (Optional)`:
         ```

@@ -1,23 +1,34 @@
 slug: elastic-ai-agents-tools-agents-mcp--9-2-0--snap
 id: hqcegji4bh0y
-title: '[INTERNAL] Elastic AI Agents - Tools, Agents, and MCP'
+title: Elastic Agent Builder - Chat, Tools, Agents, and MCP
 description: ""
 icon: ""
-tags: []
+tags:
+- co.elastic.workshops.production
+- co.elastic.workshops.production.elastic-ai-agents-tools-agents-mcp
+- co.elastic.workshops
 owner: elastic
 developers:
 - jeff.vestal@elastic.co
+instructors:
+- jeff.vestal@elastic.co
+- joshua.phifer@elastic.co
+- michael.ferretti@elastic.co
+- yazid.akadiri@elastic.co
+- peter.strasser@elastic.co
+- tanya.kalich@elastic.co
+- vincent.maury@elastic.co
 show_timer: true
-idle_timeout: 10800
+idle_timeout: 3600
 timelimit: 10800
-sandbox_preset: managed-vm-elastic-9-2-0-snapshot
+sandbox_preset: managed-vm-elastic-9-2-0-snapshot-dev
 lab_config:
-  extend_ttl: 10800
+  extend_ttl: 3600
   sidebar_enabled: true
   feedback_recap_enabled: true
   feedback_tab_enabled: false
   loadingMessages: true
   override_challenge_layout: false
   hideStopButton: false
-checksum: "13662184473073041493"
+checksum: "15657289666590637597"
 enhanced_loading: false
