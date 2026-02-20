@@ -1,0 +1,38 @@
+---
+description: Instruqt assignment.md file conventions and guardrails
+globs: **/assignment.md
+alwaysApply: false
+---
+
+# Instruqt Assignment File Conventions
+
+## Frontmatter Fields -- Do Not Change
+
+- `id`: Instruqt's internal challenge ID. Changing it breaks the track.
+- `slug`: Instruqt identifier used in URLs. Changing it breaks the track.
+- Tab `id` values: Instruqt-generated. Do not modify.
+
+## Tab `path` Fields
+
+Tab paths must match the Kibana version running in the sandbox. Verify against a `.remote` file or running sandbox before changing.
+
+- AI Agents track (`elastic-ai-agents-tools-agents-mcp--9-2-0--snap`): uses `/app/agent_builder/*`
+- Workflows track (`dr-rangelove-stove-store/instruqt`): uses standard Kibana paths
+
+**Never** change paths from `/app/agent_builder/` to `/app/chat/` or vice versa without confirming the sandbox supports it.
+
+## API Paths in Instructions
+
+API paths in Console code blocks must match the sandbox. The AI Agents track uses:
+- `/api/agent_builder/tools`, `/api/agent_builder/agents`, `/api/agent_builder/converse`
+- `/api/agent_builder/mcp` (MCP endpoint)
+
+**Not** `/api/chat/*` -- those are from an older Kibana version.
+
+## Setup Scripts and Feature Flags
+
+The current Kibana feature flag is `"agentBuilder:enabled": true`. The old flags (`onechat:mcp:enabled`, `onechat:api:enabled`, `onechat:ui:enabled`) are defunct on the `-dev` sandbox. Do not revert to old flags.
+
+## Naming
+
+Use "Elastic Chat" in user-facing prose. Do not use "1Chat", "OneChat", or "Onechat". Exception: Kibana config keys in setup scripts (e.g., `onechat:mcp:enabled`) must stay as-is if that's what the API expects.

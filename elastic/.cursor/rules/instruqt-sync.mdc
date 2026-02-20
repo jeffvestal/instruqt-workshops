@@ -1,0 +1,39 @@
+---
+description: Safe Instruqt CLI sync workflow to prevent overwriting live tracks
+alwaysApply: true
+---
+
+# Instruqt Sync Workflow
+
+This repo contains multiple Instruqt workshop tracks. Local files can drift from Instruqt's live state when edits are made via the Instruqt UI or from another machine.
+
+## Before Editing
+
+1. `cd` into the track directory (the one containing `track.yml`)
+2. Run `instruqt track pull` to get the latest live state
+3. Commit the pull result before making any changes (clean diff baseline)
+
+## `.remote` Files
+
+After a pull, Instruqt may create `.remote` files (e.g., `assignment.md.remote`). These show what's live on Instruqt vs. your local copy.
+
+- **Never delete `.remote` files without reviewing them.** If they differ from local, your local files are stale.
+- Diff `.remote` against local to understand what changed on the server side.
+- `.remote` files should not be committed or pushed; they are local diff artifacts.
+
+## Pushing Changes
+
+```bash
+cd <track-dir>/
+instruqt track push
+git add . && git commit && git push
+```
+
+- If Instruqt says "remote changes not pulled," **do not use `--force`**. Pull first, review the diff, reconcile, then push.
+- Only use `--force` if you have explicitly verified every difference between local and remote and confirmed local is correct.
+- After pushing, run `instruqt track pull` and confirm no diff to verify the push took.
+- Always push to both Instruqt and GitHub to keep them in sync.
+
+## `track.yml` Checksum
+
+The `checksum` field in `track.yml` is auto-managed by the Instruqt CLI. Never manually edit it.

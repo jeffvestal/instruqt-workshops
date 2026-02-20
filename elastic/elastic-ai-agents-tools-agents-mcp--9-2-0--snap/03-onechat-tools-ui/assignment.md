@@ -19,7 +19,7 @@ tabs:
   - key: Content-Security-Policy
     value: 'script-src ''self''; worker-src blob: ''self''; style-src ''unsafe-inline''
       ''self'''
-- id: xwveehv99iir
+- id: wxuwwoc6xyyy
   title: 'Kibana - Tools - Pop-Out '
   type: service
   hostname: kubernetes-vm
