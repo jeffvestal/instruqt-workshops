@@ -44,10 +44,55 @@ timelimit: 0
 enhanced_loading: false
 ---
 
+Welcome to the Elastic Agent Builder Workshop
+===
+
+In this hands-on workshop you'll use **Elastic Agent Builder** to build AI agents that can reason over your Elasticsearch data using natural language. Agent Builder combines large language models with Elastic-native search capabilities, giving you a framework to create custom agents and tools -- and expose them to external clients through MCP (Model Context Protocol).
+
+By the end of this workshop, you'll have built a working financial data assistant from the ground up: a custom agent with specialized tools, accessible through both the Kibana chat UI and an external MCP client.
+
+---
+
+What is Elastic Agent Builder?
+===
+
+Elastic Agent Builder is a feature in Kibana that lets you:
+
+- **Chat with your Elasticsearch data** using a built-in conversational UI
+- **Build custom agents** with tailored instructions, personas, and guardrails
+- **Create custom tools** (powered by ES|QL) that give agents precise, efficient access to your data
+- **Expose everything via MCP and APIs** so external clients like Claude Desktop, Cursor, or your own apps can use the same agents and tools
+
+Key Concepts
+===
+
+| Concept | What It Does |
+|---|---|
+| **Agent Chat** | The conversational interface in Kibana for talking to agents in real time |
+| **Agents** | LLM-powered personas with custom instructions and an assigned set of tools. You control what they can do and how they respond |
+| **Tools** | Modular functions that agents call to search, retrieve, and act on Elasticsearch data. Built-in tools work out of the box; custom ES\|QL tools let you tailor queries to your data |
+| **MCP** | Model Context Protocol -- a standard for exposing tools to external AI clients. Elastic Agent Builder acts as an MCP server that any compatible client can connect to |
+
+What You'll Build Today
+===
+
+Here's what's ahead:
+
+1. **Overview & Presentation** -- You are here. Review the slides and get oriented
+2. **Chat Setup** -- Connect Elastic Chat to an LLM and confirm the AI assistant can respond
+3. **Create a Custom Tool** -- Write an ES|QL-powered tool that finds news and reports for a financial symbol
+4. **Create a Custom Agent** -- Build a Financial Manager agent with specialized instructions and your new tool
+5. **ES|QL Refresher** _(optional)_ -- A hands-on walkthrough of ES|QL basics using the workshop's financial data
+6. **Explore the APIs** -- Use the Tools, Agents, and Converse APIs directly from the Kibana Console
+7. **MCP Client** -- Connect an external MCP client to Elastic's MCP server and chat with your agents from outside Kibana
+8. **Feedback** -- Let us know how it went
+
+Getting Started
+===
+
+1. Click `View Notes` in the upper right to view the presentation slides
+2. [Optional] Read about MCP in the [button label="What Is MCP"](tab-0) tab
+
+---
 
 ![social_kegsofduff_human_and_robot_building_chat_app_with_elasticsear_b5a3c6da-b66f-4339-900b-97bcd2ef0299_1.gif](../assets/social_kegsofduff_human_and_robot_building_chat_app_with_elasticsear_b5a3c6da-b66f-4339-900b-97bcd2ef0299_1.gif)
-
-1. Click on the `View Notes` button in the upper right to view the presentation
-2. [Optional] Read about MCP in the notes section or in the what-is tab
-
-

@@ -5,20 +5,23 @@ description: ""
 icon: ""
 tags:
 - co.elastic.workshops.production
-- co.elastic.workshops.production.elastic-ai-agents-tools-agents-mcp
+- co.elastic.workshops.production.agent-builder-agents-tools-and-mcp
 - co.elastic.workshops
 owner: elastic
 developers:
 - jeff.vestal@elastic.co
 instructors:
+- mark.vovchuk@elastic.co
 - jeff.vestal@elastic.co
 - joshua.phifer@elastic.co
 - michael.ferretti@elastic.co
 - yazid.akadiri@elastic.co
+- lasse.byrnak@elastic.co
+- riccardo.spadafora@elastic.co
 - peter.strasser@elastic.co
 - tanya.kalich@elastic.co
 - vincent.maury@elastic.co
-show_timer: true
+- eduardo.xavier@elastic.co
 idle_timeout: 3600
 timelimit: 10800
 sandbox_preset: managed-vm-elastic-9-2-0-snapshot-dev
@@ -30,5 +33,5 @@ lab_config:
   loadingMessages: true
   override_challenge_layout: false
   hideStopButton: false
-checksum: "12809971994298301689"
+checksum: "13499456713306623480"
 enhanced_loading: false
