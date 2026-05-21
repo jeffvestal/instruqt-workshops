@@ -1,0 +1,33 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Setting up kubernetes-vm ==="
+
+# Wait for Instruqt bootstrap
+until [ -f /opt/instruqt/bootstrap/complete ]; do
+  echo "Waiting for Instruqt bootstrap..."
+  sleep 2
+done
+echo "Bootstrap complete"
+
+# Source environment variables
+source /etc/profile.d/instruqt.sh 2>/dev/null || true
+
+# Wait for Elasticsearch
+until curl -sk "https://localhost:9200" \
+  -u "elastic:${ELASTIC_PASSWORD}" > /dev/null 2>&1; do
+  echo "Waiting for Elasticsearch..."
+  sleep 5
+done
+echo "Elasticsearch is ready"
+
+# Wait for Kibana
+until curl -sk "https://localhost:5601/api/status" \
+  -H "Authorization: Basic $(echo -n elastic:${ELASTIC_PASSWORD} | base64)" \
+  > /dev/null 2>&1; do
+  echo "Waiting for Kibana..."
+  sleep 5
+done
+echo "Kibana is ready"
+
+echo "=== kubernetes-vm setup complete ==="

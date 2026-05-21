@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Setting up host-1 ==="
+echo "Test workshop — no additional setup required on host-1."
+echo "=== host-1 setup complete ==="
