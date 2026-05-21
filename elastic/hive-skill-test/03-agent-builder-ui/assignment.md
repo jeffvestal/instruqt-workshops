@@ -1,43 +1,43 @@
 ---
 slug: agent-builder-ui
-id: ""
+id: yf8lczaygpwr
 type: challenge
 title: Explore Agent Builder in Kibana
 teaser: Navigate to Agent Builder and create your first AI agent
 notes:
-  - type: text
-    contents: |
-      ## Elastic Agent Builder
+- type: text
+  contents: |
+    ## Elastic Agent Builder
 
-      Agent Builder is built into Kibana. It lets you create AI agents that can:
+    Agent Builder is built into Kibana. It lets you create AI agents that can:
 
-      - Answer questions using your Elasticsearch data
-      - Call tools like ES|QL queries, search APIs, and custom connectors
-      - Chain together with other agents for multi-agent workflows
+    - Answer questions using your Elasticsearch data
+    - Call tools like ES|QL queries, search APIs, and custom connectors
+    - Chain together with other agents for multi-agent workflows
 
-      No code required — configure everything from the Kibana UI.
-  - type: text
-    contents: |
-      ## What We're Building
+    No code required — configure everything from the Kibana UI.
+- type: text
+  contents: |
+    ## What We're Building
 
-      In this challenge, you'll:
+    In this challenge, you'll:
 
-      1. Navigate to Agent Builder in Kibana
-      2. Create a simple agent with a system prompt
-      3. Chat with it to confirm it's working
+    1. Navigate to Agent Builder in Kibana
+    2. Create a simple agent with a system prompt
+    3. Chat with it to confirm it's working
 
-      The **Kibana** tab is already pointed at the Agent Builder section.
+    The **Kibana** tab is already pointed at the Agent Builder section.
 tabs:
-  - id: g7h8i9j0k1l2
-    title: Kibana - Agent Builder
-    type: service
-    hostname: kubernetes-vm
-    path: /app/enterpriseSearch/content/agents
-    port: 30001
-  - id: m3n4o5p6q7r8
-    title: Terminal
-    type: terminal
-    hostname: host-1
+- id: rp9w8qup9qyx
+  title: Kibana - Agent Builder
+  type: service
+  hostname: kubernetes-vm
+  path: /app/enterpriseSearch/content/agents
+  port: 30001
+- id: mq9nzdunnfma
+  title: Terminal
+  type: terminal
+  hostname: host-1
 difficulty: basic
 timelimit: 900
 enhanced_loading: null

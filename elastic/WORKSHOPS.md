@@ -102,9 +102,9 @@ The top-level `dr-rangelove-stove-store/` directory also contains supporting doc
 |---|---|
 | Directory | `hive-skill-test/` |
 | Instruqt Slug | `hive-skill-test` |
-| Track ID | (pending) |
+| Track ID | `ua4j1v3eh0j6` |
 | Title | Instruqt Workshop Skill Test |
-| Instruqt URL | (pending) |
+| Instruqt URL | https://play.instruqt.com/manage/elastic/tracks/hive-skill-test |
 
 ### Challenges (3)
 

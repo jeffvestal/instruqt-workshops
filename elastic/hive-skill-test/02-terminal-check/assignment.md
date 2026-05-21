@@ -1,23 +1,23 @@
 ---
 slug: terminal-check
-id: ""
+id: vhc6gxybtori
 type: challenge
 title: Query Elasticsearch from the Terminal
 teaser: Use curl to query the Elasticsearch cluster and check what's running
 notes:
-  - type: text
-    contents: |
-      ## Elasticsearch from the Command Line
+- type: text
+  contents: |
+    ## Elasticsearch from the Command Line
 
-      Elasticsearch exposes a REST API. You can query it directly using `curl`
-      from the terminal — no UI required.
+    Elasticsearch exposes a REST API. You can query it directly using `curl`
+    from the terminal — no UI required.
 
-      In this challenge, you'll check cluster health and list available indices.
+    In this challenge, you'll check cluster health and list available indices.
 tabs:
-  - id: a1b2c3d4e5f6
-    title: Terminal
-    type: terminal
-    hostname: host-1
+- id: todrutkpjr8y
+  title: Terminal
+  type: terminal
+  hostname: host-1
 difficulty: basic
 timelimit: 600
 enhanced_loading: null
