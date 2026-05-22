@@ -10,33 +10,47 @@ until [ -f /opt/instruqt/bootstrap/complete ]; do
 done
 echo "Bootstrap complete"
 
-# Load all env vars from preset endpoint (ELASTICSEARCH_URL, KIBANA_URL, passwords, LLM keys, etc.)
-until curl -s http://kubernetes-vm:9000/env > /dev/null 2>&1; do
+# Load env vars — use localhost from within kubernetes-vm (kubernetes-vm hostname may not self-resolve)
+until curl -s http://localhost:9000/env > /dev/null 2>&1; do
   echo "Waiting for env endpoint..."
   sleep 3
 done
-export $(curl -s http://kubernetes-vm:9000/env | xargs)
+export $(curl -s http://localhost:9000/env | xargs)
 echo "Env vars loaded"
 
-# Wait for Elasticsearch
+# Wait for Elasticsearch (use LOCAL endpoint from within the VM)
 until curl -s -H "Authorization: Basic ${ELASTICSEARCH_AUTH_BASE64}" \
-  "${ELASTICSEARCH_URL}/_cluster/health" > /dev/null 2>&1; do
+  "${ELASTICSEARCH_URL_LOCAL}/_cluster/health" > /dev/null 2>&1; do
   echo "Waiting for Elasticsearch..."
   sleep 5
 done
-echo "Elasticsearch is ready at ${ELASTICSEARCH_URL}"
+echo "Elasticsearch is ready"
 
-# Wait for Kibana
+# Wait for Kibana (use LOCAL endpoint from within the VM)
 until curl -s -H "Authorization: Basic ${ELASTICSEARCH_AUTH_BASE64}" \
-  "${KIBANA_URL}/api/status" > /dev/null 2>&1; do
+  "${KIBANA_URL_LOCAL}/api/status" > /dev/null 2>&1; do
   echo "Waiting for Kibana..."
   sleep 5
 done
-echo "Kibana is ready at ${KIBANA_URL}"
+echo "Kibana is ready"
 
-# Provision LLM AI connector (needed for Agent Builder in challenge 3)
+# Provision LLM AI connector for Agent Builder
+# Direct API call — more reliable than elastic-llm.sh which may not exist on all preset versions
 echo "Provisioning LLM connector..."
-/opt/workshops/elastic-llm.sh -m gpt-4o -k false
-echo "LLM connector ready"
+curl -s -X POST "${KIBANA_URL_LOCAL}/api/actions/connector" \
+  -H "Authorization: Basic ${ELASTICSEARCH_AUTH_BASE64}" \
+  -H "Content-Type: application/json" \
+  -H "kbn-xsrf: true" \
+  -d "{
+    \"name\": \"LLM Proxy\",
+    \"connector_type_id\": \".gen-ai\",
+    \"config\": {
+      \"apiProvider\": \"OpenAI\",
+      \"apiUrl\": \"https://${LLM_PROXY_URL}/v1/chat/completions\"
+    },
+    \"secrets\": {
+      \"apiKey\": \"${LLM_APIKEY}\"
+    }
+  }" | grep -q '"id"' && echo "LLM connector created" || echo "WARNING: LLM connector creation failed"
 
 echo "=== kubernetes-vm setup complete ==="
