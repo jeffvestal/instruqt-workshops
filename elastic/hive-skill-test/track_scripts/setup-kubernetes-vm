@@ -10,24 +10,33 @@ until [ -f /opt/instruqt/bootstrap/complete ]; do
 done
 echo "Bootstrap complete"
 
-# Source environment variables
-source /etc/profile.d/instruqt.sh 2>/dev/null || true
+# Load all env vars from preset endpoint (ELASTICSEARCH_URL, KIBANA_URL, passwords, LLM keys, etc.)
+until curl -s http://kubernetes-vm:9000/env > /dev/null 2>&1; do
+  echo "Waiting for env endpoint..."
+  sleep 3
+done
+export $(curl -s http://kubernetes-vm:9000/env | xargs)
+echo "Env vars loaded"
 
 # Wait for Elasticsearch
-until curl -s "http://localhost:9200" \
-  -u "elastic:${ELASTICSEARCH_PASSWORD}" > /dev/null 2>&1; do
+until curl -s -H "Authorization: Basic ${ELASTICSEARCH_AUTH_BASE64}" \
+  "${ELASTICSEARCH_URL}/_cluster/health" > /dev/null 2>&1; do
   echo "Waiting for Elasticsearch..."
   sleep 5
 done
-echo "Elasticsearch is ready"
+echo "Elasticsearch is ready at ${ELASTICSEARCH_URL}"
 
 # Wait for Kibana
-until curl -s "http://localhost:5601/api/status" \
-  -H "Authorization: Basic $(echo -n elastic:${ELASTICSEARCH_PASSWORD} | base64)" \
-  > /dev/null 2>&1; do
+until curl -s -H "Authorization: Basic ${ELASTICSEARCH_AUTH_BASE64}" \
+  "${KIBANA_URL}/api/status" > /dev/null 2>&1; do
   echo "Waiting for Kibana..."
   sleep 5
 done
-echo "Kibana is ready"
+echo "Kibana is ready at ${KIBANA_URL}"
+
+# Provision LLM AI connector (needed for Agent Builder in challenge 3)
+echo "Provisioning LLM connector..."
+/opt/workshops/elastic-llm.sh -m gpt-4o -k false
+echo "LLM connector ready"
 
 echo "=== kubernetes-vm setup complete ==="

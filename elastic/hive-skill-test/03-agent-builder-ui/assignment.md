@@ -62,7 +62,7 @@ Click the **Kibana - Agent Builder** tab. You should see the Agent Builder landi
 
 If prompted to log in, use:
 - **Username**: `elastic`
-- **Password**: the value of `$ELASTIC_PASSWORD` from your terminal
+- **Password**: run `echo $ELASTICSEARCH_PASSWORD` in the Terminal tab to get the value
 
 ### 2. Create a New Agent
 
@@ -93,8 +93,9 @@ Your agent responds to the test message with something that confirms it received
 <details>
 <summary>Agent not responding? Expand for troubleshooting</summary>
 
-1. Check the Terminal tab: run `echo $SA_LLM_PROXY_BEARER_TOKEN` — if empty, the LLM proxy secret may not be configured for this track.
-2. Verify Kibana is reachable: `curl -sk https://kubernetes-vm:5601/api/status -u elastic:${ELASTIC_PASSWORD} | jq .status.overall`
-3. If Kibana returns `"level": "available"`, the UI should be accessible.
+1. Load env vars if missing: `export $(curl -s http://kubernetes-vm:9000/env | xargs)`
+2. Verify Kibana is reachable: `curl -s -H "Authorization: Basic ${ELASTICSEARCH_AUTH_BASE64}" ${KIBANA_URL}/api/status | jq .status.overall`
+3. Check LLM connector: `echo $LLM_APIKEY` — should be non-empty if setup script completed.
+4. If Kibana returns `"level": "available"`, the UI should be accessible.
 
 </details>
