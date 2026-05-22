@@ -41,19 +41,19 @@ Terminal tab to run a few `curl` commands against Elasticsearch.
 In the **Terminal** tab, run:
 
 ```bash
-curl -sk "https://kubernetes-vm:9200/_cluster/health" \
-  -u "elastic:${ELASTIC_PASSWORD}" | jq .
+curl -s "http://kubernetes-vm:9200/_cluster/health" \
+  -u "elastic:${ELASTICSEARCH_PASSWORD}" | jq .
 ```
 
 You should see a JSON response with `"status": "green"` or `"yellow"`.
 
-> **Hint**: The `ELASTIC_PASSWORD` environment variable is pre-set in your terminal session.
+> **Hint**: The `ELASTICSEARCH_PASSWORD` environment variable is pre-set in your terminal session.
 
 ### 2. List Indices
 
 ```bash
-curl -sk "https://kubernetes-vm:9200/_cat/indices?v" \
-  -u "elastic:${ELASTIC_PASSWORD}"
+curl -s "http://kubernetes-vm:9200/_cat/indices?v" \
+  -u "elastic:${ELASTICSEARCH_PASSWORD}"
 ```
 
 This returns a table of all indices with their document counts and sizes.
@@ -61,8 +61,8 @@ This returns a table of all indices with their document counts and sizes.
 ### 3. Run a Search Query
 
 ```bash
-curl -sk "https://kubernetes-vm:9200/_search?pretty" \
-  -u "elastic:${ELASTIC_PASSWORD}" \
+curl -s "http://kubernetes-vm:9200/_search?pretty" \
+  -u "elastic:${ELASTICSEARCH_PASSWORD}" \
   -H "Content-Type: application/json" \
   -d '{"query": {"match_all": {}}, "size": 3}'
 ```
@@ -75,10 +75,10 @@ The `_cat/indices` output should show at least one index (Kibana creates several
 <details>
 <summary>Not seeing output? Expand for troubleshooting</summary>
 
-If the `ELASTIC_PASSWORD` variable is empty, check that the Kibana setup has completed:
+If the `ELASTICSEARCH_PASSWORD` variable is empty, check that the Kibana setup has completed:
 
 ```bash
-echo $ELASTIC_PASSWORD
+echo $ELASTICSEARCH_PASSWORD
 ```
 
 If empty, wait 60 seconds and try again — the bootstrap process may still be running.

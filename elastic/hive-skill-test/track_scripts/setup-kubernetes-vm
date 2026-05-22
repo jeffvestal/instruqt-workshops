@@ -14,16 +14,16 @@ echo "Bootstrap complete"
 source /etc/profile.d/instruqt.sh 2>/dev/null || true
 
 # Wait for Elasticsearch
-until curl -sk "https://localhost:9200" \
-  -u "elastic:${ELASTIC_PASSWORD}" > /dev/null 2>&1; do
+until curl -s "http://localhost:9200" \
+  -u "elastic:${ELASTICSEARCH_PASSWORD}" > /dev/null 2>&1; do
   echo "Waiting for Elasticsearch..."
   sleep 5
 done
 echo "Elasticsearch is ready"
 
 # Wait for Kibana
-until curl -sk "https://localhost:5601/api/status" \
-  -H "Authorization: Basic $(echo -n elastic:${ELASTIC_PASSWORD} | base64)" \
+until curl -s "http://localhost:5601/api/status" \
+  -H "Authorization: Basic $(echo -n elastic:${ELASTICSEARCH_PASSWORD} | base64)" \
   > /dev/null 2>&1; do
   echo "Waiting for Kibana..."
   sleep 5

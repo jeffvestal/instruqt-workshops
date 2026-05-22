@@ -18,6 +18,7 @@ instructors:
 show_timer: true
 idle_timeout: 7200
 timelimit: 7200
+sandbox_preset: managed-vm-elastic-9-4-0
 lab_config:
   extend_ttl: 5400
   sidebar_enabled: true
@@ -28,5 +29,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "4303151852757846717"
+checksum: "11204398219629886089"
 enhanced_loading: false
