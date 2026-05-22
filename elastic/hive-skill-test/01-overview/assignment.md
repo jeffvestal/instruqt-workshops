@@ -45,4 +45,4 @@ then click **Next** to start the first interactive challenge.
 | Terminal Check | Query Elasticsearch from the command line using `curl` |
 | Agent Builder UI | Open Kibana and explore the Agent Builder interface |
 
-Click **Check** to continue.
+Click **Next** to begin.
